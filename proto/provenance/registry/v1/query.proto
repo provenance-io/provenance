@@ -30,6 +30,16 @@ service Query {
     option (google.api.http).get =
         "/provenance/registry/v1/has_role/{key.asset_class_id}/{key.nft_id}/{address}/{role}";
   }
+
+  // PendingRoleChange returns a single pending role change by its id.
+  rpc PendingRoleChange(QueryPendingRoleChangeRequest) returns (QueryPendingRoleChangeResponse) {
+    option (google.api.http).get = "/provenance/registry/v1/pending_role_change/{id}";
+  }
+
+  // PendingRoleChanges returns the pending role changes, optionally filtered by registry key.
+  rpc PendingRoleChanges(QueryPendingRoleChangesRequest) returns (QueryPendingRoleChangesResponse) {
+    option (google.api.http).get = "/provenance/registry/v1/pending_role_changes";
+  }
 }
 
 // QueryGetRegistryRequest is the request type for the Query/GetRegistry RPC method.
@@ -91,4 +101,37 @@ message QueryHasRoleResponse {
   // has_role is true if the address has the specified role for the given key.
   // This boolean value indicates whether the role verification was successful.
   bool has_role = 1;
+}
+
+// QueryPendingRoleChangeRequest is the request type for the Query/PendingRoleChange RPC method.
+message QueryPendingRoleChangeRequest {
+  // id is the deterministic identifier of the pending role change to retrieve.
+  string id = 1;
+}
+
+// QueryPendingRoleChangeResponse is the response type for the Query/PendingRoleChange RPC method.
+message QueryPendingRoleChangeResponse {
+  // pending_role_change is the pending role change for the requested id.
+  PendingRoleChange pending_role_change = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryPendingRoleChangesRequest is the paginated request type for the Query/PendingRoleChanges
+// RPC method.
+message QueryPendingRoleChangesRequest {
+  // key optionally filters the results to a single registry entry. When unset, all pending role
+  // changes are returned.
+  RegistryKey key = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryPendingRoleChangesResponse is the paginated response type for the Query/PendingRoleChanges
+// RPC method.
+message QueryPendingRoleChangesResponse {
+  // pending_role_changes is the collection of pending role changes.
+  repeated PendingRoleChange pending_role_changes = 1 [(gogoproto.nullable) = false];
+
+  // pagination is the pagination details for this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }

@@ -355,6 +355,211 @@ func (m *QueryHasRoleResponse) GetHasRole() bool {
 	return false
 }
 
+// QueryPendingRoleChangeRequest is the request type for the Query/PendingRoleChange RPC method.
+type QueryPendingRoleChangeRequest struct {
+	// id is the deterministic identifier of the pending role change to retrieve.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (m *QueryPendingRoleChangeRequest) Reset()         { *m = QueryPendingRoleChangeRequest{} }
+func (m *QueryPendingRoleChangeRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryPendingRoleChangeRequest) ProtoMessage()    {}
+func (*QueryPendingRoleChangeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{6}
+}
+func (m *QueryPendingRoleChangeRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryPendingRoleChangeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryPendingRoleChangeRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryPendingRoleChangeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPendingRoleChangeRequest.Merge(m, src)
+}
+func (m *QueryPendingRoleChangeRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryPendingRoleChangeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPendingRoleChangeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryPendingRoleChangeRequest proto.InternalMessageInfo
+
+func (m *QueryPendingRoleChangeRequest) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+// QueryPendingRoleChangeResponse is the response type for the Query/PendingRoleChange RPC method.
+type QueryPendingRoleChangeResponse struct {
+	// pending_role_change is the pending role change for the requested id.
+	PendingRoleChange PendingRoleChange `protobuf:"bytes,1,opt,name=pending_role_change,json=pendingRoleChange,proto3" json:"pending_role_change"`
+}
+
+func (m *QueryPendingRoleChangeResponse) Reset()         { *m = QueryPendingRoleChangeResponse{} }
+func (m *QueryPendingRoleChangeResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryPendingRoleChangeResponse) ProtoMessage()    {}
+func (*QueryPendingRoleChangeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{7}
+}
+func (m *QueryPendingRoleChangeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryPendingRoleChangeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryPendingRoleChangeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryPendingRoleChangeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPendingRoleChangeResponse.Merge(m, src)
+}
+func (m *QueryPendingRoleChangeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryPendingRoleChangeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPendingRoleChangeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryPendingRoleChangeResponse proto.InternalMessageInfo
+
+func (m *QueryPendingRoleChangeResponse) GetPendingRoleChange() PendingRoleChange {
+	if m != nil {
+		return m.PendingRoleChange
+	}
+	return PendingRoleChange{}
+}
+
+// QueryPendingRoleChangesRequest is the paginated request type for the Query/PendingRoleChanges
+// RPC method.
+type QueryPendingRoleChangesRequest struct {
+	// key optionally filters the results to a single registry entry. When unset, all pending role
+	// changes are returned.
+	Key *RegistryKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryPendingRoleChangesRequest) Reset()         { *m = QueryPendingRoleChangesRequest{} }
+func (m *QueryPendingRoleChangesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryPendingRoleChangesRequest) ProtoMessage()    {}
+func (*QueryPendingRoleChangesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{8}
+}
+func (m *QueryPendingRoleChangesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryPendingRoleChangesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryPendingRoleChangesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryPendingRoleChangesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPendingRoleChangesRequest.Merge(m, src)
+}
+func (m *QueryPendingRoleChangesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryPendingRoleChangesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPendingRoleChangesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryPendingRoleChangesRequest proto.InternalMessageInfo
+
+func (m *QueryPendingRoleChangesRequest) GetKey() *RegistryKey {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+func (m *QueryPendingRoleChangesRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryPendingRoleChangesResponse is the paginated response type for the Query/PendingRoleChanges
+// RPC method.
+type QueryPendingRoleChangesResponse struct {
+	// pending_role_changes is the collection of pending role changes.
+	PendingRoleChanges []PendingRoleChange `protobuf:"bytes,1,rep,name=pending_role_changes,json=pendingRoleChanges,proto3" json:"pending_role_changes"`
+	// pagination is the pagination details for this response.
+	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryPendingRoleChangesResponse) Reset()         { *m = QueryPendingRoleChangesResponse{} }
+func (m *QueryPendingRoleChangesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryPendingRoleChangesResponse) ProtoMessage()    {}
+func (*QueryPendingRoleChangesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{9}
+}
+func (m *QueryPendingRoleChangesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryPendingRoleChangesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryPendingRoleChangesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryPendingRoleChangesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPendingRoleChangesResponse.Merge(m, src)
+}
+func (m *QueryPendingRoleChangesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryPendingRoleChangesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPendingRoleChangesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryPendingRoleChangesResponse proto.InternalMessageInfo
+
+func (m *QueryPendingRoleChangesResponse) GetPendingRoleChanges() []PendingRoleChange {
+	if m != nil {
+		return m.PendingRoleChanges
+	}
+	return nil
+}
+
+func (m *QueryPendingRoleChangesResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryGetRegistryRequest)(nil), "provenance.registry.v1.QueryGetRegistryRequest")
 	proto.RegisterType((*QueryGetRegistryResponse)(nil), "provenance.registry.v1.QueryGetRegistryResponse")
@@ -362,6 +567,10 @@ func init() {
 	proto.RegisterType((*QueryGetRegistriesResponse)(nil), "provenance.registry.v1.QueryGetRegistriesResponse")
 	proto.RegisterType((*QueryHasRoleRequest)(nil), "provenance.registry.v1.QueryHasRoleRequest")
 	proto.RegisterType((*QueryHasRoleResponse)(nil), "provenance.registry.v1.QueryHasRoleResponse")
+	proto.RegisterType((*QueryPendingRoleChangeRequest)(nil), "provenance.registry.v1.QueryPendingRoleChangeRequest")
+	proto.RegisterType((*QueryPendingRoleChangeResponse)(nil), "provenance.registry.v1.QueryPendingRoleChangeResponse")
+	proto.RegisterType((*QueryPendingRoleChangesRequest)(nil), "provenance.registry.v1.QueryPendingRoleChangesRequest")
+	proto.RegisterType((*QueryPendingRoleChangesResponse)(nil), "provenance.registry.v1.QueryPendingRoleChangesResponse")
 }
 
 func init() {
@@ -369,45 +578,55 @@ func init() {
 }
 
 var fileDescriptor_c166c561e401a2eb = []byte{
-	// 605 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x94, 0x3d, 0x6f, 0xd3, 0x40,
-	0x18, 0xc7, 0x73, 0x6d, 0xa1, 0xe5, 0x0a, 0x1d, 0x8e, 0x0a, 0x5c, 0x0b, 0x99, 0xc8, 0xb4, 0x50,
-	0xf1, 0xe2, 0xc3, 0x01, 0x24, 0xe6, 0xf0, 0x12, 0xa0, 0x4b, 0x30, 0x62, 0x81, 0x21, 0xba, 0x38,
-	0x87, 0x63, 0x25, 0xf5, 0xb9, 0xbe, 0x4b, 0x84, 0x15, 0x65, 0x61, 0x63, 0x43, 0xe2, 0x0b, 0xf4,
-	0x0b, 0xb0, 0x30, 0xb3, 0xb0, 0x75, 0xac, 0xc4, 0xc2, 0x84, 0x50, 0xc2, 0x07, 0x41, 0x3e, 0x9f,
-	0xf3, 0x02, 0x09, 0x4e, 0xc5, 0xe6, 0x7b, 0xee, 0xf9, 0x3f, 0xcf, 0xef, 0x79, 0x39, 0x43, 0x33,
-	0x8c, 0x58, 0x97, 0x06, 0x24, 0x70, 0x29, 0x8e, 0xa8, 0xe7, 0x73, 0x11, 0xc5, 0xb8, 0x6b, 0xe3,
-	0x83, 0x0e, 0x8d, 0x62, 0x2b, 0x8c, 0x98, 0x60, 0xe8, 0xc2, 0xd8, 0xc7, 0xca, 0x7c, 0xac, 0xae,
-	0xad, 0x5f, 0x77, 0x19, 0xdf, 0x67, 0x1c, 0xd7, 0x09, 0xa7, 0xa9, 0x00, 0x77, 0xed, 0x3a, 0x15,
-	0xc4, 0xc6, 0x21, 0xf1, 0xfc, 0x80, 0x08, 0x9f, 0x05, 0x69, 0x0c, 0x7d, 0xd3, 0x63, 0x1e, 0x93,
-	0x9f, 0x38, 0xf9, 0x52, 0xd6, 0x4b, 0x1e, 0x63, 0x5e, 0x9b, 0x62, 0x12, 0xfa, 0x98, 0x04, 0x01,
-	0x13, 0x52, 0xc2, 0xd5, 0xed, 0xce, 0x1c, 0xb6, 0x11, 0x83, 0x74, 0x33, 0xab, 0xf0, 0xe2, 0xf3,
-	0x24, 0x79, 0x85, 0x0a, 0x47, 0xdd, 0x38, 0xf4, 0xa0, 0x43, 0xb9, 0x40, 0xf7, 0xe0, 0x72, 0x8b,
-	0xc6, 0x1a, 0x28, 0x82, 0xdd, 0xf5, 0xd2, 0x15, 0x6b, 0x76, 0x1d, 0x56, 0xa6, 0xda, 0xa3, 0xb1,
-	0x93, 0xf8, 0x9b, 0x2e, 0xd4, 0xfe, 0x8e, 0xc8, 0x43, 0x16, 0x70, 0x8a, 0x2a, 0x70, 0x2d, 0xd3,
-	0xaa, 0xb8, 0x3b, 0x79, 0x71, 0x1f, 0x05, 0x22, 0x8a, 0xcb, 0x2b, 0x47, 0x3f, 0x2e, 0x17, 0x9c,
-	0x91, 0xd8, 0x7c, 0x0f, 0xe0, 0xd6, 0x1f, 0x59, 0x7c, 0xca, 0x33, 0xf2, 0x6d, 0xb8, 0x41, 0x38,
-	0xa7, 0xa2, 0xe6, 0xb6, 0x09, 0xe7, 0x35, 0xbf, 0x21, 0x93, 0x9d, 0x71, 0xce, 0x4a, 0xeb, 0x83,
-	0xc4, 0xf8, 0xb4, 0x81, 0x1e, 0x43, 0x38, 0xee, 0xb4, 0xe6, 0x4a, 0x9c, 0xab, 0x56, 0x3a, 0x16,
-	0x2b, 0x19, 0x8b, 0x95, 0xce, 0x51, 0x8d, 0xc5, 0xaa, 0x12, 0x8f, 0xaa, 0x0c, 0xce, 0x84, 0xd2,
-	0xfc, 0x0c, 0xa0, 0x3e, 0x8b, 0x45, 0xd5, 0xbc, 0x07, 0x61, 0x34, 0xb2, 0x6a, 0xa0, 0xb8, 0x7c,
-	0xd2, 0xaa, 0x27, 0xe4, 0xa8, 0x32, 0x83, 0xf9, 0x5a, 0x2e, 0x73, 0x4a, 0x32, 0x05, 0x7d, 0x08,
-	0xe0, 0x79, 0x09, 0xfd, 0x84, 0x70, 0x87, 0xb5, 0xe9, 0xff, 0x0d, 0x1d, 0x69, 0x70, 0x95, 0x34,
-	0x1a, 0x11, 0xe5, 0x5c, 0x5b, 0x92, 0xad, 0xce, 0x8e, 0xe8, 0x3e, 0x5c, 0x89, 0x58, 0x9b, 0x6a,
-	0xcb, 0x45, 0xb0, 0xbb, 0x51, 0xda, 0xce, 0x8b, 0x28, 0x59, 0xa4, 0xc2, 0xb4, 0xe1, 0xe6, 0x34,
-	0xa1, 0x6a, 0xe8, 0x16, 0x5c, 0x6b, 0x12, 0x5e, 0x93, 0x51, 0x13, 0xce, 0x35, 0x67, 0xb5, 0x99,
-	0xba, 0x94, 0x3e, 0xad, 0xc0, 0x53, 0x52, 0x83, 0xbe, 0x00, 0xb8, 0x3e, 0xb1, 0x81, 0x08, 0xcf,
-	0x4b, 0x3c, 0x67, 0xfb, 0xf5, 0xdb, 0x8b, 0x0b, 0x52, 0x2e, 0xf3, 0xd9, 0xbb, 0x6f, 0xbf, 0x3e,
-	0x2e, 0x3d, 0x44, 0x65, 0x9c, 0xf3, 0xf4, 0x70, 0xaf, 0x45, 0x63, 0x6b, 0x7a, 0x43, 0xfb, 0xa9,
-	0x31, 0x78, 0x23, 0x92, 0x03, 0x3a, 0x04, 0xf0, 0xdc, 0xd4, 0x3a, 0x21, 0x7b, 0x41, 0x9e, 0xf1,
-	0x33, 0xd0, 0x4b, 0x27, 0x91, 0xa8, 0x22, 0x76, 0x65, 0x11, 0x26, 0x2a, 0xe6, 0x15, 0x81, 0xbe,
-	0x02, 0xb8, 0xaa, 0x46, 0x83, 0x6e, 0xfc, 0x33, 0xd3, 0xf4, 0x8a, 0xe9, 0x37, 0x17, 0x73, 0x56,
-	0x40, 0xaf, 0x25, 0xd0, 0x4b, 0xf4, 0x62, 0x1e, 0x50, 0xb6, 0x0b, 0xf9, 0x5d, 0xc5, 0x3d, 0xb5,
-	0x94, 0x7d, 0xdc, 0x4b, 0x14, 0xfd, 0x72, 0xeb, 0x68, 0x60, 0x80, 0xe3, 0x81, 0x01, 0x7e, 0x0e,
-	0x0c, 0xf0, 0x61, 0x68, 0x14, 0x8e, 0x87, 0x46, 0xe1, 0xfb, 0xd0, 0x28, 0xc0, 0x2d, 0x9f, 0xcd,
-	0xc1, 0xac, 0x82, 0x57, 0x77, 0x3d, 0x5f, 0x34, 0x3b, 0x75, 0xcb, 0x65, 0xfb, 0x13, 0x54, 0xb7,
-	0x7c, 0x36, 0xc9, 0xf8, 0x76, 0x4c, 0x29, 0xe2, 0x90, 0xf2, 0xfa, 0x69, 0xf9, 0xc7, 0xbd, 0xf3,
-	0x3b, 0x00, 0x00, 0xff, 0xff, 0xb3, 0x7a, 0x07, 0x40, 0x36, 0x06, 0x00, 0x00,
+	// 760 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x96, 0xcf, 0x4f, 0x13, 0x41,
+	0x14, 0xc7, 0x3b, 0x05, 0x2d, 0x3e, 0x94, 0x84, 0x81, 0x68, 0x69, 0xb4, 0x34, 0x2b, 0x28, 0x2a,
+	0xee, 0xd0, 0x0a, 0xca, 0x19, 0x54, 0x54, 0x2e, 0x75, 0x8d, 0x17, 0x3d, 0x34, 0xd3, 0x76, 0xdc,
+	0x6e, 0x28, 0x3b, 0xcb, 0xce, 0xd2, 0xd8, 0x34, 0x1c, 0xf4, 0xe6, 0xcd, 0xc4, 0x3f, 0x40, 0xce,
+	0x1e, 0xbd, 0xea, 0xc5, 0x1b, 0x17, 0x13, 0x12, 0x2f, 0x9e, 0x8c, 0x01, 0xff, 0x10, 0xb3, 0xb3,
+	0xd3, 0x5f, 0xb4, 0x4b, 0xd9, 0xc0, 0xad, 0x3b, 0x33, 0xdf, 0x79, 0x9f, 0xef, 0x7b, 0x6f, 0x5e,
+	0x0a, 0x9a, 0xe3, 0xf2, 0x1a, 0xb3, 0xa9, 0x5d, 0x62, 0xc4, 0x65, 0xa6, 0x25, 0x3c, 0xb7, 0x4e,
+	0x6a, 0x59, 0xb2, 0xb5, 0xcd, 0xdc, 0xba, 0xee, 0xb8, 0xdc, 0xe3, 0xf8, 0x72, 0xfb, 0x8c, 0xde,
+	0x3c, 0xa3, 0xd7, 0xb2, 0xa9, 0xdb, 0x25, 0x2e, 0x36, 0xb9, 0x20, 0x45, 0x2a, 0x58, 0x20, 0x20,
+	0xb5, 0x6c, 0x91, 0x79, 0x34, 0x4b, 0x1c, 0x6a, 0x5a, 0x36, 0xf5, 0x2c, 0x6e, 0x07, 0x77, 0xa4,
+	0x26, 0x4d, 0x6e, 0x72, 0xf9, 0x93, 0xf8, 0xbf, 0xd4, 0xea, 0x55, 0x93, 0x73, 0xb3, 0xca, 0x08,
+	0x75, 0x2c, 0x42, 0x6d, 0x9b, 0x7b, 0x52, 0x22, 0xd4, 0xee, 0x6c, 0x08, 0x5b, 0x8b, 0x41, 0x1e,
+	0xd3, 0xf2, 0x70, 0xe5, 0xb9, 0x1f, 0x7c, 0x8d, 0x79, 0x86, 0xda, 0x31, 0xd8, 0xd6, 0x36, 0x13,
+	0x1e, 0x5e, 0x82, 0xa1, 0x0d, 0x56, 0x4f, 0xa2, 0x0c, 0x9a, 0x1b, 0xcd, 0x5d, 0xd7, 0xfb, 0xfb,
+	0xd0, 0x9b, 0xaa, 0x75, 0x56, 0x37, 0xfc, 0xf3, 0x5a, 0x09, 0x92, 0xbd, 0x37, 0x0a, 0x87, 0xdb,
+	0x82, 0xe1, 0x35, 0x18, 0x69, 0x6a, 0xd5, 0xbd, 0xb3, 0x83, 0xee, 0x7d, 0x64, 0x7b, 0x6e, 0x7d,
+	0x65, 0x78, 0xef, 0xcf, 0x74, 0xcc, 0x68, 0x89, 0xb5, 0x0f, 0x08, 0xa6, 0x8e, 0x44, 0xb1, 0x98,
+	0x68, 0x92, 0xcf, 0xc0, 0x18, 0x15, 0x82, 0x79, 0x85, 0x52, 0x95, 0x0a, 0x51, 0xb0, 0xca, 0x32,
+	0xd8, 0x05, 0xe3, 0xa2, 0x5c, 0x5d, 0xf5, 0x17, 0x9f, 0x96, 0xf1, 0x63, 0x80, 0x76, 0xa6, 0x93,
+	0x25, 0x89, 0x73, 0x43, 0x0f, 0xca, 0xa2, 0xfb, 0x65, 0xd1, 0x83, 0x3a, 0xaa, 0xb2, 0xe8, 0x79,
+	0x6a, 0x32, 0x15, 0xc1, 0xe8, 0x50, 0x6a, 0x5f, 0x11, 0xa4, 0xfa, 0xb1, 0x28, 0xcf, 0xeb, 0x00,
+	0x6e, 0x6b, 0x35, 0x89, 0x32, 0x43, 0x51, 0x5d, 0x77, 0xc8, 0xf1, 0x5a, 0x1f, 0xe6, 0x9b, 0x03,
+	0x99, 0x03, 0x92, 0x2e, 0xe8, 0x5d, 0x04, 0x13, 0x12, 0xfa, 0x09, 0x15, 0x06, 0xaf, 0xb2, 0xd3,
+	0x15, 0x1d, 0x27, 0x21, 0x41, 0xcb, 0x65, 0x97, 0x09, 0x91, 0x8c, 0xcb, 0x54, 0x37, 0x3f, 0xf1,
+	0x32, 0x0c, 0xbb, 0xbc, 0xca, 0x92, 0x43, 0x19, 0x34, 0x37, 0x96, 0x9b, 0x19, 0x74, 0xa3, 0x64,
+	0x91, 0x0a, 0x2d, 0x0b, 0x93, 0xdd, 0x84, 0x2a, 0xa1, 0x53, 0x30, 0x52, 0xa1, 0xa2, 0x20, 0x6f,
+	0xf5, 0x39, 0x47, 0x8c, 0x44, 0x25, 0x38, 0xa2, 0x11, 0xb8, 0x26, 0x25, 0x79, 0x66, 0x97, 0x2d,
+	0xdb, 0xf4, 0xd7, 0x56, 0x2b, 0xd4, 0x6e, 0xd5, 0x0d, 0x8f, 0x41, 0xbc, 0xd5, 0x0d, 0x71, 0xab,
+	0xac, 0xbd, 0x43, 0x90, 0x0e, 0x53, 0xa8, 0x70, 0x05, 0x98, 0x70, 0x82, 0x4d, 0x19, 0xb2, 0x50,
+	0x92, 0xdb, 0x2a, 0x43, 0xb7, 0xc2, 0xfc, 0xf4, 0xdc, 0xa7, 0x8a, 0x39, 0xee, 0x1c, 0xdd, 0xd0,
+	0x3e, 0x87, 0x32, 0x88, 0x53, 0x56, 0xe5, 0xac, 0x3a, 0xfc, 0x27, 0x82, 0xe9, 0x50, 0x42, 0x95,
+	0x26, 0x0a, 0x93, 0x7d, 0xd2, 0xd4, 0x6c, 0xf8, 0xc8, 0x79, 0xc2, 0x3d, 0x79, 0x3a, 0xbb, 0xe6,
+	0xcf, 0x7d, 0x49, 0xc0, 0x39, 0xe9, 0x07, 0x7f, 0x47, 0x30, 0xda, 0x31, 0xa8, 0x30, 0x09, 0xe3,
+	0x0c, 0x19, 0x92, 0xa9, 0x85, 0x93, 0x0b, 0x02, 0x10, 0xed, 0xd9, 0xfb, 0x5f, 0xff, 0x3e, 0xc5,
+	0x1f, 0xe2, 0x15, 0x32, 0x60, 0x42, 0x93, 0xc6, 0x06, 0xab, 0xeb, 0xdd, 0x83, 0x6c, 0x27, 0x58,
+	0xb4, 0xdf, 0x78, 0xfe, 0x07, 0xde, 0x45, 0x70, 0xa9, 0x6b, 0xea, 0xe0, 0xec, 0x09, 0x79, 0xda,
+	0xd3, 0x32, 0x95, 0x8b, 0x22, 0x51, 0x26, 0xe6, 0xa4, 0x09, 0x0d, 0x67, 0x06, 0x99, 0xc0, 0x3f,
+	0x10, 0x24, 0xd4, 0x0b, 0xc6, 0x77, 0x8e, 0x8d, 0xd4, 0x3d, 0x89, 0x52, 0xf3, 0x27, 0x3b, 0xac,
+	0x80, 0x5e, 0x4b, 0xa0, 0x97, 0xf8, 0x45, 0x18, 0x50, 0x73, 0x64, 0x0c, 0xce, 0x2a, 0x69, 0xa8,
+	0xd9, 0xb5, 0x43, 0x1a, 0xbe, 0x62, 0xc7, 0xef, 0x92, 0xf1, 0x9e, 0x46, 0xc5, 0x4b, 0xc7, 0x02,
+	0x86, 0x8d, 0xa0, 0xd4, 0xfd, 0xa8, 0x32, 0xe5, 0x70, 0x59, 0x3a, 0xcc, 0xe1, 0x85, 0x30, 0x87,
+	0x7d, 0x9e, 0x1f, 0x69, 0xf8, 0x5d, 0xf2, 0x0d, 0x01, 0xee, 0x7d, 0xb9, 0x38, 0x22, 0x48, 0xab,
+	0x5f, 0x1e, 0x44, 0xd6, 0x29, 0x07, 0x8b, 0xd2, 0x81, 0x8e, 0xe7, 0x23, 0x38, 0x10, 0x2b, 0x1b,
+	0x7b, 0x07, 0x69, 0xb4, 0x7f, 0x90, 0x46, 0x7f, 0x0f, 0xd2, 0xe8, 0xe3, 0x61, 0x3a, 0xb6, 0x7f,
+	0x98, 0x8e, 0xfd, 0x3e, 0x4c, 0xc7, 0x60, 0xca, 0xe2, 0x21, 0x28, 0x79, 0xf4, 0x6a, 0xd1, 0xb4,
+	0xbc, 0xca, 0x76, 0x51, 0x2f, 0xf1, 0xcd, 0x8e, 0x70, 0x77, 0x2d, 0xde, 0x19, 0xfc, 0x6d, 0x3b,
+	0xbc, 0x57, 0x77, 0x98, 0x28, 0x9e, 0x97, 0xff, 0x8a, 0xee, 0xfd, 0x0f, 0x00, 0x00, 0xff, 0xff,
+	0xdb, 0x88, 0x32, 0x7c, 0xda, 0x09, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -430,6 +649,10 @@ type QueryClient interface {
 	GetRegistries(ctx context.Context, in *QueryGetRegistriesRequest, opts ...grpc.CallOption) (*QueryGetRegistriesResponse, error)
 	// HasRole returns true if the address has the specified role for the given key.
 	HasRole(ctx context.Context, in *QueryHasRoleRequest, opts ...grpc.CallOption) (*QueryHasRoleResponse, error)
+	// PendingRoleChange returns a single pending role change by its id.
+	PendingRoleChange(ctx context.Context, in *QueryPendingRoleChangeRequest, opts ...grpc.CallOption) (*QueryPendingRoleChangeResponse, error)
+	// PendingRoleChanges returns the pending role changes, optionally filtered by registry key.
+	PendingRoleChanges(ctx context.Context, in *QueryPendingRoleChangesRequest, opts ...grpc.CallOption) (*QueryPendingRoleChangesResponse, error)
 }
 
 type queryClient struct {
@@ -467,6 +690,24 @@ func (c *queryClient) HasRole(ctx context.Context, in *QueryHasRoleRequest, opts
 	return out, nil
 }
 
+func (c *queryClient) PendingRoleChange(ctx context.Context, in *QueryPendingRoleChangeRequest, opts ...grpc.CallOption) (*QueryPendingRoleChangeResponse, error) {
+	out := new(QueryPendingRoleChangeResponse)
+	err := c.cc.Invoke(ctx, "/provenance.registry.v1.Query/PendingRoleChange", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) PendingRoleChanges(ctx context.Context, in *QueryPendingRoleChangesRequest, opts ...grpc.CallOption) (*QueryPendingRoleChangesResponse, error) {
+	out := new(QueryPendingRoleChangesResponse)
+	err := c.cc.Invoke(ctx, "/provenance.registry.v1.Query/PendingRoleChanges", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// GetRegistry returns the registry entry for a given key.
@@ -477,6 +718,10 @@ type QueryServer interface {
 	GetRegistries(context.Context, *QueryGetRegistriesRequest) (*QueryGetRegistriesResponse, error)
 	// HasRole returns true if the address has the specified role for the given key.
 	HasRole(context.Context, *QueryHasRoleRequest) (*QueryHasRoleResponse, error)
+	// PendingRoleChange returns a single pending role change by its id.
+	PendingRoleChange(context.Context, *QueryPendingRoleChangeRequest) (*QueryPendingRoleChangeResponse, error)
+	// PendingRoleChanges returns the pending role changes, optionally filtered by registry key.
+	PendingRoleChanges(context.Context, *QueryPendingRoleChangesRequest) (*QueryPendingRoleChangesResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -491,6 +736,12 @@ func (*UnimplementedQueryServer) GetRegistries(ctx context.Context, req *QueryGe
 }
 func (*UnimplementedQueryServer) HasRole(ctx context.Context, req *QueryHasRoleRequest) (*QueryHasRoleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HasRole not implemented")
+}
+func (*UnimplementedQueryServer) PendingRoleChange(ctx context.Context, req *QueryPendingRoleChangeRequest) (*QueryPendingRoleChangeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PendingRoleChange not implemented")
+}
+func (*UnimplementedQueryServer) PendingRoleChanges(ctx context.Context, req *QueryPendingRoleChangesRequest) (*QueryPendingRoleChangesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PendingRoleChanges not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -551,6 +802,42 @@ func _Query_HasRole_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_PendingRoleChange_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPendingRoleChangeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PendingRoleChange(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.registry.v1.Query/PendingRoleChange",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PendingRoleChange(ctx, req.(*QueryPendingRoleChangeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_PendingRoleChanges_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPendingRoleChangesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PendingRoleChanges(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.registry.v1.Query/PendingRoleChanges",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PendingRoleChanges(ctx, req.(*QueryPendingRoleChangesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provenance.registry.v1.Query",
@@ -567,6 +854,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "HasRole",
 			Handler:    _Query_HasRole_Handler,
+		},
+		{
+			MethodName: "PendingRoleChange",
+			Handler:    _Query_PendingRoleChange_Handler,
+		},
+		{
+			MethodName: "PendingRoleChanges",
+			Handler:    _Query_PendingRoleChanges_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -816,6 +1111,169 @@ func (m *QueryHasRoleResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryPendingRoleChangeRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryPendingRoleChangeRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryPendingRoleChangeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Id)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryPendingRoleChangeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryPendingRoleChangeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryPendingRoleChangeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.PendingRoleChange.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryPendingRoleChangesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryPendingRoleChangesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryPendingRoleChangesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	if m.Key != nil {
+		{
+			size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryPendingRoleChangesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryPendingRoleChangesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryPendingRoleChangesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	if len(m.PendingRoleChanges) > 0 {
+		for iNdEx := len(m.PendingRoleChanges) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PendingRoleChanges[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -915,6 +1373,66 @@ func (m *QueryHasRoleResponse) Size() (n int) {
 	_ = l
 	if m.HasRole {
 		n += 2
+	}
+	return n
+}
+
+func (m *QueryPendingRoleChangeRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Id)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryPendingRoleChangeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.PendingRoleChange.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryPendingRoleChangesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Key != nil {
+		l = m.Key.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryPendingRoleChangesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.PendingRoleChanges) > 0 {
+		for _, e := range m.PendingRoleChanges {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
 	}
 	return n
 }
@@ -1518,6 +2036,413 @@ func (m *QueryHasRoleResponse) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.HasRole = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryPendingRoleChangeRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryPendingRoleChangeRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryPendingRoleChangeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Id = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryPendingRoleChangeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryPendingRoleChangeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryPendingRoleChangeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingRoleChange", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.PendingRoleChange.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryPendingRoleChangesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryPendingRoleChangesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryPendingRoleChangesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Key == nil {
+				m.Key = &RegistryKey{}
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryPendingRoleChangesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryPendingRoleChangesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryPendingRoleChangesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingRoleChanges", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PendingRoleChanges = append(m.PendingRoleChanges, PendingRoleChange{})
+			if err := m.PendingRoleChanges[len(m.PendingRoleChanges)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

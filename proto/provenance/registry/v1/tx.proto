@@ -21,10 +21,14 @@ service Msg {
 
   // GrantRole grants a role to one or more addresses.
   // This adds the specified addresses to the role for the given registry key.
+  // The single signer must satisfy the role's authorization policy directly; multi-party role
+  // changes are made through ProposeRoleChange / ApproveRoleChange.
   rpc GrantRole(MsgGrantRole) returns (MsgGrantRoleResponse);
 
   // RevokeRole revokes a role from one or more addresses.
   // This removes the specified addresses from the role for the given registry key.
+  // The single signer must satisfy the role's authorization policy directly; multi-party role
+  // changes are made through ProposeRoleChange / ApproveRoleChange.
   rpc RevokeRole(MsgRevokeRole) returns (MsgRevokeRoleResponse);
 
   // UnregisterNFT unregisters an NFT from the registry.
@@ -35,6 +39,19 @@ service Msg {
   // This creates multiple registry entries, or updates if one exists.
   // Each registry in this will cost one MsgRegisterNFT.
   rpc RegistryBulkUpdate(MsgRegistryBulkUpdate) returns (MsgRegistryBulkUpdateResponse);
+
+  // SetRoles atomically sets the desired state for one or more roles on a registry entry.
+  // The single signer must satisfy each affected role's authorization policy directly; multi-party
+  // role changes are made through ProposeRoleChange / ApproveRoleChange.
+  rpc SetRoles(MsgSetRoles) returns (MsgSetRolesResponse);
+
+  // ProposeRoleChange opens a pending role change that accumulates single-signer approvals.
+  // The change auto-applies once the role's authorization policy is satisfied.
+  rpc ProposeRoleChange(MsgProposeRoleChange) returns (MsgProposeRoleChangeResponse);
+
+  // ApproveRoleChange records a single-signer approval for an open pending role change.
+  // When the accumulated approvals satisfy the role's policy, the change is applied automatically.
+  rpc ApproveRoleChange(MsgApproveRoleChange) returns (MsgApproveRoleChangeResponse);
 }
 
 // MsgRegisterNFT represents a message to register a new NFT in the registry.
@@ -64,8 +81,9 @@ message MsgRegisterNFTResponse {}
 message MsgGrantRole {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // signer is the address that is authorized to grant the role.
-  // This address must have the appropriate permissions to modify role assignments.
+  // signer is the address authorizing the role grant. The signer must satisfy the role's
+  // authorization policy on its own (e.g. the NFT owner for roles without a policy). Multi-party
+  // role changes are made through ProposeRoleChange / ApproveRoleChange instead.
   string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // key is the registry key to grant the role to.
@@ -90,8 +108,9 @@ message MsgGrantRoleResponse {}
 message MsgRevokeRole {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // signer is the address that is authorized to revoke the role.
-  // This address must have the appropriate permissions to modify role assignments.
+  // signer is the address authorizing the role revocation. The signer must satisfy the role's
+  // authorization policy on its own (e.g. the NFT owner for roles without a policy). Multi-party
+  // role changes are made through ProposeRoleChange / ApproveRoleChange instead.
   string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // key is the registry key to revoke the role from.
@@ -146,3 +165,72 @@ message MsgRegistryBulkUpdate {
 // MsgRegistryBulkUpdateResponse defines the response for RegistryBulkUpdate.
 // This is an empty response indicating successful bulk update.
 message MsgRegistryBulkUpdateResponse {}
+
+// MsgSetRoles atomically sets the desired state for one or more roles on a registry entry.
+// For each role in role_updates, the keeper computes the diff between current and desired
+// addresses and applies grants and revokes to reach the desired state.
+// All updates succeed or all fail (atomic).
+message MsgSetRoles {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // signer is the address authorizing the role updates. The signer must satisfy each affected
+  // role's authorization policy on its own. Multi-party role changes are made through
+  // ProposeRoleChange / ApproveRoleChange instead.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // key identifies the registry entry to update.
+  RegistryKey key = 2;
+
+  // role_updates contains the desired state for each role to update.
+  // At least one entry is required. Roles not listed here are unchanged.
+  repeated RoleUpdate role_updates = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgSetRolesResponse defines the response for SetRoles.
+message MsgSetRolesResponse {}
+
+// MsgProposeRoleChange opens a pending role change that collects single-signer approvals until
+// every affected role's authorization policy is satisfied, then applies the whole batch
+// atomically. Its payload mirrors MsgSetRoles (desired-state, multi-role), but using single-signer
+// messages (rather than one multi-signer message) keeps every step compatible with authz delegation.
+message MsgProposeRoleChange {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // signer is the address proposing the change. It is recorded as the first approval; it only
+  // counts toward a policy if the signer is itself a required party.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // key identifies the registry entry to change.
+  RegistryKey key = 2;
+
+  // role_updates contains the desired state for each role to set when the change is applied.
+  // At least one entry is required. Roles not listed here are unchanged.
+  repeated RoleUpdate role_updates = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgProposeRoleChangeResponse defines the response for ProposeRoleChange.
+message MsgProposeRoleChangeResponse {
+  // change_id is the deterministic identifier of the pending change. It is also returned when the
+  // change auto-applied immediately (e.g. a single-party policy satisfied by the proposer).
+  string change_id = 1;
+
+  // applied is true if the proposal alone satisfied the policy and the change was applied.
+  bool applied = 2;
+}
+
+// MsgApproveRoleChange records a single-signer approval for an open pending role change.
+message MsgApproveRoleChange {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // signer is the approving party. Single-signer, so it can be delegated via authz.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // change_id is the identifier of the pending change to approve.
+  string change_id = 2;
+}
+
+// MsgApproveRoleChangeResponse defines the response for ApproveRoleChange.
+message MsgApproveRoleChangeResponse {
+  // applied is true if this approval satisfied the policy and the change was applied.
+  bool applied = 1;
+}

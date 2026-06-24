@@ -32,6 +32,17 @@ enum RegistryRole {
   // REGISTRY_ROLE_ORIGINATOR indicates the address has originator privileges.
   // Originators are responsible for creating and originating the underlying assets.
   REGISTRY_ROLE_ORIGINATOR = 6;
+  // REGISTRY_ROLE_LIEN_OWNER indicates the entity on whose behalf the registry acts as a nominal lien holder.
+  REGISTRY_ROLE_LIEN_OWNER = 7;
+  // REGISTRY_ROLE_SECURED_PARTY_FOR_LIEN indicates an organization with a security interest in the lien.
+  // This party can foreclose into the Lien Owner role or direct a transfer in case of default.
+  REGISTRY_ROLE_SECURED_PARTY_FOR_LIEN = 8;
+  // REGISTRY_ROLE_SECURED_PARTY_FOR_ENOTE indicates an organization with a financial interest in the eNote.
+  // This party can foreclose into the Controller role or direct a transfer in case of default.
+  REGISTRY_ROLE_SECURED_PARTY_FOR_ENOTE = 9;
+  // REGISTRY_ROLE_PLEDGEE indicates a lender or creditor that holds a security interest in pledged loans
+  // as collateral securing an obligation of the Pledgor.
+  REGISTRY_ROLE_PLEDGEE = 10;
 }
 
 // RegistryKey represents a unique identifier for registry entries.
@@ -72,4 +83,37 @@ message RolesEntry {
   // addresses is the list of blockchain addresses that can perform this role.
   // These addresses have the permissions associated with the specified role.
   repeated string addresses = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// RoleUpdate specifies the desired set of addresses for a single role.
+message RoleUpdate {
+  // role is the role to update.
+  RegistryRole role = 1;
+
+  // addresses is the desired set of addresses for this role.
+  // An empty list means the role should be cleared entirely.
+  repeated string addresses = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// PendingRoleChange is a role change awaiting the approvals required by the affected roles'
+// authorization policies. Each required party submits a single-signer approval; once the
+// accumulated approvers satisfy every affected role's policy, the change is applied atomically
+// and this record is removed.
+message PendingRoleChange {
+  // id is the deterministic identifier of this pending change
+  // (a hash of key + the sorted set of role updates).
+  string id = 1;
+
+  // key identifies the registry entry the change applies to.
+  RegistryKey key = 2;
+
+  // role_updates is the desired state for each role the change will set when applied. The same
+  // desired-state, multi-role semantics as MsgSetRoles, collected through accumulated approvals.
+  repeated RoleUpdate role_updates = 3 [(gogoproto.nullable) = false];
+
+  // proposer is the address that opened the pending change.
+  string proposer = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // approvals is the accumulated set of addresses that have approved this change.
+  repeated string approvals = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

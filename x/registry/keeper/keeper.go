@@ -19,9 +19,10 @@ import (
 
 // Keeper defines the registry keeper.
 type Keeper struct {
-	cdc      codec.BinaryCodec
-	schema   collections.Schema
-	Registry collections.Map[collections.Pair[string, string], types.RegistryEntry]
+	cdc                codec.BinaryCodec
+	schema             collections.Schema
+	Registry           collections.Map[collections.Pair[string, string], types.RegistryEntry]
+	PendingRoleChanges collections.Map[string, types.PendingRoleChange]
 
 	NFTKeeper      NFTKeeper
 	MetadataKeeper MetadataKeeper
@@ -40,6 +41,14 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, nftKeep
 			"registry",
 			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
 			codec.CollValue[types.RegistryEntry](cdc),
+		),
+
+		PendingRoleChanges: collections.NewMap(
+			sb,
+			collections.NewPrefix(pendingRoleChangePrefix),
+			"pending_role_changes",
+			collections.StringKey,
+			codec.CollValue[types.PendingRoleChange](cdc),
 		),
 
 		NFTKeeper:      nftKeeper,
@@ -284,6 +293,65 @@ func (k Keeper) GetRegistry(ctx context.Context, key *types.RegistryKey) (*types
 // SetRegistry sets a registry entry for a given key.
 func (k Keeper) SetRegistry(ctx context.Context, entry types.RegistryEntry) error {
 	return k.Registry.Set(ctx, entry.Key.CollKey(), entry)
+}
+
+// SetRoles atomically sets the desired state for one or more roles on a registry entry.
+// Each RoleUpdate specifies a role and the complete desired set of addresses; an empty
+// address list clears the role entirely.
+func (k Keeper) SetRoles(ctx context.Context, key *types.RegistryKey, roleUpdates []types.RoleUpdate) error {
+	entry, err := k.Registry.Get(ctx, key.CollKey())
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.NewErrCodeRegistryNotFound(key.String())
+		}
+		return fmt.Errorf("failed to get registry entry: %w", err)
+	}
+
+	// Snapshot the original entry to compute diff events. The loop below mutates entry.Roles
+	// (and individual Addresses slices) in place, so a shallow copy would corrupt the snapshot
+	// and produce incorrect diffs. Deep-copy the Roles slice and each Addresses slice.
+	origCopy := entry
+	origCopy.Roles = make([]types.RolesEntry, len(entry.Roles))
+	for i, re := range entry.Roles {
+		origCopy.Roles[i] = types.RolesEntry{Role: re.Role, Addresses: slices.Clone(re.Addresses)}
+	}
+
+	for _, update := range roleUpdates {
+		roleI := -1
+		for i, re := range entry.Roles {
+			if re.Role == update.Role {
+				roleI = i
+				break
+			}
+		}
+
+		if len(update.Addresses) == 0 {
+			// Clear the role if present.
+			if roleI >= 0 {
+				entry.Roles = append(entry.Roles[:roleI], entry.Roles[roleI+1:]...)
+			}
+		} else {
+			// Set the complete desired address list for the role.
+			if roleI >= 0 {
+				entry.Roles[roleI].Addresses = update.Addresses
+			} else {
+				entry.Roles = append(entry.Roles, types.RolesEntry{Role: update.Role, Addresses: update.Addresses})
+			}
+		}
+	}
+
+	if err = k.Registry.Set(ctx, key.CollKey(), entry); err != nil {
+		return fmt.Errorf("failed to set registry entry: %w", err)
+	}
+
+	grantEvents, revokeEvents := types.GetChangeEvents(&origCopy, &entry)
+	for _, tev := range grantEvents {
+		k.EmitEvent(ctx, tev)
+	}
+	for _, tev := range revokeEvents {
+		k.EmitEvent(ctx, tev)
+	}
+	return nil
 }
 
 // GetRegistries returns the registries paginated

@@ -46,18 +46,31 @@ func (k msgServer) RegisterNFT(ctx context.Context, msg *types.MsgRegisterNFT) (
 // GrantRole grants a role to one or more addresses.
 // This adds the specified addresses to the role for the given registry key.
 func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*types.MsgGrantRoleResponse, error) {
-	// ensure the registry exists
-	if err := k.ValidateRegistryExists(ctx, msg.Key); err != nil {
+	// Ensure the registry exists and fetch the current entry for auth checks.
+	entry, err := k.GetRegistry(ctx, msg.Key)
+	if err != nil {
 		return nil, err
 	}
+	if entry == nil {
+		return nil, types.NewErrCodeRegistryNotFound(msg.Key.String())
+	}
 
-	// Validate that the signer owns the NFT
-	if err := k.ValidateNFTOwner(ctx, &msg.Key.AssetClassId, &msg.Key.NftId, msg.Signer); err != nil {
-		return nil, err
+	roleAuths := types.RoleAuthorizationMap()
+	if roleAuth, ok := roleAuths[msg.Role]; ok {
+		// Policy-based path: the incoming addresses are the "new" assignment. A single signer must
+		// satisfy the policy on its own; multi-party changes go through ProposeRoleChange.
+		if err := k.Keeper.ValidateRoleChangeAuthorization(ctx, roleAuth, entry, msg.Addresses, []string{msg.Signer}); err != nil {
+			return nil, err
+		}
+	} else {
+		// Legacy fallback: the signer must own the NFT.
+		if err := k.ValidateNFTOwner(ctx, &msg.Key.AssetClassId, &msg.Key.NftId, msg.Signer); err != nil {
+			return nil, err
+		}
 	}
 
 	// Grant the role to the addresses.
-	err := k.Keeper.GrantRole(ctx, msg.Key, msg.Role, msg.Addresses)
+	err = k.Keeper.GrantRole(ctx, msg.Key, msg.Role, msg.Addresses)
 	if err != nil {
 		return nil, err
 	}
@@ -68,23 +81,92 @@ func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*typ
 // RevokeRole revokes a role from one or more addresses.
 // This removes the specified addresses from the role for the given registry key.
 func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*types.MsgRevokeRoleResponse, error) {
-	// ensure the registry exists
-	if err := k.ValidateRegistryExists(ctx, msg.Key); err != nil {
+	// Ensure the registry exists and fetch the current entry for auth checks.
+	entry, err := k.GetRegistry(ctx, msg.Key)
+	if err != nil {
 		return nil, err
 	}
+	if entry == nil {
+		return nil, types.NewErrCodeRegistryNotFound(msg.Key.String())
+	}
 
-	// Validate that the signer owns the NFT
-	if err := k.ValidateNFTOwner(ctx, &msg.Key.AssetClassId, &msg.Key.NftId, msg.Signer); err != nil {
-		return nil, err
+	roleAuths := types.RoleAuthorizationMap()
+	if roleAuth, ok := roleAuths[msg.Role]; ok {
+		// Policy-based path. For revoke, no new addresses are being assigned. A single signer must
+		// satisfy the policy on its own; multi-party changes go through ProposeRoleChange.
+		if err := k.Keeper.ValidateRoleChangeAuthorization(ctx, roleAuth, entry, nil, []string{msg.Signer}); err != nil {
+			return nil, err
+		}
+	} else {
+		// Legacy fallback: the signer must own the NFT.
+		if err := k.ValidateNFTOwner(ctx, &msg.Key.AssetClassId, &msg.Key.NftId, msg.Signer); err != nil {
+			return nil, err
+		}
 	}
 
 	// Revoke the role from the addresses.
-	err := k.Keeper.RevokeRole(ctx, msg.Key, msg.Role, msg.Addresses)
+	err = k.Keeper.RevokeRole(ctx, msg.Key, msg.Role, msg.Addresses)
 	if err != nil {
 		return nil, err
 	}
 
 	return &types.MsgRevokeRoleResponse{}, nil
+}
+
+// SetRoles atomically sets the desired state for one or more roles on a registry entry.
+// Each role update specifies a role and the complete desired set of addresses for that role.
+// An empty address list clears the role.
+func (k msgServer) SetRoles(ctx context.Context, msg *types.MsgSetRoles) (*types.MsgSetRolesResponse, error) {
+	// Ensure the registry exists and fetch the current entry for auth checks.
+	entry, err := k.GetRegistry(ctx, msg.Key)
+	if err != nil {
+		return nil, err
+	}
+	if entry == nil {
+		return nil, types.NewErrCodeRegistryNotFound(msg.Key.String())
+	}
+
+	roleAuths := types.RoleAuthorizationMap()
+	for _, update := range msg.RoleUpdates {
+		if roleAuth, ok := roleAuths[update.Role]; ok {
+			// The new addresses for this role are the desired state from the update. A single signer
+			// must satisfy the policy on its own; multi-party changes go through ProposeRoleChange.
+			if err := k.Keeper.ValidateRoleChangeAuthorization(ctx, roleAuth, entry, update.Addresses, []string{msg.Signer}); err != nil {
+				return nil, err
+			}
+		} else {
+			// Legacy fallback: the signer must own the NFT.
+			if err := k.ValidateNFTOwner(ctx, &msg.Key.AssetClassId, &msg.Key.NftId, msg.Signer); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if err := k.Keeper.SetRoles(ctx, msg.Key, msg.RoleUpdates); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSetRolesResponse{}, nil
+}
+
+// ProposeRoleChange opens a pending role change that accumulates single-signer approvals and
+// auto-applies once the role's authorization policy is satisfied.
+func (k msgServer) ProposeRoleChange(ctx context.Context, msg *types.MsgProposeRoleChange) (*types.MsgProposeRoleChangeResponse, error) {
+	id, applied, err := k.Keeper.ProposeRoleChange(ctx, msg.Signer, msg.Key, msg.RoleUpdates)
+	if err != nil {
+		return nil, err
+	}
+	return &types.MsgProposeRoleChangeResponse{ChangeId: id, Applied: applied}, nil
+}
+
+// ApproveRoleChange records a single-signer approval for a pending role change and auto-applies
+// it once the role's authorization policy is satisfied.
+func (k msgServer) ApproveRoleChange(ctx context.Context, msg *types.MsgApproveRoleChange) (*types.MsgApproveRoleChangeResponse, error) {
+	applied, err := k.Keeper.ApproveRoleChange(ctx, msg.Signer, msg.ChangeId)
+	if err != nil {
+		return nil, err
+	}
+	return &types.MsgApproveRoleChangeResponse{Applied: applied}, nil
 }
 
 // UnregisterNFT unregisters an NFT from the registry.

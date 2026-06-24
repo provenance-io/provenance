@@ -1,0 +1,128 @@
+syntax = "proto3";
+package provenance.registry.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/registry/types";
+option java_package        = "io.provenance.registry.v1";
+option java_multiple_files = true;
+
+import "provenance/registry/v1/registry.proto";
+
+// SignatureType defines how signature requirements are evaluated.
+enum SignatureType {
+  // SIGNATURE_TYPE_UNSPECIFIED is the default/unset value.
+  SIGNATURE_TYPE_UNSPECIFIED = 0;
+  // SIGNATURE_TYPE_REQUIRED_ALL requires signatures from ALL listed roles.
+  // Fails immediately if any role does not exist in the registry or NFT state.
+  SIGNATURE_TYPE_REQUIRED_ALL = 1;
+  // SIGNATURE_TYPE_REQUIRED_ALL_IF_SET requires signatures from ALL listed roles,
+  // but only if they exist. Roles that are not set are silently skipped.
+  SIGNATURE_TYPE_REQUIRED_ALL_IF_SET = 2;
+  // SIGNATURE_TYPE_REQUIRED_ANY requires a signature from AT LEAST ONE of the listed roles.
+  // Fails if none of the roles exist.
+  SIGNATURE_TYPE_REQUIRED_ANY = 3;
+  // SIGNATURE_TYPE_REQUIRED_ANY_IF_SET requires a signature from AT LEAST ONE of the listed roles,
+  // but only if any of them exist. Skips the entire requirement if none of the roles are set.
+  SIGNATURE_TYPE_REQUIRED_ANY_IF_SET = 4;
+}
+
+// NftRole identifies roles managed outside the registry module (e.g., by the metadata module).
+// These roles are read-only from the registry module's perspective.
+enum NftRole {
+  // NFT_ROLE_UNSPECIFIED is the default/unset value.
+  NFT_ROLE_UNSPECIFIED = 0;
+  // NFT_ROLE_NFT_OWNER is the owner of the NFT.
+  // For metadata-scope NFTs, this is the scope value owner; otherwise it's the owner from the x/nft module.
+  NFT_ROLE_NFT_OWNER = 1;
+}
+
+// Assignment describes which address(es) to resolve for a role in an authorization check.
+enum Assignment {
+  // ASSIGNMENT_UNSPECIFIED is the default/unset value.
+  ASSIGNMENT_UNSPECIFIED = 0;
+  // ASSIGNMENT_CURRENT resolves exactly one address currently assigned to the role.
+  // Fails if the role has multiple addresses assigned.
+  ASSIGNMENT_CURRENT = 1;
+  // ASSIGNMENT_CURRENT_ALL resolves all addresses currently assigned to the role.
+  // All of them must sign.
+  ASSIGNMENT_CURRENT_ALL = 2;
+  // ASSIGNMENT_CURRENT_ANY resolves any one of the addresses currently assigned to the role.
+  // At least one must sign.
+  ASSIGNMENT_CURRENT_ANY = 3;
+  // ASSIGNMENT_NEW resolves exactly one new address being assigned to the role.
+  // Fails if multiple new addresses are provided.
+  // Invalid for NftRole (read-only from registry perspective).
+  ASSIGNMENT_NEW = 4;
+  // ASSIGNMENT_NEW_ANY resolves any one of the new addresses being assigned to the role.
+  // Invalid for NftRole.
+  ASSIGNMENT_NEW_ANY = 5;
+  // ASSIGNMENT_NEW_ALL resolves all new addresses being assigned to the role.
+  // All of them must sign.
+  // Invalid for NftRole.
+  ASSIGNMENT_NEW_ALL = 6;
+}
+
+// RoleAuthorization configures who must sign to update a specific role.
+// Contains one or more Authorization paths; the update is approved if ANY path is fully satisfied.
+message RoleAuthorization {
+  // role is the registry role whose assignments are being controlled.
+  RegistryRole role = 1;
+
+  // authorizations is a list of alternative approval paths.
+  // The role update is approved if any single authorization is fully satisfied.
+  repeated Authorization authorizations = 2;
+}
+
+// Authorization defines one complete approval path for a role update.
+// All signature requirements in this authorization must be satisfied for this path to succeed.
+message Authorization {
+  // description is a human-readable explanation of this authorization path.
+  string description = 1;
+
+  // signatures is the ordered list of signature requirements that must all be satisfied.
+  repeated SignatureRequirement signatures = 2;
+}
+
+// SignatureRequirement defines a single signature check within an authorization path.
+message SignatureRequirement {
+  // type controls how the roles are evaluated (required_all, required_all_if_set, etc.).
+  SignatureType type = 1;
+
+  // roles lists the role assignments that must be checked.
+  repeated RoleAssignment roles = 2;
+}
+
+// RoleAssignment specifies which role and which assignment type to resolve for a signature check.
+message RoleAssignment {
+  // role_selector identifies the role to resolve, either a single role or a priority list.
+  oneof role_selector {
+    // registry_role is a role managed within the registry module state.
+    // Can be used with any assignment type.
+    RegistryRole registry_role = 1;
+    // nft_role is a role managed by another module (e.g., NFT_ROLE_NFT_OWNER from metadata).
+    // Can only be used with ASSIGNMENT_CURRENT* variants.
+    NftRole nft_role = 2;
+    // role_priority is an ordered list of roles; the first one that exists is used.
+    RolePriority role_priority = 3;
+  }
+
+  // assignment specifies which address(es) to resolve for the role.
+  Assignment assignment = 4;
+}
+
+// RolePriority is an ordered list of role entries used for fallback/hierarchical authority.
+// The keeper uses the first role in the list that exists.
+message RolePriority {
+  // entries is the ordered list of roles to check. The first existing role is used.
+  repeated RolePriorityEntry entries = 1;
+}
+
+// RolePriorityEntry is a single entry in a RolePriority list.
+message RolePriorityEntry {
+  // role identifies the role in this priority slot.
+  oneof role {
+    // registry_role is a role managed within the registry module state.
+    RegistryRole registry_role = 1;
+    // nft_role is a role managed by another module.
+    NftRole nft_role = 2;
+  }
+}

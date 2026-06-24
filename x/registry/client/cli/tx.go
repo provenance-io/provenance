@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -30,6 +31,8 @@ func CmdTx() *cobra.Command {
 		CmdRevokeRole(),
 		CmdUnregisterNFT(),
 		CmdRegistryBulkUpdate(),
+		CmdProposeRoleChange(),
+		CmdApproveRoleChange(),
 	)
 
 	return cmd
@@ -220,4 +223,100 @@ func CmdRegistryBulkUpdate() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
+}
+
+// CmdProposeRoleChange returns the command to propose a multi-party role change
+func CmdProposeRoleChange() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "propose-role-change <asset_class_id> <nft_id> <role=address[,address...]> [role=address[,address...]...]",
+		Short: "Propose a desired-state role change that accumulates approvals until every affected role's policy is satisfied",
+		Long: `Propose a batch of desired-state role updates that accumulates single-signer approvals until
+every affected role's authorization policy is satisfied, then applies atomically.
+
+Each role update is "role=address[,address...]". An empty address list clears the role.
+
+Example:
+  propose-role-change myclass nft1 controller=cosmos1new secured_party_for_enote=`,
+		Args: cobra.MinimumNArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			roleUpdates, err := parseRoleUpdates(args[2:])
+			if err != nil {
+				return err
+			}
+
+			msg := types.MsgProposeRoleChange{
+				Signer: clientCtx.GetFromAddress().String(),
+				Key: &types.RegistryKey{
+					AssetClassId: args[0],
+					NftId:        args[1],
+				},
+				RoleUpdates: roleUpdates,
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// CmdApproveRoleChange returns the command to approve a pending role change
+func CmdApproveRoleChange() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "approve-role-change <change_id>",
+		Short: "Approve a pending role change by its id",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.MsgApproveRoleChange{
+				Signer:   clientCtx.GetFromAddress().String(),
+				ChangeId: args[0],
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// parseRoleUpdates converts "role=address[,address...]" arguments into RoleUpdate values.
+// An empty address list (e.g. "role=") clears the role.
+func parseRoleUpdates(args []string) ([]types.RoleUpdate, error) {
+	updates := make([]types.RoleUpdate, 0, len(args))
+	for _, arg := range args {
+		name, addrCSV, ok := strings.Cut(arg, "=")
+		if !ok {
+			return nil, fmt.Errorf("invalid role update %q: expected format \"role=address[,address...]\"", arg)
+		}
+
+		role, err := types.ParseRegistryRole(name)
+		if err != nil {
+			return nil, err
+		}
+
+		var addresses []string
+		if trimmed := strings.TrimSpace(addrCSV); trimmed != "" {
+			for _, addr := range strings.Split(trimmed, ",") {
+				addr = strings.TrimSpace(addr)
+				if addr != "" {
+					addresses = append(addresses, addr)
+				}
+			}
+		}
+
+		updates = append(updates, types.RoleUpdate{Role: role, Addresses: addresses})
+	}
+	return updates, nil
 }
