@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	storetypes "cosmossdk.io/store/types"
+	corestore "cosmossdk.io/core/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -10,9 +10,10 @@ import (
 // This file is available only to unit tests and exposes private things
 // so that they can be used in unit tests.
 
-// GetStoreKey is a TEST ONLY getter for the keeper's storekey.
-func (k *Keeper) GetStoreKey() storetypes.StoreKey {
-	return k.storeKey
+// GetStoreService is a TEST ONLY getter for the keeper's store service.
+// Used by tests that need to write raw bytes directly into the store (e.g. to simulate corrupt state).
+func (k *Keeper) GetStoreService() corestore.KVStoreService {
+	return k.storeService
 }
 
 // SetAuthKeeper is a TEST ONLY setter for the keeper's authKeeper.
