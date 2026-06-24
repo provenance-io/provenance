@@ -1,12 +1,17 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/provenance-io/provenance/x/quarantine"
@@ -66,34 +71,16 @@ func (k Keeper) QuarantinedFunds(goCtx context.Context, req *quarantine.QueryQua
 		// Not paginating here because it's assumed that there are few results.
 		// Also, there's no way to use query.FilteredPaginate to iterate over just these specific entries.
 		// So it'd be doing a lot of extra unneeded work.
-		qRecords := k.GetQuarantineRecords(ctx, toAddr, fromAddr)
-		for _, qr := range qRecords {
-			qf := qr.AsQuarantinedFunds(toAddr)
-			resp.QuarantinedFunds = append(resp.QuarantinedFunds, qf)
+		for _, qr := range k.GetQuarantineRecords(ctx, toAddr, fromAddr) {
+			resp.QuarantinedFunds = append(resp.QuarantinedFunds, qr.AsQuarantinedFunds(toAddr))
 		}
 	} else {
-		store, pre := k.getQuarantineRecordPrefixStore(ctx, toAddr)
-		resp.Pagination, err = query.FilteredPaginate(
-			store, req.Pagination,
-			func(key, value []byte, accumulate bool) (bool, error) {
-				var qr *quarantine.QuarantineRecord
-
-				qr, err = k.bzToQuarantineRecord(value)
-				if err != nil {
-					return false, err
-				}
-				if qr.Declined {
-					return false, nil
-				}
-				if accumulate {
-					kToAddr, _ := quarantine.ParseRecordKey(quarantine.MakeKey(pre, key))
-					qf := qr.AsQuarantinedFunds(kToAddr)
-					resp.QuarantinedFunds = append(resp.QuarantinedFunds, qf)
-				}
-				return true, nil
+		resp.Pagination, err = k.filteredRecordPaginate(
+			ctx, toAddr, req.Pagination,
+			func(kToAddr sdk.AccAddress, record *quarantine.QuarantineRecord) {
+				resp.QuarantinedFunds = append(resp.QuarantinedFunds, record.AsQuarantinedFunds(kToAddr))
 			},
 		)
-
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
@@ -128,24 +115,144 @@ func (k Keeper) AutoResponses(goCtx context.Context, req *quarantine.QueryAutoRe
 
 	if len(fromAddr) > 0 {
 		qar := k.GetAutoResponse(ctx, toAddr, fromAddr)
-		r := quarantine.NewAutoResponseEntry(toAddr, fromAddr, qar)
-		resp.AutoResponses = append(resp.AutoResponses, r)
+		resp.AutoResponses = append(resp.AutoResponses, quarantine.NewAutoResponseEntry(toAddr, fromAddr, qar))
 	} else {
-		store, pre := k.getAutoResponsesPrefixStore(ctx, toAddr)
-		resp.Pagination, err = query.Paginate(
-			store, req.Pagination,
-			func(key, value []byte) error {
-				kToAddr, kFromAddr := quarantine.ParseAutoResponseKey(quarantine.MakeKey(pre, key))
-				qar := quarantine.ToAutoResponse(value)
-				r := quarantine.NewAutoResponseEntry(kToAddr, kFromAddr, qar)
-				resp.AutoResponses = append(resp.AutoResponses, r)
-				return nil
+		// We use query.CollectionPaginate so that key-based (NextKey) cursor
+		// pagination works correctly in addition to offset-based pagination.
+		ptrs, pageRes, pErr := query.CollectionPaginate(
+			ctx,
+			k.autoResponses,
+			req.Pagination,
+			func(
+				key collections.Pair[sdk.AccAddress, sdk.AccAddress],
+				response quarantine.AutoResponse,
+			) (*quarantine.AutoResponseEntry, error) {
+				return quarantine.NewAutoResponseEntry(key.K1(), key.K2(), response), nil
 			},
+			query.WithCollectionPaginationPairPrefix[sdk.AccAddress, sdk.AccAddress](toAddr),
 		)
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+		if pErr != nil {
+			return nil, status.Error(codes.Internal, pErr.Error())
+		}
+		// query.CollectionPaginate returns nil *PageResponse when CountTotal is
+		// false (the default).  The old query.Paginate always returned a non-nil
+		// &PageResponse{},
+		if pageRes == nil {
+			pageRes = &query.PageResponse{}
+		}
+		resp.Pagination = pageRes
+		for _, p := range ptrs {
+			if p != nil {
+				resp.AutoResponses = append(resp.AutoResponses, p)
+			}
 		}
 	}
 
 	return resp, nil
+}
+
+// filteredRecordPaginate iterates the records collection using offset-based
+// pagination, skipping declined records.
+func (k Keeper) filteredRecordPaginate(
+	ctx sdk.Context,
+	toAddr sdk.AccAddress,
+	pageReq *query.PageRequest,
+	onResult func(toAddr sdk.AccAddress, record *quarantine.QuarantineRecord),
+) (*query.PageResponse, error) {
+	if pageReq == nil {
+		pageReq = &query.PageRequest{CountTotal: true}
+	}
+	limit := pageReq.Limit
+	if limit == 0 {
+		limit = query.DefaultLimit
+	}
+
+	offset := pageReq.Offset
+	countTotal := pageReq.CountTotal
+	reverse := pageReq.Reverse
+
+	var ranger collections.Ranger[collections.Pair[sdk.AccAddress, sdk.AccAddress]]
+	if reverse {
+		rng := &collections.Range[collections.Pair[sdk.AccAddress, sdk.AccAddress]]{}
+		rng.Descending()
+		ranger = rng
+	} else if len(toAddr) > 0 {
+		ranger = collections.NewPrefixedPairRange[sdk.AccAddress, sdk.AccAddress](toAddr)
+	}
+
+	iter, err := k.records.Iterate(ctx, ranger)
+	if err != nil {
+		return nil, fmt.Errorf("quarantine: failed to open records iterator: %w", err)
+	}
+
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
+
+	hasCursor := len(pageReq.Key) > 0 && !reverse
+	var (
+		numSeen         uint64
+		numAccum        uint64
+		nextKey         []byte
+		nextKeyCaptured bool
+		cursorCleared   bool // flips to true the moment we reach the cursor.
+	)
+
+	for ; iter.Valid(); iter.Next() {
+		kv, kvErr := iter.KeyValue()
+		if kvErr != nil {
+			return nil, fmt.Errorf("quarantine: failed to read record: %w", kvErr)
+		}
+		k1 := kv.Key.K1()
+		if reverse && len(toAddr) > 0 {
+			cmp := bytes.Compare(k1, toAddr)
+			if cmp > 0 {
+				continue
+			}
+			if cmp < 0 {
+				break
+			}
+		}
+		if hasCursor && !cursorCleared {
+			var encoded []byte
+			if len(toAddr) > 0 {
+				encoded = address.MustLengthPrefix(kv.Key.K2())
+			} else {
+				encoded = quarantine.CreateRecordKey(k1, kv.Key.K2())[1:]
+			}
+			if bytes.Compare(encoded, pageReq.Key) < 0 {
+				continue
+			}
+			cursorCleared = true
+		}
+		if kv.Value.Declined {
+			continue
+		}
+		numSeen++
+		if numSeen <= offset {
+			continue
+		}
+		if numAccum < limit {
+			record := kv.Value
+			onResult(k1, &record)
+			numAccum++
+		} else {
+			if !nextKeyCaptured {
+				if len(toAddr) > 0 {
+					nextKey = address.MustLengthPrefix(kv.Key.K2())
+				} else {
+					nextKey = quarantine.CreateRecordKey(k1, kv.Key.K2())[1:]
+				}
+				nextKeyCaptured = true
+			}
+			if !countTotal {
+				break
+			}
+		}
+	}
+
+	pageRes := &query.PageResponse{NextKey: nextKey}
+	if countTotal {
+		pageRes.Total = numSeen
+	}
+
+	return pageRes, nil
 }
