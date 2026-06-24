@@ -33,6 +33,8 @@ func CmdTx() *cobra.Command {
 		CmdRegistryBulkUpdate(),
 		CmdProposeRoleChange(),
 		CmdApproveRoleChange(),
+		CmdCreateRegistryClass(),
+		CmdUpdateRegistryClassRoleAuthorization(),
 	)
 
 	return cmd
@@ -281,6 +283,104 @@ func CmdApproveRoleChange() *cobra.Command {
 			msg := types.MsgApproveRoleChange{
 				Signer:   clientCtx.GetFromAddress().String(),
 				ChangeId: args[0],
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// CmdCreateRegistryClass returns the command to create a registry class.
+// The class definition (including role_authorizations) is read from a JSON file in proto-JSON
+// format so that oneof fields in the authorization policy are decoded correctly.
+func CmdCreateRegistryClass() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-registry-class <class_json_file>",
+		Short: "Create a registry class from a JSON file",
+		Long: `Create a registry class defining asset class-level authorization rules.
+
+The file is a proto-JSON RegistryClass, e.g.:
+{
+  "registryClassId": "dart-loan-v1",
+  "asset_class_id": "loan.asset",
+  "maintainer": "pb1...",
+  "role_authorizations": [ { "role": "REGISTRY_ROLE_CONTROLLER", "authorizations": [ ... ] } ]
+}
+
+If "maintainer" is omitted it defaults to the --from signer. The signer must equal the maintainer.`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			jsonData, err := os.ReadFile(args[0])
+			if err != nil {
+				return fmt.Errorf("failed to read file: %w", err)
+			}
+
+			var class types.RegistryClass
+			if err := clientCtx.Codec.UnmarshalJSON(jsonData, &class); err != nil {
+				return fmt.Errorf("failed to unmarshal registry class JSON: %w", err)
+			}
+
+			signer := clientCtx.GetFromAddress().String()
+			maintainer := class.Maintainer
+			if maintainer == "" {
+				maintainer = signer
+			}
+
+			msg := types.MsgCreateRegistryClass{
+				Signer:             signer,
+				RegistryClassId:    class.RegistryClassId,
+				AssetClassId:       class.AssetClassId,
+				Maintainer:         maintainer,
+				RoleAuthorizations: class.RoleAuthorizations,
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// CmdUpdateRegistryClassRoleAuthorization returns the command to replace a registry class's
+// authorization rules. The new rules are read from a proto-JSON RegistryClass file (only its
+// role_authorizations are used).
+func CmdUpdateRegistryClassRoleAuthorization() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update-registry-class <registry_class_id> <class_json_file>",
+		Short: "Replace a registry class's authorization rules from a JSON file",
+		Long: `Replace the authorization rules for an existing registry class. Only the current
+maintainer may update the rules. The file is a proto-JSON RegistryClass; only its
+role_authorizations field is used.`,
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			jsonData, err := os.ReadFile(args[1])
+			if err != nil {
+				return fmt.Errorf("failed to read file: %w", err)
+			}
+
+			var class types.RegistryClass
+			if err := clientCtx.Codec.UnmarshalJSON(jsonData, &class); err != nil {
+				return fmt.Errorf("failed to unmarshal registry class JSON: %w", err)
+			}
+
+			msg := types.MsgUpdateRegistryClassRoleAuthorization{
+				Signer:             clientCtx.GetFromAddress().String(),
+				RegistryClassId:    args[0],
+				RoleAuthorizations: class.RoleAuthorizations,
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)

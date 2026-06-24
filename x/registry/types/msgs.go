@@ -17,6 +17,8 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgSetRoles)(nil),
 	(*MsgProposeRoleChange)(nil),
 	(*MsgApproveRoleChange)(nil),
+	(*MsgCreateRegistryClass)(nil),
+	(*MsgUpdateRegistryClassRoleAuthorization)(nil),
 }
 
 // ValidateBasic validates the MsgRegisterNFT message
@@ -35,6 +37,13 @@ func (m MsgRegisterNFT) ValidateBasic() error {
 	for _, role := range m.Roles {
 		if err := role.Validate(); err != nil {
 			errs = append(errs, NewErrCodeInvalidField("role", "%s", err))
+		}
+	}
+
+	// registry_class_id is optional; validate format only when set.
+	if m.RegistryClassId != "" {
+		if err := ValidateRegistryClassID(m.RegistryClassId); err != nil {
+			errs = append(errs, NewErrCodeInvalidField("registry_class_id", "%s", err))
 		}
 	}
 
@@ -167,6 +176,51 @@ func (m MsgApproveRoleChange) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
+// ValidateBasic validates the MsgCreateRegistryClass message
+func (m MsgCreateRegistryClass) ValidateBasic() error {
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("signer", "%s", err))
+	}
+
+	if _, err := sdk.AccAddressFromBech32(m.Maintainer); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("maintainer", "%s", err))
+	}
+
+	// The signer must be the maintainer being set.
+	if m.Signer != m.Maintainer {
+		errs = append(errs, NewErrCodeInvalidField("signer", "signer %q must match maintainer %q", m.Signer, m.Maintainer))
+	}
+
+	if err := ValidateRegistryClassID(m.RegistryClassId); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("registry_class_id", "%s", err))
+	}
+
+	if err := ValidateClassID(m.AssetClassId); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("asset_class_id", "%s", err))
+	}
+
+	errs = append(errs, validateRoleAuthorizations(m.RoleAuthorizations)...)
+
+	return errors.Join(errs...)
+}
+
+// ValidateBasic validates the MsgUpdateRegistryClassRoleAuthorization message
+func (m MsgUpdateRegistryClassRoleAuthorization) ValidateBasic() error {
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("signer", "%s", err))
+	}
+
+	if err := ValidateRegistryClassID(m.RegistryClassId); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("registry_class_id", "%s", err))
+	}
+
+	errs = append(errs, validateRoleAuthorizations(m.RoleAuthorizations)...)
+
+	return errors.Join(errs...)
+}
+
 // ValidateBasic validates the MsgUnregisterNFT message
 func (m MsgUnregisterNFT) ValidateBasic() error {
 	var errs []error
@@ -265,6 +319,20 @@ func (m QueryPendingRoleChangesRequest) Validate() error {
 	if m.Key != nil {
 		return m.Key.Validate()
 	}
+	return nil
+}
+
+// Validate validates the QueryRegistryClassRequest
+func (m QueryRegistryClassRequest) Validate() error {
+	if len(m.RegistryClassId) == 0 {
+		return NewErrCodeInvalidField("registry_class_id", "registry_class_id cannot be empty")
+	}
+	return nil
+}
+
+// Validate validates the QueryRegistryClassesRequest
+func (m QueryRegistryClassesRequest) Validate() error {
+	// There's nothing to validate; pagination is optional.
 	return nil
 }
 

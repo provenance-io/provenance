@@ -34,8 +34,19 @@ func (k msgServer) RegisterNFT(ctx context.Context, msg *types.MsgRegisterNFT) (
 		return nil, err
 	}
 
+	// If a registry class is referenced, it must exist.
+	if msg.RegistryClassId != "" {
+		has, err := k.HasRegistryClass(ctx, msg.RegistryClassId)
+		if err != nil {
+			return nil, err
+		}
+		if !has {
+			return nil, types.NewErrCodeRegistryClassNotFound(msg.RegistryClassId)
+		}
+	}
+
 	// Store the registry in state.
-	err := k.CreateRegistry(ctx, msg.Key, msg.Roles)
+	err := k.CreateRegistry(ctx, msg.Key, msg.Roles, msg.RegistryClassId)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +66,7 @@ func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*typ
 		return nil, types.NewErrCodeRegistryNotFound(msg.Key.String())
 	}
 
-	roleAuths := types.RoleAuthorizationMap()
+	roleAuths := k.roleAuthorizationsForEntry(ctx, entry)
 	if roleAuth, ok := roleAuths[msg.Role]; ok {
 		// Policy-based path: the incoming addresses are the "new" assignment. A single signer must
 		// satisfy the policy on its own; multi-party changes go through ProposeRoleChange.
@@ -90,7 +101,7 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*t
 		return nil, types.NewErrCodeRegistryNotFound(msg.Key.String())
 	}
 
-	roleAuths := types.RoleAuthorizationMap()
+	roleAuths := k.roleAuthorizationsForEntry(ctx, entry)
 	if roleAuth, ok := roleAuths[msg.Role]; ok {
 		// Policy-based path. For revoke, no new addresses are being assigned. A single signer must
 		// satisfy the policy on its own; multi-party changes go through ProposeRoleChange.
@@ -126,7 +137,7 @@ func (k msgServer) SetRoles(ctx context.Context, msg *types.MsgSetRoles) (*types
 		return nil, types.NewErrCodeRegistryNotFound(msg.Key.String())
 	}
 
-	roleAuths := types.RoleAuthorizationMap()
+	roleAuths := k.roleAuthorizationsForEntry(ctx, entry)
 	for _, update := range msg.RoleUpdates {
 		if roleAuth, ok := roleAuths[update.Role]; ok {
 			// The new addresses for this role are the desired state from the update. A single signer
@@ -169,6 +180,29 @@ func (k msgServer) ApproveRoleChange(ctx context.Context, msg *types.MsgApproveR
 	return &types.MsgApproveRoleChangeResponse{Applied: applied}, nil
 }
 
+// CreateRegistryClass creates a new registry class defining asset class-level authorization rules.
+func (k msgServer) CreateRegistryClass(ctx context.Context, msg *types.MsgCreateRegistryClass) (*types.MsgCreateRegistryClassResponse, error) {
+	class := types.RegistryClass{
+		RegistryClassId:    msg.RegistryClassId,
+		AssetClassId:       msg.AssetClassId,
+		Maintainer:         msg.Maintainer,
+		RoleAuthorizations: msg.RoleAuthorizations,
+	}
+	if err := k.Keeper.CreateRegistryClass(ctx, class); err != nil {
+		return nil, err
+	}
+	return &types.MsgCreateRegistryClassResponse{}, nil
+}
+
+// UpdateRegistryClassRoleAuthorization replaces the authorization rules for an existing registry
+// class. Only the current maintainer may update the rules.
+func (k msgServer) UpdateRegistryClassRoleAuthorization(ctx context.Context, msg *types.MsgUpdateRegistryClassRoleAuthorization) (*types.MsgUpdateRegistryClassRoleAuthorizationResponse, error) {
+	if err := k.Keeper.UpdateRegistryClassRoleAuthorization(ctx, msg.Signer, msg.RegistryClassId, msg.RoleAuthorizations); err != nil {
+		return nil, err
+	}
+	return &types.MsgUpdateRegistryClassRoleAuthorizationResponse{}, nil
+}
+
 // UnregisterNFT unregisters an NFT from the registry.
 // This removes the entire registry entry and associated data for the specified key.
 func (k msgServer) UnregisterNFT(ctx context.Context, msg *types.MsgUnregisterNFT) (*types.MsgUnregisterNFTResponse, error) {
@@ -203,6 +237,17 @@ func (k msgServer) RegistryBulkUpdate(ctx context.Context, msg *types.MsgRegistr
 		if msg.Signer != authority1 && msg.Signer != authority2 {
 			if err := k.ValidateNFTOwner(ctx, &entry.Key.AssetClassId, &entry.Key.NftId, msg.Signer); err != nil {
 				return nil, fmt.Errorf("[%d]: %w", i, err)
+			}
+		}
+
+		// If a registry class is referenced, it must exist.
+		if entry.RegistryClassId != "" {
+			has, err := k.HasRegistryClass(ctx, entry.RegistryClassId)
+			if err != nil {
+				return nil, fmt.Errorf("[%d]: %w", i, err)
+			}
+			if !has {
+				return nil, fmt.Errorf("[%d]: %w", i, types.NewErrCodeRegistryClassNotFound(entry.RegistryClassId))
 			}
 		}
 

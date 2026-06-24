@@ -116,7 +116,7 @@ func (s *KeeperTestSuite) TestCreateRegistry() {
 		},
 	}
 
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles, "")
 	s.Require().NoError(err)
 
 	// Verify registry was created
@@ -128,7 +128,7 @@ func (s *KeeperTestSuite) TestCreateRegistry() {
 
 	// Test duplicate creation not allowed.
 	expDupErr := "registry already exists for key: \"" + key.String() + "\": registry already exists"
-	err = s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles)
+	err = s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles, "")
 	s.Require().EqualError(err, expDupErr)
 }
 
@@ -144,7 +144,7 @@ func (s *KeeperTestSuite) TestGrantRole() {
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, baseKey, baseRoles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, baseKey, baseRoles, "")
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -239,7 +239,7 @@ func (s *KeeperTestSuite) TestRevokeRole() {
 			Addresses: []string{s.user1Addr.String(), s.user2Addr.String()},
 		},
 	}
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, baseKey, baseRoles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, baseKey, baseRoles, "")
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -322,7 +322,7 @@ func (s *KeeperTestSuite) TestHasRole() {
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, baseKey, baseRoles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, baseKey, baseRoles, "")
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -387,7 +387,7 @@ func (s *KeeperTestSuite) TestGetRegistry() {
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, baseKey, baseRoles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, baseKey, baseRoles, "")
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -456,7 +456,7 @@ func (s *KeeperTestSuite) TestGetRegistries() {
 		{AssetClassId: "eclass", NftId: "nft1"},
 	}
 	for _, k := range keys {
-		s.Require().NoError(s.app.RegistryKeeper.CreateRegistry(s.ctx, k, roles))
+		s.Require().NoError(s.app.RegistryKeeper.CreateRegistry(s.ctx, k, roles, ""))
 	}
 
 	// Helper to get key strings in order

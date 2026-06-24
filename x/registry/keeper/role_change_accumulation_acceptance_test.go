@@ -87,7 +87,7 @@ func (s *RoleChangeAccumulationAcceptanceTestSuite) mintNFT(id string) *types.Re
 }
 
 func (s *RoleChangeAccumulationAcceptanceTestSuite) setupRegistry(key *types.RegistryKey, roles []types.RolesEntry) {
-	s.Require().NoError(s.registryKeeper.CreateRegistry(s.ctx, key, roles))
+	s.Require().NoError(s.registryKeeper.CreateRegistry(s.ctx, key, roles, ""))
 }
 
 // proposeNewController opens a pending GRANT of the CONTROLLER role to newController, signed by

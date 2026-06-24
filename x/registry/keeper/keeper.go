@@ -23,6 +23,7 @@ type Keeper struct {
 	schema             collections.Schema
 	Registry           collections.Map[collections.Pair[string, string], types.RegistryEntry]
 	PendingRoleChanges collections.Map[string, types.PendingRoleChange]
+	RegistryClasses    collections.Map[string, types.RegistryClass]
 
 	NFTKeeper      NFTKeeper
 	MetadataKeeper MetadataKeeper
@@ -49,6 +50,14 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, nftKeep
 			"pending_role_changes",
 			collections.StringKey,
 			codec.CollValue[types.PendingRoleChange](cdc),
+		),
+
+		RegistryClasses: collections.NewMap(
+			sb,
+			collections.NewPrefix(registryClassPrefix),
+			"registry_classes",
+			collections.StringKey,
+			codec.CollValue[types.RegistryClass](cdc),
 		),
 
 		NFTKeeper:      nftKeeper,
@@ -94,12 +103,12 @@ func (k Keeper) CreateDefaultRegistry(ctx context.Context, ownerAddrStr string, 
 		Addresses: []string{ownerAddrStr},
 	}
 
-	return k.CreateRegistry(ctx, key, roles)
+	return k.CreateRegistry(ctx, key, roles, "")
 }
 
 // CreateRegistry stores a new registry entry in state.
 // Returns an error if the registry already exists, or if there's a problem.
-func (k Keeper) CreateRegistry(ctx context.Context, key *types.RegistryKey, roles []types.RolesEntry) error {
+func (k Keeper) CreateRegistry(ctx context.Context, key *types.RegistryKey, roles []types.RolesEntry, registryClassID string) error {
 	// Already exists check
 	has, err := k.Registry.Has(ctx, key.CollKey())
 	if err != nil {
@@ -110,8 +119,9 @@ func (k Keeper) CreateRegistry(ctx context.Context, key *types.RegistryKey, role
 	}
 
 	err = k.Registry.Set(ctx, key.CollKey(), types.RegistryEntry{
-		Key:   key,
-		Roles: roles,
+		Key:             key,
+		Roles:           roles,
+		RegistryClassId: registryClassID,
 	})
 	if err != nil {
 		return fmt.Errorf("could not set registry entry: %w", err)

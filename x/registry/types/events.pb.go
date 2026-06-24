@@ -502,6 +502,120 @@ func (m *EventRoleChangeApplied) GetChangeId() string {
 	return ""
 }
 
+// EventRegistryClassCreated is emitted when a registry class is created.
+type EventRegistryClassCreated struct {
+	RegistryClassId string `protobuf:"bytes,1,opt,name=registry_class_id,json=registryClassId,proto3" json:"registry_class_id,omitempty"`
+	AssetClassId    string `protobuf:"bytes,2,opt,name=asset_class_id,json=assetClassId,proto3" json:"asset_class_id,omitempty"`
+	Maintainer      string `protobuf:"bytes,3,opt,name=maintainer,proto3" json:"maintainer,omitempty"`
+}
+
+func (m *EventRegistryClassCreated) Reset()         { *m = EventRegistryClassCreated{} }
+func (m *EventRegistryClassCreated) String() string { return proto.CompactTextString(m) }
+func (*EventRegistryClassCreated) ProtoMessage()    {}
+func (*EventRegistryClassCreated) Descriptor() ([]byte, []int) {
+	return fileDescriptor_61a0995529587ff0, []int{8}
+}
+func (m *EventRegistryClassCreated) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventRegistryClassCreated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventRegistryClassCreated.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventRegistryClassCreated) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventRegistryClassCreated.Merge(m, src)
+}
+func (m *EventRegistryClassCreated) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventRegistryClassCreated) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventRegistryClassCreated.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventRegistryClassCreated proto.InternalMessageInfo
+
+func (m *EventRegistryClassCreated) GetRegistryClassId() string {
+	if m != nil {
+		return m.RegistryClassId
+	}
+	return ""
+}
+
+func (m *EventRegistryClassCreated) GetAssetClassId() string {
+	if m != nil {
+		return m.AssetClassId
+	}
+	return ""
+}
+
+func (m *EventRegistryClassCreated) GetMaintainer() string {
+	if m != nil {
+		return m.Maintainer
+	}
+	return ""
+}
+
+// EventRegistryClassUpdated is emitted when a registry class's authorization rules are updated.
+type EventRegistryClassUpdated struct {
+	RegistryClassId string `protobuf:"bytes,1,opt,name=registry_class_id,json=registryClassId,proto3" json:"registry_class_id,omitempty"`
+	Maintainer      string `protobuf:"bytes,2,opt,name=maintainer,proto3" json:"maintainer,omitempty"`
+}
+
+func (m *EventRegistryClassUpdated) Reset()         { *m = EventRegistryClassUpdated{} }
+func (m *EventRegistryClassUpdated) String() string { return proto.CompactTextString(m) }
+func (*EventRegistryClassUpdated) ProtoMessage()    {}
+func (*EventRegistryClassUpdated) Descriptor() ([]byte, []int) {
+	return fileDescriptor_61a0995529587ff0, []int{9}
+}
+func (m *EventRegistryClassUpdated) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventRegistryClassUpdated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventRegistryClassUpdated.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventRegistryClassUpdated) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventRegistryClassUpdated.Merge(m, src)
+}
+func (m *EventRegistryClassUpdated) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventRegistryClassUpdated) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventRegistryClassUpdated.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventRegistryClassUpdated proto.InternalMessageInfo
+
+func (m *EventRegistryClassUpdated) GetRegistryClassId() string {
+	if m != nil {
+		return m.RegistryClassId
+	}
+	return ""
+}
+
+func (m *EventRegistryClassUpdated) GetMaintainer() string {
+	if m != nil {
+		return m.Maintainer
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*EventNFTRegistered)(nil), "provenance.registry.v1.EventNFTRegistered")
 	proto.RegisterType((*EventRoleGranted)(nil), "provenance.registry.v1.EventRoleGranted")
@@ -511,6 +625,8 @@ func init() {
 	proto.RegisterType((*EventRoleChangeProposed)(nil), "provenance.registry.v1.EventRoleChangeProposed")
 	proto.RegisterType((*EventRoleChangeApproved)(nil), "provenance.registry.v1.EventRoleChangeApproved")
 	proto.RegisterType((*EventRoleChangeApplied)(nil), "provenance.registry.v1.EventRoleChangeApplied")
+	proto.RegisterType((*EventRegistryClassCreated)(nil), "provenance.registry.v1.EventRegistryClassCreated")
+	proto.RegisterType((*EventRegistryClassUpdated)(nil), "provenance.registry.v1.EventRegistryClassUpdated")
 }
 
 func init() {
@@ -518,31 +634,35 @@ func init() {
 }
 
 var fileDescriptor_61a0995529587ff0 = []byte{
-	// 382 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x53, 0xcd, 0x4e, 0xea, 0x40,
-	0x18, 0x65, 0x2e, 0x5c, 0x42, 0x27, 0x37, 0x37, 0x37, 0x93, 0x2b, 0xd6, 0x9f, 0x34, 0xa4, 0xba,
-	0x60, 0x63, 0x1b, 0xa2, 0x2f, 0x20, 0x44, 0x0d, 0x1b, 0x83, 0x55, 0x62, 0xe2, 0x86, 0x0c, 0x9d,
-	0x01, 0x1a, 0xea, 0x4c, 0x33, 0x33, 0x34, 0xb2, 0xf4, 0x09, 0xf4, 0xb1, 0x5c, 0xb2, 0x74, 0x69,
-	0xe0, 0x45, 0x4c, 0xa7, 0x40, 0x55, 0xdc, 0xa1, 0xee, 0xfa, 0x9d, 0x73, 0x72, 0x7a, 0xbe, 0xd3,
-	0x7e, 0x70, 0x2f, 0x12, 0x3c, 0xa6, 0x0c, 0x33, 0x9f, 0xba, 0x82, 0xf6, 0x03, 0xa9, 0xc4, 0xd8,
-	0x8d, 0x6b, 0x2e, 0x8d, 0x29, 0x53, 0xd2, 0x89, 0x04, 0x57, 0x1c, 0x95, 0x33, 0x91, 0xb3, 0x10,
-	0x39, 0x71, 0xcd, 0xbe, 0x80, 0xe8, 0x24, 0xd1, 0x9d, 0x9f, 0x5e, 0x79, 0x1a, 0xa6, 0x82, 0x12,
-	0xb4, 0x01, 0x8b, 0xac, 0xa7, 0x3a, 0x01, 0x31, 0x41, 0x05, 0x54, 0x0d, 0xef, 0x37, 0xeb, 0xa9,
-	0x26, 0x41, 0xfb, 0xf0, 0x2f, 0x96, 0x92, 0xaa, 0x8e, 0x1f, 0x62, 0x29, 0x13, 0xfa, 0x97, 0xa6,
-	0xff, 0x68, 0xb4, 0x91, 0x80, 0x4d, 0x62, 0xdf, 0x03, 0xf8, 0x4f, 0x7b, 0x7a, 0x3c, 0xa4, 0x67,
-	0x02, 0x33, 0xb5, 0xa6, 0x23, 0x42, 0xb0, 0x20, 0x78, 0x48, 0xcd, 0xbc, 0xe6, 0xf4, 0x33, 0xda,
-	0x85, 0x06, 0x26, 0x44, 0x50, 0x29, 0xa9, 0x34, 0x0b, 0x95, 0x7c, 0xd5, 0xf0, 0x32, 0xe0, 0x7d,
-	0x06, 0x8f, 0xc6, 0x7c, 0xf8, 0xf3, 0x19, 0x2e, 0xe1, 0xff, 0x45, 0xb5, 0x6d, 0x26, 0xbe, 0xa8,
-	0xdc, 0x6b, 0x68, 0xa6, 0x7b, 0xcd, 0xbf, 0x61, 0x7d, 0x14, 0x0e, 0xdb, 0x11, 0xc1, 0xeb, 0x76,
-	0x6c, 0x3f, 0x00, 0xb8, 0xb9, 0x6c, 0xac, 0x31, 0xc0, 0xac, 0x4f, 0x5b, 0x82, 0x47, 0x5c, 0xae,
-	0x5b, 0xdc, 0x0e, 0x34, 0x7c, 0x6d, 0x97, 0x08, 0xd2, 0xf6, 0x4a, 0x29, 0xd0, 0x24, 0x68, 0x1b,
-	0x96, 0xa2, 0xf4, 0x2d, 0xc2, 0x2c, 0xa4, 0xdc, 0x62, 0xb6, 0xbd, 0x95, 0x40, 0xc7, 0x91, 0xfe,
-	0x8b, 0x3f, 0x78, 0x82, 0x55, 0x4f, 0x9c, 0x0a, 0xc5, 0x3c, 0xd0, 0x72, 0xb6, 0x05, 0x2c, 0xaf,
-	0x7a, 0x86, 0xc1, 0x77, 0xee, 0x58, 0x1f, 0x3e, 0x4d, 0x2d, 0x30, 0x99, 0x5a, 0xe0, 0x65, 0x6a,
-	0x81, 0xc7, 0x99, 0x95, 0x9b, 0xcc, 0xac, 0xdc, 0xf3, 0xcc, 0xca, 0xc1, 0xad, 0x80, 0x3b, 0x9f,
-	0xdf, 0x65, 0x0b, 0xdc, 0x1c, 0xf5, 0x03, 0x35, 0x18, 0x75, 0x1d, 0x9f, 0xdf, 0xba, 0x99, 0xe8,
-	0x20, 0xe0, 0x6f, 0x26, 0xf7, 0x2e, 0xbb, 0x78, 0x35, 0x8e, 0xa8, 0xec, 0x16, 0xf5, 0xb9, 0x1f,
-	0xbe, 0x06, 0x00, 0x00, 0xff, 0xff, 0x0f, 0x6a, 0x22, 0x48, 0x15, 0x04, 0x00, 0x00,
+	// 444 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x54, 0x4d, 0x6f, 0xd4, 0x30,
+	0x10, 0x5d, 0xb7, 0x4b, 0xd5, 0x1d, 0x21, 0x3e, 0x2c, 0x28, 0x29, 0xa0, 0xa8, 0x0a, 0x1c, 0x2a,
+	0x24, 0x12, 0x55, 0xf0, 0x07, 0xe8, 0x0a, 0xd0, 0x5e, 0x50, 0x09, 0x54, 0x48, 0x5c, 0x2a, 0x77,
+	0x3d, 0x4d, 0xad, 0x4d, 0xed, 0x68, 0xec, 0x46, 0xf4, 0xc8, 0x0f, 0x40, 0xf0, 0xb3, 0x38, 0xf6,
+	0xc8, 0x11, 0xed, 0xfe, 0x11, 0x14, 0x67, 0xd3, 0xec, 0x76, 0x7b, 0x00, 0x2d, 0x70, 0x8b, 0xdf,
+	0x3c, 0xbf, 0x79, 0x7e, 0x76, 0x06, 0x1e, 0x15, 0x64, 0x4a, 0xd4, 0x42, 0x0f, 0x31, 0x21, 0xcc,
+	0x94, 0x75, 0x74, 0x96, 0x94, 0x3b, 0x09, 0x96, 0xa8, 0x9d, 0x8d, 0x0b, 0x32, 0xce, 0xf0, 0x8d,
+	0x96, 0x14, 0x37, 0xa4, 0xb8, 0xdc, 0x89, 0xde, 0x02, 0x7f, 0x59, 0xf1, 0xde, 0xbc, 0x7a, 0x9f,
+	0x7a, 0x18, 0x09, 0x25, 0xbf, 0x0b, 0x6b, 0xfa, 0xc8, 0x1d, 0x28, 0x19, 0xb0, 0x2d, 0xb6, 0xdd,
+	0x4b, 0xaf, 0xe9, 0x23, 0x37, 0x90, 0xfc, 0x31, 0xdc, 0x10, 0xd6, 0xa2, 0x3b, 0x18, 0xe6, 0xc2,
+	0xda, 0xaa, 0xbc, 0xe2, 0xcb, 0xd7, 0x3d, 0xda, 0xaf, 0xc0, 0x81, 0x8c, 0x3e, 0x33, 0xb8, 0xe5,
+	0x35, 0x53, 0x93, 0xe3, 0x6b, 0x12, 0xda, 0x2d, 0xa9, 0xc8, 0x39, 0x74, 0xc9, 0xe4, 0x18, 0xac,
+	0xfa, 0x9a, 0xff, 0xe6, 0x0f, 0xa1, 0x27, 0xa4, 0x24, 0xb4, 0x16, 0x6d, 0xd0, 0xdd, 0x5a, 0xdd,
+	0xee, 0xa5, 0x2d, 0x30, 0xef, 0x21, 0xc5, 0xd2, 0x8c, 0xfe, 0xbf, 0x87, 0x77, 0x70, 0xa7, 0x89,
+	0x76, 0x5f, 0xd3, 0x5f, 0x0a, 0xf7, 0x03, 0x04, 0xf5, 0xb9, 0xa6, 0x77, 0xb8, 0x7b, 0x9a, 0x8f,
+	0xf6, 0x0b, 0x29, 0x96, 0xcd, 0x38, 0xfa, 0xca, 0xe0, 0xde, 0x45, 0x62, 0xfd, 0x63, 0xa1, 0x33,
+	0xdc, 0x23, 0x53, 0x18, 0xbb, 0x6c, 0x70, 0x0f, 0xa0, 0x37, 0xf4, 0x72, 0x15, 0xa1, 0x4e, 0x6f,
+	0xbd, 0x06, 0x06, 0x92, 0xdf, 0x87, 0xf5, 0xa2, 0xee, 0x42, 0x41, 0xb7, 0xae, 0x35, 0xeb, 0x28,
+	0x5d, 0x30, 0xf4, 0xa2, 0xf0, 0xaf, 0xf8, 0x92, 0x26, 0x5b, 0xd4, 0x14, 0x35, 0x91, 0xa6, 0x86,
+	0x2e, 0xd6, 0x11, 0xc1, 0xc6, 0xa2, 0x66, 0xae, 0xfe, 0xe5, 0x19, 0xa3, 0x2f, 0x0c, 0x36, 0xe7,
+	0xee, 0xcc, 0xef, 0xea, 0x13, 0xfa, 0x4b, 0x7b, 0x02, 0xb7, 0x9b, 0xff, 0xb1, 0xed, 0x51, 0x5b,
+	0xb8, 0x49, 0xb3, 0x1b, 0x7e, 0xdb, 0x4c, 0x08, 0x70, 0x22, 0x94, 0x76, 0x42, 0x69, 0xa4, 0xa9,
+	0x9b, 0x19, 0x24, 0xca, 0xae, 0xb2, 0xd3, 0xbc, 0xa1, 0x3f, 0xb1, 0x33, 0xdf, 0x68, 0xe5, 0x72,
+	0xa3, 0xdd, 0xd1, 0xf7, 0x71, 0xc8, 0xce, 0xc7, 0x21, 0xfb, 0x39, 0x0e, 0xd9, 0xb7, 0x49, 0xd8,
+	0x39, 0x9f, 0x84, 0x9d, 0x1f, 0x93, 0xb0, 0x03, 0x9b, 0xca, 0xc4, 0x57, 0x0f, 0xa4, 0x3d, 0xf6,
+	0xf1, 0x79, 0xa6, 0xdc, 0xf1, 0xe9, 0x61, 0x3c, 0x34, 0x27, 0x49, 0x4b, 0x7a, 0xaa, 0xcc, 0xcc,
+	0x2a, 0xf9, 0xd4, 0x8e, 0x3a, 0x77, 0x56, 0xa0, 0x3d, 0x5c, 0xf3, 0x73, 0xee, 0xd9, 0xaf, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0xe7, 0x09, 0x9d, 0xa4, 0x0e, 0x05, 0x00, 0x00,
 }
 
 func (m *EventNFTRegistered) Marshal() (dAtA []byte, err error) {
@@ -894,6 +1014,87 @@ func (m *EventRoleChangeApplied) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
+func (m *EventRegistryClassCreated) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventRegistryClassCreated) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventRegistryClassCreated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Maintainer) > 0 {
+		i -= len(m.Maintainer)
+		copy(dAtA[i:], m.Maintainer)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Maintainer)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.AssetClassId) > 0 {
+		i -= len(m.AssetClassId)
+		copy(dAtA[i:], m.AssetClassId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.AssetClassId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.RegistryClassId) > 0 {
+		i -= len(m.RegistryClassId)
+		copy(dAtA[i:], m.RegistryClassId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.RegistryClassId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventRegistryClassUpdated) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventRegistryClassUpdated) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventRegistryClassUpdated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Maintainer) > 0 {
+		i -= len(m.Maintainer)
+		copy(dAtA[i:], m.Maintainer)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Maintainer)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.RegistryClassId) > 0 {
+		i -= len(m.RegistryClassId)
+		copy(dAtA[i:], m.RegistryClassId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.RegistryClassId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintEvents(dAtA []byte, offset int, v uint64) int {
 	offset -= sovEvents(v)
 	base := offset
@@ -1067,6 +1268,44 @@ func (m *EventRoleChangeApplied) Size() (n int) {
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	l = len(m.ChangeId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *EventRegistryClassCreated) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.RegistryClassId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.AssetClassId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Maintainer)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *EventRegistryClassUpdated) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.RegistryClassId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Maintainer)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
@@ -2193,6 +2432,266 @@ func (m *EventRoleChangeApplied) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.ChangeId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventRegistryClassCreated) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventRegistryClassCreated: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventRegistryClassCreated: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RegistryClassId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RegistryClassId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AssetClassId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AssetClassId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Maintainer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Maintainer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventRegistryClassUpdated) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventRegistryClassUpdated: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventRegistryClassUpdated: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RegistryClassId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RegistryClassId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Maintainer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Maintainer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

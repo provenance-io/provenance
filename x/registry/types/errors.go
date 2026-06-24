@@ -39,6 +39,8 @@ const (
 	ErrCodeAddressDoesNotHaveRole ErrCode = "ADDRESS_DOES_NOT_HAVE_ROLE"
 	ErrCodeInvalidField           ErrCode = "INVALID_FIELD"
 	ErrCodePendingChangeNotFound  ErrCode = "PENDING_CHANGE_NOT_FOUND"
+	ErrCodeRegistryClassExists    ErrCode = "REGISTRY_CLASS_ALREADY_EXISTS"
+	ErrCodeRegistryClassNotFound  ErrCode = "REGISTRY_CLASS_NOT_FOUND"
 )
 
 var (
@@ -52,6 +54,8 @@ var (
 	ErrAddressDoesNotHaveRole = cerrs.Register(ModuleName, 8, "address does not have role")
 	ErrInvalidField           = cerrs.Register(ModuleName, 9, "invalid field")
 	ErrPendingChangeNotFound  = cerrs.Register(ModuleName, 10, "pending role change not found")
+	ErrRegistryClassExists    = cerrs.Register(ModuleName, 11, "registry class already exists")
+	ErrRegistryClassNotFound  = cerrs.Register(ModuleName, 12, "registry class not found")
 )
 
 func NewErrCodeRegistryAlreadyExists(key string) error {
@@ -88,4 +92,12 @@ func NewErrCodeInvalidField(field, format string, args ...interface{}) error {
 
 func NewErrCodePendingChangeNotFound(changeID string) error {
 	return cerrs.Wrapf(ErrPendingChangeNotFound, "pending role change not found: %q", changeID)
+}
+
+func NewErrCodeRegistryClassExists(registryClassID string) error {
+	return cerrs.Wrapf(ErrRegistryClassExists, "registry class already exists: %q", registryClassID)
+}
+
+func NewErrCodeRegistryClassNotFound(registryClassID string) error {
+	return cerrs.Wrapf(ErrRegistryClassNotFound, "registry class not found: %q", registryClassID)
 }

@@ -59,3 +59,16 @@ message EventRoleChangeApplied {
   string asset_class_id = 2;
   string change_id      = 3;
 }
+
+// EventRegistryClassCreated is emitted when a registry class is created.
+message EventRegistryClassCreated {
+  string registry_class_id = 1;
+  string asset_class_id    = 2;
+  string maintainer        = 3;
+}
+
+// EventRegistryClassUpdated is emitted when a registry class's authorization rules are updated.
+message EventRegistryClassUpdated {
+  string registry_class_id = 1;
+  string maintainer        = 2;
+}

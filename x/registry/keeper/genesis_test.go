@@ -224,7 +224,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						Addresses: []string{s.user1},
 					},
 				}
-				err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles)
+				err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles, "")
 				s.Require().NoError(err)
 			},
 			expEntries: []types.RegistryEntry{
@@ -276,7 +276,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 				}
 
 				for _, e := range entries {
-					err := s.app.RegistryKeeper.CreateRegistry(s.ctx, e.key, e.roles)
+					err := s.app.RegistryKeeper.CreateRegistry(s.ctx, e.key, e.roles, "")
 					s.Require().NoError(err)
 				}
 			},
@@ -377,9 +377,9 @@ func (s *KeeperTestSuite) TestGenesisRoundTrip() {
 	}
 
 	// Create registries
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key1, roles1)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key1, roles1, "")
 	s.Require().NoError(err)
-	err = s.app.RegistryKeeper.CreateRegistry(s.ctx, key2, roles2)
+	err = s.app.RegistryKeeper.CreateRegistry(s.ctx, key2, roles2, "")
 	s.Require().NoError(err)
 
 	// Export genesis

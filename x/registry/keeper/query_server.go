@@ -132,3 +132,44 @@ func (qs QueryServer) PendingRoleChanges(ctx context.Context, req *types.QueryPe
 
 	return &types.QueryPendingRoleChangesResponse{PendingRoleChanges: changes, Pagination: pageRes}, nil
 }
+
+// RegistryClass returns a single registry class (including its authorization policy) by id.
+func (qs QueryServer) RegistryClass(ctx context.Context, req *types.QueryRegistryClassRequest) (*types.QueryRegistryClassResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	class, err := qs.keeper.GetRegistryClass(sdkCtx, req.RegistryClassId)
+	if err != nil {
+		return nil, err
+	}
+	if class == nil {
+		return nil, types.NewErrCodeRegistryClassNotFound(req.RegistryClassId)
+	}
+
+	return &types.QueryRegistryClassResponse{RegistryClass: *class}, nil
+}
+
+// RegistryClasses returns all registry classes, paginated.
+func (qs QueryServer) RegistryClasses(ctx context.Context, req *types.QueryRegistryClassesRequest) (*types.QueryRegistryClassesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	classes, pageRes, err := qs.keeper.GetRegistryClasses(sdkCtx, req.Pagination)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryRegistryClassesResponse{RegistryClasses: classes, Pagination: pageRes}, nil
+}

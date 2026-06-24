@@ -166,7 +166,7 @@ func (k Keeper) recordApprovalAndMaybeApply(ctx context.Context, entry *types.Re
 // role-update gates: for a policy-governed role they must be one of the policy's referenced
 // addresses, and for a non-policy role they must own the NFT (the legacy fallback).
 func (k Keeper) approverEligible(ctx context.Context, entry *types.RegistryEntry, change *types.PendingRoleChange, approver string) bool {
-	roleAuths := types.RoleAuthorizationMap()
+	roleAuths := k.roleAuthorizationsForEntry(ctx, entry)
 	for _, update := range change.RoleUpdates {
 		roleAuth, ok := roleAuths[update.Role]
 		if !ok {
@@ -189,7 +189,7 @@ func (k Keeper) approverEligible(ctx context.Context, entry *types.RegistryEntry
 // authorization policy. A role with no policy falls back to NFT ownership: at least one approver
 // must own the NFT. The change applies only when all role updates are satisfied (atomic gate).
 func (k Keeper) pendingChangeSatisfied(ctx context.Context, entry *types.RegistryEntry, change *types.PendingRoleChange) bool {
-	roleAuths := types.RoleAuthorizationMap()
+	roleAuths := k.roleAuthorizationsForEntry(ctx, entry)
 	for _, update := range change.RoleUpdates {
 		roleAuth, ok := roleAuths[update.Role]
 		if !ok {

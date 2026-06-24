@@ -9,6 +9,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "provenance/registry/v1/registry.proto";
+import "provenance/registry/v1/authorization.proto";
 
 // Query defines the gRPC querier service for the registry module.
 // This service provides read-only access to registry data and role verification.
@@ -39,6 +40,16 @@ service Query {
   // PendingRoleChanges returns the pending role changes, optionally filtered by registry key.
   rpc PendingRoleChanges(QueryPendingRoleChangesRequest) returns (QueryPendingRoleChangesResponse) {
     option (google.api.http).get = "/provenance/registry/v1/pending_role_changes";
+  }
+
+  // RegistryClass returns a single registry class (including its authorization policy) by id.
+  rpc RegistryClass(QueryRegistryClassRequest) returns (QueryRegistryClassResponse) {
+    option (google.api.http).get = "/provenance/registry/v1/registry_class/{registry_class_id}";
+  }
+
+  // RegistryClasses returns all registry classes.
+  rpc RegistryClasses(QueryRegistryClassesRequest) returns (QueryRegistryClassesResponse) {
+    option (google.api.http).get = "/provenance/registry/v1/registry_classes";
   }
 }
 
@@ -131,6 +142,33 @@ message QueryPendingRoleChangesRequest {
 message QueryPendingRoleChangesResponse {
   // pending_role_changes is the collection of pending role changes.
   repeated PendingRoleChange pending_role_changes = 1 [(gogoproto.nullable) = false];
+
+  // pagination is the pagination details for this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryRegistryClassRequest is the request type for the Query/RegistryClass RPC method.
+message QueryRegistryClassRequest {
+  // registry_class_id is the unique identifier of the registry class to retrieve.
+  string registry_class_id = 1;
+}
+
+// QueryRegistryClassResponse is the response type for the Query/RegistryClass RPC method.
+message QueryRegistryClassResponse {
+  // registry_class is the registry class for the requested id, including its authorization policy.
+  RegistryClass registry_class = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryRegistryClassesRequest is the paginated request type for the Query/RegistryClasses RPC method.
+message QueryRegistryClassesRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryRegistryClassesResponse is the paginated response type for the Query/RegistryClasses RPC method.
+message QueryRegistryClassesResponse {
+  // registry_classes is the collection of registry classes.
+  repeated RegistryClass registry_classes = 1 [(gogoproto.nullable) = false];
 
   // pagination is the pagination details for this response.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;

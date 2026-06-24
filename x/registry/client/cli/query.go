@@ -28,6 +28,8 @@ func CmdQuery() *cobra.Command {
 		GetCmdQueryHasRole(),
 		GetCmdQueryPendingRoleChange(),
 		GetCmdQueryPendingRoleChanges(),
+		GetCmdQueryRegistryClass(),
+		GetCmdQueryRegistryClasses(),
 	)
 
 	return cmd
@@ -219,5 +221,67 @@ func GetCmdQueryPendingRoleChanges() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "pending-role-changes")
+	return cmd
+}
+
+// GetCmdQueryRegistryClass returns the command for querying a single registry class by id
+func GetCmdQueryRegistryClass() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "registry-class <registry_class_id>",
+		Short: "Query a registry class (including its authorization policy) by id",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.RegistryClass(context.Background(), &types.QueryRegistryClassRequest{
+				RegistryClassId: args[0],
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdQueryRegistryClasses returns the command for querying all registry classes
+func GetCmdQueryRegistryClasses() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "registry-classes",
+		Short: "Query all registry classes",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.RegistryClasses(context.Background(), &types.QueryRegistryClassesRequest{
+				Pagination: pageReq,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "registry-classes")
 	return cmd
 }

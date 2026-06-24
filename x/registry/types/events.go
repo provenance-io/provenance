@@ -76,6 +76,23 @@ func NewEventRoleChangeApplied(change *PendingRoleChange) *EventRoleChangeApplie
 	}
 }
 
+// NewEventRegistryClassCreated returns a new EventRegistryClassCreated.
+func NewEventRegistryClassCreated(class *RegistryClass) *EventRegistryClassCreated {
+	return &EventRegistryClassCreated{
+		RegistryClassId: class.RegistryClassId,
+		AssetClassId:    class.AssetClassId,
+		Maintainer:      class.Maintainer,
+	}
+}
+
+// NewEventRegistryClassUpdated returns a new EventRegistryClassUpdated.
+func NewEventRegistryClassUpdated(class *RegistryClass) *EventRegistryClassUpdated {
+	return &EventRegistryClassUpdated{
+		RegistryClassId: class.RegistryClassId,
+		Maintainer:      class.Maintainer,
+	}
+}
+
 // GetChangeEvents gets all the events that represent the changes from oldReg to newReg.
 // Panics if they have different keys (unless oldReg or newReg is nil).
 func GetChangeEvents(oldReg, newReg *RegistryEntry) ([]*EventRoleGranted, []*EventRoleRevoked) {

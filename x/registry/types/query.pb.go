@@ -560,6 +560,199 @@ func (m *QueryPendingRoleChangesResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
+// QueryRegistryClassRequest is the request type for the Query/RegistryClass RPC method.
+type QueryRegistryClassRequest struct {
+	// registry_class_id is the unique identifier of the registry class to retrieve.
+	RegistryClassId string `protobuf:"bytes,1,opt,name=registry_class_id,json=registryClassId,proto3" json:"registry_class_id,omitempty"`
+}
+
+func (m *QueryRegistryClassRequest) Reset()         { *m = QueryRegistryClassRequest{} }
+func (m *QueryRegistryClassRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryRegistryClassRequest) ProtoMessage()    {}
+func (*QueryRegistryClassRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{10}
+}
+func (m *QueryRegistryClassRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryRegistryClassRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryRegistryClassRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryRegistryClassRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRegistryClassRequest.Merge(m, src)
+}
+func (m *QueryRegistryClassRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryRegistryClassRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRegistryClassRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryRegistryClassRequest proto.InternalMessageInfo
+
+func (m *QueryRegistryClassRequest) GetRegistryClassId() string {
+	if m != nil {
+		return m.RegistryClassId
+	}
+	return ""
+}
+
+// QueryRegistryClassResponse is the response type for the Query/RegistryClass RPC method.
+type QueryRegistryClassResponse struct {
+	// registry_class is the registry class for the requested id, including its authorization policy.
+	RegistryClass RegistryClass `protobuf:"bytes,1,opt,name=registry_class,json=registryClass,proto3" json:"registry_class"`
+}
+
+func (m *QueryRegistryClassResponse) Reset()         { *m = QueryRegistryClassResponse{} }
+func (m *QueryRegistryClassResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryRegistryClassResponse) ProtoMessage()    {}
+func (*QueryRegistryClassResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{11}
+}
+func (m *QueryRegistryClassResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryRegistryClassResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryRegistryClassResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryRegistryClassResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRegistryClassResponse.Merge(m, src)
+}
+func (m *QueryRegistryClassResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryRegistryClassResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRegistryClassResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryRegistryClassResponse proto.InternalMessageInfo
+
+func (m *QueryRegistryClassResponse) GetRegistryClass() RegistryClass {
+	if m != nil {
+		return m.RegistryClass
+	}
+	return RegistryClass{}
+}
+
+// QueryRegistryClassesRequest is the paginated request type for the Query/RegistryClasses RPC method.
+type QueryRegistryClassesRequest struct {
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryRegistryClassesRequest) Reset()         { *m = QueryRegistryClassesRequest{} }
+func (m *QueryRegistryClassesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryRegistryClassesRequest) ProtoMessage()    {}
+func (*QueryRegistryClassesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{12}
+}
+func (m *QueryRegistryClassesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryRegistryClassesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryRegistryClassesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryRegistryClassesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRegistryClassesRequest.Merge(m, src)
+}
+func (m *QueryRegistryClassesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryRegistryClassesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRegistryClassesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryRegistryClassesRequest proto.InternalMessageInfo
+
+func (m *QueryRegistryClassesRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryRegistryClassesResponse is the paginated response type for the Query/RegistryClasses RPC method.
+type QueryRegistryClassesResponse struct {
+	// registry_classes is the collection of registry classes.
+	RegistryClasses []RegistryClass `protobuf:"bytes,1,rep,name=registry_classes,json=registryClasses,proto3" json:"registry_classes"`
+	// pagination is the pagination details for this response.
+	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryRegistryClassesResponse) Reset()         { *m = QueryRegistryClassesResponse{} }
+func (m *QueryRegistryClassesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryRegistryClassesResponse) ProtoMessage()    {}
+func (*QueryRegistryClassesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{13}
+}
+func (m *QueryRegistryClassesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryRegistryClassesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryRegistryClassesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryRegistryClassesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRegistryClassesResponse.Merge(m, src)
+}
+func (m *QueryRegistryClassesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryRegistryClassesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRegistryClassesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryRegistryClassesResponse proto.InternalMessageInfo
+
+func (m *QueryRegistryClassesResponse) GetRegistryClasses() []RegistryClass {
+	if m != nil {
+		return m.RegistryClasses
+	}
+	return nil
+}
+
+func (m *QueryRegistryClassesResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryGetRegistryRequest)(nil), "provenance.registry.v1.QueryGetRegistryRequest")
 	proto.RegisterType((*QueryGetRegistryResponse)(nil), "provenance.registry.v1.QueryGetRegistryResponse")
@@ -571,6 +764,10 @@ func init() {
 	proto.RegisterType((*QueryPendingRoleChangeResponse)(nil), "provenance.registry.v1.QueryPendingRoleChangeResponse")
 	proto.RegisterType((*QueryPendingRoleChangesRequest)(nil), "provenance.registry.v1.QueryPendingRoleChangesRequest")
 	proto.RegisterType((*QueryPendingRoleChangesResponse)(nil), "provenance.registry.v1.QueryPendingRoleChangesResponse")
+	proto.RegisterType((*QueryRegistryClassRequest)(nil), "provenance.registry.v1.QueryRegistryClassRequest")
+	proto.RegisterType((*QueryRegistryClassResponse)(nil), "provenance.registry.v1.QueryRegistryClassResponse")
+	proto.RegisterType((*QueryRegistryClassesRequest)(nil), "provenance.registry.v1.QueryRegistryClassesRequest")
+	proto.RegisterType((*QueryRegistryClassesResponse)(nil), "provenance.registry.v1.QueryRegistryClassesResponse")
 }
 
 func init() {
@@ -578,55 +775,65 @@ func init() {
 }
 
 var fileDescriptor_c166c561e401a2eb = []byte{
-	// 760 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x96, 0xcf, 0x4f, 0x13, 0x41,
-	0x14, 0xc7, 0x3b, 0x05, 0x2d, 0x3e, 0x94, 0x84, 0x81, 0x68, 0x69, 0xb4, 0x34, 0x2b, 0x28, 0x2a,
-	0xee, 0xd0, 0x0a, 0xca, 0x19, 0x54, 0x54, 0x2e, 0x75, 0x8d, 0x17, 0x3d, 0x34, 0xd3, 0x76, 0xdc,
-	0x6e, 0x28, 0x3b, 0xcb, 0xce, 0xd2, 0xd8, 0x34, 0x1c, 0xf4, 0xe6, 0xcd, 0xc4, 0x3f, 0x40, 0xce,
-	0x1e, 0xbd, 0xea, 0xc5, 0x1b, 0x17, 0x13, 0x12, 0x2f, 0x9e, 0x8c, 0x01, 0xff, 0x10, 0xb3, 0xb3,
-	0xd3, 0x5f, 0xb4, 0x4b, 0xd9, 0xc0, 0xad, 0x3b, 0x33, 0xdf, 0x79, 0x9f, 0xef, 0x7b, 0x6f, 0x5e,
-	0x0a, 0x9a, 0xe3, 0xf2, 0x1a, 0xb3, 0xa9, 0x5d, 0x62, 0xc4, 0x65, 0xa6, 0x25, 0x3c, 0xb7, 0x4e,
-	0x6a, 0x59, 0xb2, 0xb5, 0xcd, 0xdc, 0xba, 0xee, 0xb8, 0xdc, 0xe3, 0xf8, 0x72, 0xfb, 0x8c, 0xde,
-	0x3c, 0xa3, 0xd7, 0xb2, 0xa9, 0xdb, 0x25, 0x2e, 0x36, 0xb9, 0x20, 0x45, 0x2a, 0x58, 0x20, 0x20,
-	0xb5, 0x6c, 0x91, 0x79, 0x34, 0x4b, 0x1c, 0x6a, 0x5a, 0x36, 0xf5, 0x2c, 0x6e, 0x07, 0x77, 0xa4,
-	0x26, 0x4d, 0x6e, 0x72, 0xf9, 0x93, 0xf8, 0xbf, 0xd4, 0xea, 0x55, 0x93, 0x73, 0xb3, 0xca, 0x08,
-	0x75, 0x2c, 0x42, 0x6d, 0x9b, 0x7b, 0x52, 0x22, 0xd4, 0xee, 0x6c, 0x08, 0x5b, 0x8b, 0x41, 0x1e,
-	0xd3, 0xf2, 0x70, 0xe5, 0xb9, 0x1f, 0x7c, 0x8d, 0x79, 0x86, 0xda, 0x31, 0xd8, 0xd6, 0x36, 0x13,
-	0x1e, 0x5e, 0x82, 0xa1, 0x0d, 0x56, 0x4f, 0xa2, 0x0c, 0x9a, 0x1b, 0xcd, 0x5d, 0xd7, 0xfb, 0xfb,
-	0xd0, 0x9b, 0xaa, 0x75, 0x56, 0x37, 0xfc, 0xf3, 0x5a, 0x09, 0x92, 0xbd, 0x37, 0x0a, 0x87, 0xdb,
-	0x82, 0xe1, 0x35, 0x18, 0x69, 0x6a, 0xd5, 0xbd, 0xb3, 0x83, 0xee, 0x7d, 0x64, 0x7b, 0x6e, 0x7d,
-	0x65, 0x78, 0xef, 0xcf, 0x74, 0xcc, 0x68, 0x89, 0xb5, 0x0f, 0x08, 0xa6, 0x8e, 0x44, 0xb1, 0x98,
-	0x68, 0x92, 0xcf, 0xc0, 0x18, 0x15, 0x82, 0x79, 0x85, 0x52, 0x95, 0x0a, 0x51, 0xb0, 0xca, 0x32,
-	0xd8, 0x05, 0xe3, 0xa2, 0x5c, 0x5d, 0xf5, 0x17, 0x9f, 0x96, 0xf1, 0x63, 0x80, 0x76, 0xa6, 0x93,
-	0x25, 0x89, 0x73, 0x43, 0x0f, 0xca, 0xa2, 0xfb, 0x65, 0xd1, 0x83, 0x3a, 0xaa, 0xb2, 0xe8, 0x79,
-	0x6a, 0x32, 0x15, 0xc1, 0xe8, 0x50, 0x6a, 0x5f, 0x11, 0xa4, 0xfa, 0xb1, 0x28, 0xcf, 0xeb, 0x00,
-	0x6e, 0x6b, 0x35, 0x89, 0x32, 0x43, 0x51, 0x5d, 0x77, 0xc8, 0xf1, 0x5a, 0x1f, 0xe6, 0x9b, 0x03,
-	0x99, 0x03, 0x92, 0x2e, 0xe8, 0x5d, 0x04, 0x13, 0x12, 0xfa, 0x09, 0x15, 0x06, 0xaf, 0xb2, 0xd3,
-	0x15, 0x1d, 0x27, 0x21, 0x41, 0xcb, 0x65, 0x97, 0x09, 0x91, 0x8c, 0xcb, 0x54, 0x37, 0x3f, 0xf1,
-	0x32, 0x0c, 0xbb, 0xbc, 0xca, 0x92, 0x43, 0x19, 0x34, 0x37, 0x96, 0x9b, 0x19, 0x74, 0xa3, 0x64,
-	0x91, 0x0a, 0x2d, 0x0b, 0x93, 0xdd, 0x84, 0x2a, 0xa1, 0x53, 0x30, 0x52, 0xa1, 0xa2, 0x20, 0x6f,
-	0xf5, 0x39, 0x47, 0x8c, 0x44, 0x25, 0x38, 0xa2, 0x11, 0xb8, 0x26, 0x25, 0x79, 0x66, 0x97, 0x2d,
-	0xdb, 0xf4, 0xd7, 0x56, 0x2b, 0xd4, 0x6e, 0xd5, 0x0d, 0x8f, 0x41, 0xbc, 0xd5, 0x0d, 0x71, 0xab,
-	0xac, 0xbd, 0x43, 0x90, 0x0e, 0x53, 0xa8, 0x70, 0x05, 0x98, 0x70, 0x82, 0x4d, 0x19, 0xb2, 0x50,
-	0x92, 0xdb, 0x2a, 0x43, 0xb7, 0xc2, 0xfc, 0xf4, 0xdc, 0xa7, 0x8a, 0x39, 0xee, 0x1c, 0xdd, 0xd0,
-	0x3e, 0x87, 0x32, 0x88, 0x53, 0x56, 0xe5, 0xac, 0x3a, 0xfc, 0x27, 0x82, 0xe9, 0x50, 0x42, 0x95,
-	0x26, 0x0a, 0x93, 0x7d, 0xd2, 0xd4, 0x6c, 0xf8, 0xc8, 0x79, 0xc2, 0x3d, 0x79, 0x3a, 0xbb, 0xe6,
-	0xcf, 0x7d, 0x49, 0xc0, 0x39, 0xe9, 0x07, 0x7f, 0x47, 0x30, 0xda, 0x31, 0xa8, 0x30, 0x09, 0xe3,
-	0x0c, 0x19, 0x92, 0xa9, 0x85, 0x93, 0x0b, 0x02, 0x10, 0xed, 0xd9, 0xfb, 0x5f, 0xff, 0x3e, 0xc5,
-	0x1f, 0xe2, 0x15, 0x32, 0x60, 0x42, 0x93, 0xc6, 0x06, 0xab, 0xeb, 0xdd, 0x83, 0x6c, 0x27, 0x58,
-	0xb4, 0xdf, 0x78, 0xfe, 0x07, 0xde, 0x45, 0x70, 0xa9, 0x6b, 0xea, 0xe0, 0xec, 0x09, 0x79, 0xda,
-	0xd3, 0x32, 0x95, 0x8b, 0x22, 0x51, 0x26, 0xe6, 0xa4, 0x09, 0x0d, 0x67, 0x06, 0x99, 0xc0, 0x3f,
-	0x10, 0x24, 0xd4, 0x0b, 0xc6, 0x77, 0x8e, 0x8d, 0xd4, 0x3d, 0x89, 0x52, 0xf3, 0x27, 0x3b, 0xac,
-	0x80, 0x5e, 0x4b, 0xa0, 0x97, 0xf8, 0x45, 0x18, 0x50, 0x73, 0x64, 0x0c, 0xce, 0x2a, 0x69, 0xa8,
-	0xd9, 0xb5, 0x43, 0x1a, 0xbe, 0x62, 0xc7, 0xef, 0x92, 0xf1, 0x9e, 0x46, 0xc5, 0x4b, 0xc7, 0x02,
-	0x86, 0x8d, 0xa0, 0xd4, 0xfd, 0xa8, 0x32, 0xe5, 0x70, 0x59, 0x3a, 0xcc, 0xe1, 0x85, 0x30, 0x87,
-	0x7d, 0x9e, 0x1f, 0x69, 0xf8, 0x5d, 0xf2, 0x0d, 0x01, 0xee, 0x7d, 0xb9, 0x38, 0x22, 0x48, 0xab,
-	0x5f, 0x1e, 0x44, 0xd6, 0x29, 0x07, 0x8b, 0xd2, 0x81, 0x8e, 0xe7, 0x23, 0x38, 0x10, 0x2b, 0x1b,
-	0x7b, 0x07, 0x69, 0xb4, 0x7f, 0x90, 0x46, 0x7f, 0x0f, 0xd2, 0xe8, 0xe3, 0x61, 0x3a, 0xb6, 0x7f,
-	0x98, 0x8e, 0xfd, 0x3e, 0x4c, 0xc7, 0x60, 0xca, 0xe2, 0x21, 0x28, 0x79, 0xf4, 0x6a, 0xd1, 0xb4,
-	0xbc, 0xca, 0x76, 0x51, 0x2f, 0xf1, 0xcd, 0x8e, 0x70, 0x77, 0x2d, 0xde, 0x19, 0xfc, 0x6d, 0x3b,
-	0xbc, 0x57, 0x77, 0x98, 0x28, 0x9e, 0x97, 0xff, 0x8a, 0xee, 0xfd, 0x0f, 0x00, 0x00, 0xff, 0xff,
-	0xdb, 0x88, 0x32, 0x7c, 0xda, 0x09, 0x00, 0x00,
+	// 922 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0x41, 0x8f, 0xdb, 0x44,
+	0x14, 0xde, 0xd9, 0x2d, 0xec, 0xf2, 0xca, 0x6e, 0xd9, 0xe9, 0x0a, 0xb2, 0xa1, 0xa4, 0x91, 0x69,
+	0x21, 0x84, 0xe2, 0xd9, 0xa4, 0x5b, 0xa8, 0x10, 0xa7, 0x14, 0x08, 0xa5, 0x97, 0x60, 0x04, 0x07,
+	0x38, 0x44, 0x93, 0x64, 0x70, 0xac, 0x4d, 0x3d, 0xae, 0xc7, 0x89, 0x08, 0x51, 0x0e, 0x70, 0xe3,
+	0x86, 0xc4, 0x85, 0x1b, 0xfd, 0x05, 0x1c, 0x38, 0x02, 0x12, 0xe2, 0xd6, 0x0b, 0x52, 0x25, 0x2e,
+	0x9c, 0x10, 0xda, 0xe5, 0x87, 0x20, 0x8f, 0xc7, 0x89, 0x9d, 0xd8, 0x75, 0xac, 0xcd, 0x2d, 0x9e,
+	0x99, 0xef, 0xbd, 0xef, 0xfb, 0xde, 0xdb, 0xf7, 0xb4, 0xa0, 0x39, 0x2e, 0x1f, 0x31, 0x9b, 0xda,
+	0x5d, 0x46, 0x5c, 0x66, 0x5a, 0xc2, 0x73, 0xc7, 0x64, 0x54, 0x23, 0x0f, 0x86, 0xcc, 0x1d, 0xeb,
+	0x8e, 0xcb, 0x3d, 0x8e, 0x9f, 0x9f, 0xbf, 0xd1, 0xc3, 0x37, 0xfa, 0xa8, 0x56, 0xac, 0x76, 0xb9,
+	0xb8, 0xcf, 0x05, 0xe9, 0x50, 0xc1, 0x02, 0x00, 0x19, 0xd5, 0x3a, 0xcc, 0xa3, 0x35, 0xe2, 0x50,
+	0xd3, 0xb2, 0xa9, 0x67, 0x71, 0x3b, 0x88, 0x51, 0x3c, 0x30, 0xb9, 0xc9, 0xe5, 0x4f, 0xe2, 0xff,
+	0x52, 0xa7, 0x57, 0x4c, 0xce, 0xcd, 0x01, 0x23, 0xd4, 0xb1, 0x08, 0xb5, 0x6d, 0xee, 0x49, 0x88,
+	0x50, 0xb7, 0xd7, 0x53, 0xb8, 0xcd, 0x38, 0x04, 0xcf, 0xaa, 0x29, 0xcf, 0xe8, 0xd0, 0xeb, 0x73,
+	0xd7, 0xfa, 0x2a, 0x42, 0x43, 0x6b, 0xc1, 0x0b, 0x1f, 0xf9, 0x44, 0x9b, 0xcc, 0x33, 0xd4, 0x53,
+	0x83, 0x3d, 0x18, 0x32, 0xe1, 0xe1, 0x5b, 0xb0, 0x75, 0xc2, 0xc6, 0x05, 0x54, 0x46, 0x95, 0x8b,
+	0xf5, 0x97, 0xf5, 0x64, 0xcd, 0x7a, 0x88, 0xba, 0xc7, 0xc6, 0x86, 0xff, 0x5e, 0xeb, 0x42, 0x61,
+	0x39, 0xa2, 0x70, 0xb8, 0x2d, 0x18, 0x6e, 0xc2, 0x4e, 0x88, 0x55, 0x71, 0xaf, 0x67, 0xc5, 0x7d,
+	0xcf, 0xf6, 0xdc, 0x71, 0xe3, 0xc2, 0xa3, 0x7f, 0xae, 0x6e, 0x18, 0x33, 0xb0, 0xf6, 0x2d, 0x82,
+	0xc3, 0x85, 0x2c, 0x16, 0x13, 0x21, 0xf3, 0x6b, 0xb0, 0x47, 0x85, 0x60, 0x5e, 0xbb, 0x3b, 0xa0,
+	0x42, 0xb4, 0xad, 0x9e, 0x4c, 0xf6, 0x8c, 0xf1, 0xac, 0x3c, 0xbd, 0xe3, 0x1f, 0xde, 0xed, 0xe1,
+	0xf7, 0x01, 0xe6, 0x55, 0x29, 0x74, 0x25, 0x9d, 0x57, 0xf4, 0xa0, 0x84, 0xba, 0x5f, 0x42, 0x3d,
+	0xa8, 0xb9, 0x2a, 0xa1, 0xde, 0xa2, 0x26, 0x53, 0x19, 0x8c, 0x08, 0x52, 0xfb, 0x19, 0x41, 0x31,
+	0x89, 0x8b, 0xd2, 0x7c, 0x0f, 0xc0, 0x9d, 0x9d, 0x16, 0x50, 0x79, 0x2b, 0xaf, 0xea, 0x08, 0x1c,
+	0x37, 0x13, 0x38, 0xbf, 0x9a, 0xc9, 0x39, 0x60, 0x12, 0x23, 0xfd, 0x10, 0xc1, 0x65, 0x49, 0xfa,
+	0x03, 0x2a, 0x0c, 0x3e, 0x60, 0xe7, 0x2b, 0x3a, 0x2e, 0xc0, 0x36, 0xed, 0xf5, 0x5c, 0x26, 0x44,
+	0x61, 0x53, 0x5a, 0x1d, 0x7e, 0xe2, 0xdb, 0x70, 0xc1, 0xe5, 0x03, 0x56, 0xd8, 0x2a, 0xa3, 0xca,
+	0x5e, 0xfd, 0x5a, 0x56, 0x44, 0xc9, 0x45, 0x22, 0xb4, 0x1a, 0x1c, 0xc4, 0x19, 0x2a, 0x43, 0x0f,
+	0x61, 0xa7, 0x4f, 0x45, 0x5b, 0x46, 0xf5, 0x79, 0xee, 0x18, 0xdb, 0xfd, 0xe0, 0x89, 0x46, 0xe0,
+	0x25, 0x09, 0x69, 0x31, 0xbb, 0x67, 0xd9, 0xa6, 0x7f, 0x76, 0xa7, 0x4f, 0xed, 0x59, 0xdd, 0xf0,
+	0x1e, 0x6c, 0xce, 0xba, 0x61, 0xd3, 0xea, 0x69, 0x5f, 0x23, 0x28, 0xa5, 0x21, 0x54, 0xba, 0x36,
+	0x5c, 0x76, 0x82, 0x4b, 0x99, 0xb2, 0xdd, 0x95, 0xd7, 0xca, 0xa1, 0xd7, 0xd2, 0xf4, 0x2c, 0xc5,
+	0x53, 0xc5, 0xdc, 0x77, 0x16, 0x2f, 0xb4, 0x1f, 0x53, 0x39, 0x88, 0x73, 0x56, 0x65, 0x5d, 0x1d,
+	0xfe, 0x27, 0x82, 0xab, 0xa9, 0x0c, 0x95, 0x4d, 0x14, 0x0e, 0x12, 0x6c, 0x0a, 0x1b, 0x3e, 0xb7,
+	0x4f, 0x78, 0xc9, 0xa7, 0x35, 0x36, 0x7f, 0x53, 0x0d, 0x8f, 0xd0, 0x30, 0x39, 0x11, 0x42, 0xaf,
+	0xab, 0xb0, 0x1f, 0x12, 0x5c, 0x9c, 0x1f, 0x97, 0xdc, 0x28, 0xe0, 0x6e, 0x4f, 0x73, 0xd4, 0x5f,
+	0xfe, 0x42, 0x20, 0x65, 0x89, 0x01, 0x7b, 0xf1, 0x48, 0xab, 0xce, 0x3c, 0x19, 0x46, 0x19, 0xb1,
+	0x1b, 0xcb, 0xa9, 0x31, 0x78, 0x71, 0x39, 0xe3, 0xbc, 0x51, 0xd6, 0x55, 0xf1, 0xdf, 0x11, 0x5c,
+	0x49, 0xce, 0xa3, 0xb4, 0x7d, 0x0a, 0xcf, 0xc5, 0xb5, 0xad, 0x3e, 0xdb, 0xa2, 0xea, 0xe2, 0x8e,
+	0xae, 0xb1, 0xc6, 0xf5, 0x1f, 0x00, 0x9e, 0x92, 0x0a, 0xf0, 0x6f, 0x08, 0x2e, 0x46, 0x96, 0x11,
+	0x26, 0x69, 0x04, 0x53, 0x16, 0x61, 0xf1, 0x68, 0x75, 0x40, 0x40, 0x44, 0xfb, 0xf0, 0x9b, 0xbf,
+	0xfe, 0xfb, 0x7e, 0xf3, 0x5d, 0xdc, 0x20, 0x19, 0x1b, 0x9b, 0x4c, 0x4e, 0xd8, 0x58, 0x8f, 0x2f,
+	0xab, 0x69, 0x70, 0x68, 0x7f, 0xe1, 0xf9, 0x1f, 0xf8, 0x21, 0x82, 0xdd, 0xd8, 0x66, 0xc1, 0xb5,
+	0x15, 0xf9, 0xcc, 0x37, 0x62, 0xb1, 0x9e, 0x07, 0xa2, 0x44, 0x54, 0xa4, 0x08, 0x0d, 0x97, 0xb3,
+	0x44, 0xe0, 0x3f, 0x10, 0x6c, 0xab, 0x29, 0x8d, 0x5f, 0x7f, 0x62, 0xa6, 0xf8, 0xb6, 0x29, 0xde,
+	0x58, 0xed, 0xb1, 0x22, 0xf4, 0xb9, 0x24, 0xf4, 0x09, 0xfe, 0x38, 0x8d, 0x50, 0xb8, 0x16, 0xb2,
+	0x5d, 0x25, 0x13, 0xb5, 0x9f, 0xa6, 0x64, 0xe2, 0x23, 0xa6, 0x7e, 0x97, 0xec, 0x2f, 0x0d, 0x23,
+	0x7c, 0xeb, 0x89, 0x04, 0xd3, 0xd6, 0x4c, 0xf1, 0xcd, 0xbc, 0x30, 0xa5, 0xf0, 0xb6, 0x54, 0x58,
+	0xc7, 0x47, 0x69, 0x0a, 0x13, 0x46, 0x2c, 0x99, 0xf8, 0x5d, 0xf2, 0x2b, 0x02, 0xbc, 0x3c, 0x9d,
+	0x71, 0x4e, 0x22, 0xb3, 0x7e, 0x79, 0x2b, 0x37, 0x4e, 0x29, 0x38, 0x96, 0x0a, 0x74, 0x7c, 0x23,
+	0x87, 0x02, 0x81, 0x7f, 0x41, 0xb0, 0x1b, 0x1b, 0x0f, 0x19, 0x3d, 0x9e, 0x34, 0xb8, 0x33, 0x7a,
+	0x3c, 0x71, 0x44, 0x6b, 0x0d, 0x49, 0xf7, 0x1d, 0xfc, 0x76, 0x56, 0x8f, 0x07, 0x7d, 0x44, 0x26,
+	0x4b, 0xab, 0x61, 0x8a, 0x7f, 0x42, 0x70, 0x69, 0x61, 0x4c, 0xe2, 0x9b, 0xab, 0x73, 0x99, 0x9b,
+	0x7e, 0x9c, 0x0f, 0xa4, 0x24, 0x1c, 0x49, 0x09, 0x55, 0x5c, 0x59, 0x4d, 0x02, 0x13, 0x8d, 0x93,
+	0x47, 0xa7, 0x25, 0xf4, 0xf8, 0xb4, 0x84, 0xfe, 0x3d, 0x2d, 0xa1, 0xef, 0xce, 0x4a, 0x1b, 0x8f,
+	0xcf, 0x4a, 0x1b, 0x7f, 0x9f, 0x95, 0x36, 0xe0, 0xd0, 0xe2, 0x29, 0x1c, 0x5a, 0xe8, 0xb3, 0x63,
+	0xd3, 0xf2, 0xfa, 0xc3, 0x8e, 0xde, 0xe5, 0xf7, 0x23, 0xa9, 0xde, 0xb0, 0x78, 0x34, 0xf1, 0x97,
+	0xf3, 0xd4, 0xde, 0xd8, 0x61, 0xa2, 0xf3, 0xb4, 0xfc, 0x3f, 0xe3, 0xe6, 0xff, 0x01, 0x00, 0x00,
+	0xff, 0xff, 0x6b, 0xed, 0xbf, 0x4c, 0x58, 0x0d, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -653,6 +860,10 @@ type QueryClient interface {
 	PendingRoleChange(ctx context.Context, in *QueryPendingRoleChangeRequest, opts ...grpc.CallOption) (*QueryPendingRoleChangeResponse, error)
 	// PendingRoleChanges returns the pending role changes, optionally filtered by registry key.
 	PendingRoleChanges(ctx context.Context, in *QueryPendingRoleChangesRequest, opts ...grpc.CallOption) (*QueryPendingRoleChangesResponse, error)
+	// RegistryClass returns a single registry class (including its authorization policy) by id.
+	RegistryClass(ctx context.Context, in *QueryRegistryClassRequest, opts ...grpc.CallOption) (*QueryRegistryClassResponse, error)
+	// RegistryClasses returns all registry classes.
+	RegistryClasses(ctx context.Context, in *QueryRegistryClassesRequest, opts ...grpc.CallOption) (*QueryRegistryClassesResponse, error)
 }
 
 type queryClient struct {
@@ -708,6 +919,24 @@ func (c *queryClient) PendingRoleChanges(ctx context.Context, in *QueryPendingRo
 	return out, nil
 }
 
+func (c *queryClient) RegistryClass(ctx context.Context, in *QueryRegistryClassRequest, opts ...grpc.CallOption) (*QueryRegistryClassResponse, error) {
+	out := new(QueryRegistryClassResponse)
+	err := c.cc.Invoke(ctx, "/provenance.registry.v1.Query/RegistryClass", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) RegistryClasses(ctx context.Context, in *QueryRegistryClassesRequest, opts ...grpc.CallOption) (*QueryRegistryClassesResponse, error) {
+	out := new(QueryRegistryClassesResponse)
+	err := c.cc.Invoke(ctx, "/provenance.registry.v1.Query/RegistryClasses", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// GetRegistry returns the registry entry for a given key.
@@ -722,6 +951,10 @@ type QueryServer interface {
 	PendingRoleChange(context.Context, *QueryPendingRoleChangeRequest) (*QueryPendingRoleChangeResponse, error)
 	// PendingRoleChanges returns the pending role changes, optionally filtered by registry key.
 	PendingRoleChanges(context.Context, *QueryPendingRoleChangesRequest) (*QueryPendingRoleChangesResponse, error)
+	// RegistryClass returns a single registry class (including its authorization policy) by id.
+	RegistryClass(context.Context, *QueryRegistryClassRequest) (*QueryRegistryClassResponse, error)
+	// RegistryClasses returns all registry classes.
+	RegistryClasses(context.Context, *QueryRegistryClassesRequest) (*QueryRegistryClassesResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -742,6 +975,12 @@ func (*UnimplementedQueryServer) PendingRoleChange(ctx context.Context, req *Que
 }
 func (*UnimplementedQueryServer) PendingRoleChanges(ctx context.Context, req *QueryPendingRoleChangesRequest) (*QueryPendingRoleChangesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PendingRoleChanges not implemented")
+}
+func (*UnimplementedQueryServer) RegistryClass(ctx context.Context, req *QueryRegistryClassRequest) (*QueryRegistryClassResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegistryClass not implemented")
+}
+func (*UnimplementedQueryServer) RegistryClasses(ctx context.Context, req *QueryRegistryClassesRequest) (*QueryRegistryClassesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegistryClasses not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -838,6 +1077,42 @@ func _Query_PendingRoleChanges_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_RegistryClass_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRegistryClassRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RegistryClass(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.registry.v1.Query/RegistryClass",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RegistryClass(ctx, req.(*QueryRegistryClassRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_RegistryClasses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRegistryClassesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RegistryClasses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.registry.v1.Query/RegistryClasses",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RegistryClasses(ctx, req.(*QueryRegistryClassesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provenance.registry.v1.Query",
@@ -862,6 +1137,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PendingRoleChanges",
 			Handler:    _Query_PendingRoleChanges_Handler,
+		},
+		{
+			MethodName: "RegistryClass",
+			Handler:    _Query_RegistryClass_Handler,
+		},
+		{
+			MethodName: "RegistryClasses",
+			Handler:    _Query_RegistryClasses_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1274,6 +1557,157 @@ func (m *QueryPendingRoleChangesResponse) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryRegistryClassRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryRegistryClassRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryRegistryClassRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.RegistryClassId) > 0 {
+		i -= len(m.RegistryClassId)
+		copy(dAtA[i:], m.RegistryClassId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.RegistryClassId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryRegistryClassResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryRegistryClassResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryRegistryClassResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.RegistryClass.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryRegistryClassesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryRegistryClassesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryRegistryClassesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryRegistryClassesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryRegistryClassesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryRegistryClassesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	if len(m.RegistryClasses) > 0 {
+		for iNdEx := len(m.RegistryClasses) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.RegistryClasses[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -1426,6 +1860,62 @@ func (m *QueryPendingRoleChangesResponse) Size() (n int) {
 	_ = l
 	if len(m.PendingRoleChanges) > 0 {
 		for _, e := range m.PendingRoleChanges {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryRegistryClassRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.RegistryClassId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryRegistryClassResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.RegistryClass.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryRegistryClassesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryRegistryClassesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.RegistryClasses) > 0 {
+		for _, e := range m.RegistryClasses {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -2404,6 +2894,377 @@ func (m *QueryPendingRoleChangesResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.PendingRoleChanges = append(m.PendingRoleChanges, PendingRoleChange{})
 			if err := m.PendingRoleChanges[len(m.PendingRoleChanges)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryRegistryClassRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryRegistryClassRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryRegistryClassRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RegistryClassId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RegistryClassId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryRegistryClassResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryRegistryClassResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryRegistryClassResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RegistryClass", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.RegistryClass.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryRegistryClassesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryRegistryClassesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryRegistryClassesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryRegistryClassesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryRegistryClassesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryRegistryClassesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RegistryClasses", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RegistryClasses = append(m.RegistryClasses, RegistryClass{})
+			if err := m.RegistryClasses[len(m.RegistryClasses)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

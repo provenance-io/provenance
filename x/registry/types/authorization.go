@@ -11,7 +11,12 @@ func DefaultRoleAuthorizations() []RoleAuthorization {
 
 // RoleAuthorizationMap returns a map of RegistryRole → RoleAuthorization for fast lookup.
 func RoleAuthorizationMap() map[RegistryRole]RoleAuthorization {
-	auths := DefaultRoleAuthorizations()
+	return RoleAuthorizationMapFrom(DefaultRoleAuthorizations())
+}
+
+// RoleAuthorizationMapFrom builds a map of RegistryRole → RoleAuthorization from the given slice.
+// The last entry wins if a role appears more than once.
+func RoleAuthorizationMapFrom(auths []RoleAuthorization) map[RegistryRole]RoleAuthorization {
 	m := make(map[RegistryRole]RoleAuthorization, len(auths))
 	for _, a := range auths {
 		m[a.Role] = a

@@ -15,5 +15,16 @@ func (m *GenesisState) Validate() error {
 		}
 	}
 
+	seenClasses := make(map[string]bool, len(m.RegistryClasses))
+	for _, class := range m.RegistryClasses {
+		if err := class.Validate(); err != nil {
+			return fmt.Errorf("registry class: %w", err)
+		}
+		if seenClasses[class.RegistryClassId] {
+			return fmt.Errorf("duplicate registry class id: %q", class.RegistryClassId)
+		}
+		seenClasses[class.RegistryClassId] = true
+	}
+
 	return nil
 }

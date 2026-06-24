@@ -5,7 +5,29 @@ option go_package          = "github.com/provenance-io/provenance/x/registry/typ
 option java_package        = "io.provenance.registry.v1";
 option java_multiple_files = true;
 
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 import "provenance/registry/v1/registry.proto";
+
+// RegistryClass provides asset class-level authorization over role updates.
+// It defines authorization rules for an entire NFT collection (asset class), allowing the
+// maintainer to establish custom role update policies without requiring governance proposals.
+message RegistryClass {
+  // registry_class_id is the unique identifier for this registry class (e.g. "dart-loan-v1").
+  // It is required since NFT classes do not have an inherent owner, and must be unique across
+  // all registry classes.
+  string registry_class_id = 1 [(gogoproto.jsontag) = "registryClassId,omitempty"];
+
+  // asset_class_id is the Scope Specification ID or NFT Class ID this registry class governs.
+  string asset_class_id = 2;
+
+  // maintainer is the address authorized to manage this registry class. It is permanent and
+  // cannot be changed once set.
+  string maintainer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // role_authorizations are the authorization rules for role updates within this asset class.
+  repeated RoleAuthorization role_authorizations = 4 [(gogoproto.nullable) = false];
+}
 
 // SignatureType defines how signature requirements are evaluated.
 enum SignatureType {

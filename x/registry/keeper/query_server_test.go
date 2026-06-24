@@ -20,7 +20,7 @@ func (s *KeeperTestSuite) TestQueryGetRegistry() {
 			Addresses: []string{s.user1},
 		},
 	}
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles, "")
 	s.Require().NoError(err)
 
 	queryServer := keeper.NewQueryServer(s.app.RegistryKeeper)
@@ -127,7 +127,7 @@ func (s *KeeperTestSuite) TestQueryGetRegistries() {
 	}
 
 	for _, key := range keys {
-		err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles)
+		err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles, "")
 		s.Require().NoError(err)
 	}
 
@@ -248,7 +248,7 @@ func (s *KeeperTestSuite) TestQueryHasRole() {
 			Addresses: []string{s.user1, s.user2},
 		},
 	}
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles, "")
 	s.Require().NoError(err)
 
 	queryServer := keeper.NewQueryServer(s.app.RegistryKeeper)

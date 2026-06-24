@@ -7,6 +7,7 @@ option java_multiple_files = true;
 
 import "gogoproto/gogo.proto";
 import "provenance/registry/v1/registry.proto";
+import "provenance/registry/v1/authorization.proto";
 
 // GenesisState defines the registry module's genesis state.
 // This contains all the registry entries that exist when the blockchain is first initialized.
@@ -18,4 +19,7 @@ message GenesisState {
   // pending_role_changes is the list of role changes awaiting approval.
   // These preserve in-flight multi-party role changes across genesis export/import.
   repeated PendingRoleChange pending_role_changes = 2 [(gogoproto.nullable) = false];
+
+  // registry_classes is the list of registry classes defining asset class-level authorization rules.
+  repeated RegistryClass registry_classes = 3 [(gogoproto.nullable) = false];
 }
