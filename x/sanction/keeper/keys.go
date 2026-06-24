@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/gogoproto/proto"
@@ -22,10 +24,10 @@ import (
 // Proposal id temp sanction index:
 // - 0x03<proposal id (8 bytes)><addr len (1 byte)><addr> -> 0x00 or 0x01
 var (
-	ParamsPrefix        = []byte{0x00}
-	SanctionedPrefix    = []byte{0x01}
-	TemporaryPrefix     = []byte{0x02}
-	ProposalIndexPrefix = []byte{0x03}
+	ParamsPrefix        = collections.NewPrefix(0)
+	SanctionedPrefix    = collections.NewPrefix(1)
+	TemporaryPrefix     = collections.NewPrefix(2)
+	ProposalIndexPrefix = collections.NewPrefix(3)
 )
 
 const (
