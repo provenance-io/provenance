@@ -173,3 +173,14 @@ func (qs QueryServer) RegistryClasses(ctx context.Context, req *types.QueryRegis
 
 	return &types.QueryRegistryClassesResponse{RegistryClasses: classes, Pagination: pageRes}, nil
 }
+
+// Params returns the registry module parameters.
+func (qs QueryServer) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	return &types.QueryParamsResponse{Params: qs.keeper.GetParams(sdkCtx)}, nil
+}

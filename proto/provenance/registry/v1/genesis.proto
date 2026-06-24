@@ -8,6 +8,7 @@ option java_multiple_files = true;
 import "gogoproto/gogo.proto";
 import "provenance/registry/v1/registry.proto";
 import "provenance/registry/v1/authorization.proto";
+import "provenance/registry/v1/params.proto";
 
 // GenesisState defines the registry module's genesis state.
 // This contains all the registry entries that exist when the blockchain is first initialized.
@@ -22,4 +23,7 @@ message GenesisState {
 
   // registry_classes is the list of registry classes defining asset class-level authorization rules.
   repeated RegistryClass registry_classes = 3 [(gogoproto.nullable) = false];
+
+  // params defines the registry module parameters at genesis.
+  Params params = 4 [(gogoproto.nullable) = false];
 }

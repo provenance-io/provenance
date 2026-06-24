@@ -24,6 +24,9 @@ func (k Keeper) InitGenesis(ctx context.Context, state *types.GenesisState) {
 			panic(err) // Genesis should not fail
 		}
 	}
+	if err := k.Params.Set(ctx, state.Params); err != nil {
+		panic(err) // Genesis should not fail
+	}
 }
 
 func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
@@ -52,6 +55,8 @@ func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 	if err != nil {
 		panic(err)
 	}
+
+	genesis.Params = k.GetParams(ctx)
 
 	return genesis
 }

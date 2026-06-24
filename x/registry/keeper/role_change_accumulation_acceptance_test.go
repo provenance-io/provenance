@@ -76,6 +76,12 @@ func (s *RoleChangeAccumulationAcceptanceTestSuite) SetupTest() {
 
 	s.nftClass = nft.Class{Id: "accumulation-test-nft-class-id"}
 	s.nftKeeper.SaveClass(s.ctx, s.nftClass)
+
+	// These tests exercise the CONTROLLER authorization policy, which is not a chain default. Install
+	// it as the module's default policy so classless entries are governed by it.
+	s.Require().NoError(s.registryKeeper.SetParams(s.ctx, types.Params{
+		RoleAuthorizations: types.ControllerRoleAuthorizations(),
+	}))
 }
 
 func (s *RoleChangeAccumulationAcceptanceTestSuite) mintNFT(id string) *types.RegistryKey {

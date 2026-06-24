@@ -1,17 +1,14 @@
 package types
 
-// DefaultRoleAuthorizations returns the static role authorization policies.
-// These policies encode who must sign to change each participant role.
-// In a future phase, these will be replaced by per-RegistryClass dynamic policies.
-func DefaultRoleAuthorizations() []RoleAuthorization {
+// ControllerRoleAuthorizations returns the example CONTROLLER authorization policy from the ticket.
+// This is NOT the default chain behavior: by default the registry module has no role policies and
+// every role change falls back to legacy NFT-owner authorization. This policy set is provided as a
+// reusable example that governance can install via MsgUpdateParams, or that a registry-class
+// maintainer can adopt for an asset class.
+func ControllerRoleAuthorizations() []RoleAuthorization {
 	return []RoleAuthorization{
 		controllerRoleAuthorization(),
 	}
-}
-
-// RoleAuthorizationMap returns a map of RegistryRole → RoleAuthorization for fast lookup.
-func RoleAuthorizationMap() map[RegistryRole]RoleAuthorization {
-	return RoleAuthorizationMapFrom(DefaultRoleAuthorizations())
 }
 
 // RoleAuthorizationMapFrom builds a map of RegistryRole → RoleAuthorization from the given slice.

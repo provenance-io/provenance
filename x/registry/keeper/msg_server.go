@@ -203,6 +203,21 @@ func (k msgServer) UpdateRegistryClassRoleAuthorization(ctx context.Context, msg
 	return &types.MsgUpdateRegistryClassRoleAuthorizationResponse{}, nil
 }
 
+// UpdateParams is a governance proposal endpoint for updating the registry module's params,
+// including the default role authorization policies.
+func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	if err := k.ValidateAuthority(msg.Authority); err != nil {
+		return nil, err
+	}
+
+	if err := k.SetParams(ctx, msg.Params); err != nil {
+		return nil, err
+	}
+
+	k.EmitEvent(ctx, types.NewEventParamsUpdated())
+	return &types.MsgUpdateParamsResponse{}, nil
+}
+
 // UnregisterNFT unregisters an NFT from the registry.
 // This removes the entire registry entry and associated data for the specified key.
 func (k msgServer) UnregisterNFT(ctx context.Context, msg *types.MsgUnregisterNFT) (*types.MsgUnregisterNFTResponse, error) {

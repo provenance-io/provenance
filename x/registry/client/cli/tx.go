@@ -11,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/x/registry/types"
 )
@@ -35,6 +37,7 @@ func CmdTx() *cobra.Command {
 		CmdApproveRoleChange(),
 		CmdCreateRegistryClass(),
 		CmdUpdateRegistryClassRoleAuthorization(),
+		CmdUpdateParams(),
 	)
 
 	return cmd
@@ -391,7 +394,61 @@ role_authorizations field is used.`,
 	return cmd
 }
 
-// parseRoleUpdates converts "role=address[,address...]" arguments into RoleUpdate values.
+// CmdUpdateParams returns the command to update the registry module params via a governance
+// proposal. The params are read from a proto-JSON Params file. This message must be submitted
+// through governance; the authority defaults to the governance module account address and may be
+// overridden with --authority.
+func CmdUpdateParams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update-params <params_json_file>",
+		Short: "Update the registry module params from a JSON file (governance)",
+		Long: `Update the registry module params from a proto-JSON Params file, e.g.:
+{
+  "role_authorizations": [ { "role": "REGISTRY_ROLE_CONTROLLER", "authorizations": [ ... ] } ]
+}
+
+This message must be authorized by governance. The authority defaults to the governance module
+account address; use --authority to override. Submit the generated message through
+"tx gov submit-proposal".`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			jsonData, err := os.ReadFile(args[0])
+			if err != nil {
+				return fmt.Errorf("failed to read file: %w", err)
+			}
+
+			var params types.Params
+			if err := clientCtx.Codec.UnmarshalJSON(jsonData, &params); err != nil {
+				return fmt.Errorf("failed to unmarshal params JSON: %w", err)
+			}
+
+			authority, err := cmd.Flags().GetString("authority")
+			if err != nil {
+				return err
+			}
+			if authority == "" {
+				authority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+			}
+
+			msg := types.MsgUpdateParams{
+				Authority: authority,
+				Params:    params,
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	cmd.Flags().String("authority", "", "the authority address (defaults to the gov module account)")
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
 // An empty address list (e.g. "role=") clears the role.
 func parseRoleUpdates(args []string) ([]types.RoleUpdate, error) {
 	updates := make([]types.RoleUpdate, 0, len(args))

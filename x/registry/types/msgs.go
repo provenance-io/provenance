@@ -19,6 +19,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgApproveRoleChange)(nil),
 	(*MsgCreateRegistryClass)(nil),
 	(*MsgUpdateRegistryClassRoleAuthorization)(nil),
+	(*MsgUpdateParams)(nil),
 }
 
 // ValidateBasic validates the MsgRegisterNFT message
@@ -217,6 +218,20 @@ func (m MsgUpdateRegistryClassRoleAuthorization) ValidateBasic() error {
 	}
 
 	errs = append(errs, validateRoleAuthorizations(m.RoleAuthorizations)...)
+
+	return errors.Join(errs...)
+}
+
+// ValidateBasic validates the MsgUpdateParams message
+func (m MsgUpdateParams) ValidateBasic() error {
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("authority", "%s", err))
+	}
+
+	if err := m.Params.Validate(); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("params", "%s", err))
+	}
 
 	return errors.Join(errs...)
 }

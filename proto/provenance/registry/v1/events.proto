@@ -72,3 +72,6 @@ message EventRegistryClassUpdated {
   string registry_class_id = 1;
   string maintainer        = 2;
 }
+
+// EventParamsUpdated is emitted when the registry module's params are updated via governance.
+message EventParamsUpdated {}

@@ -93,6 +93,11 @@ func NewEventRegistryClassUpdated(class *RegistryClass) *EventRegistryClassUpdat
 	}
 }
 
+// NewEventParamsUpdated returns a new EventParamsUpdated.
+func NewEventParamsUpdated() *EventParamsUpdated {
+	return &EventParamsUpdated{}
+}
+
 // GetChangeEvents gets all the events that represent the changes from oldReg to newReg.
 // Panics if they have different keys (unless oldReg or newReg is nil).
 func GetChangeEvents(oldReg, newReg *RegistryEntry) ([]*EventRoleGranted, []*EventRoleRevoked) {

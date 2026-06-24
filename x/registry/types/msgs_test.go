@@ -22,6 +22,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgSetRoles{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgCreateRegistryClass{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdateRegistryClassRoleAuthorization{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateParams{Authority: signer} },
 	}
 	msgMakersMulti := []testutil.MsgMakerMulti{}
 

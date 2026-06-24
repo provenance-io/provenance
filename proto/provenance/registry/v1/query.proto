@@ -10,6 +10,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "provenance/registry/v1/registry.proto";
 import "provenance/registry/v1/authorization.proto";
+import "provenance/registry/v1/params.proto";
 
 // Query defines the gRPC querier service for the registry module.
 // This service provides read-only access to registry data and role verification.
@@ -50,6 +51,12 @@ service Query {
   // RegistryClasses returns all registry classes.
   rpc RegistryClasses(QueryRegistryClassesRequest) returns (QueryRegistryClassesResponse) {
     option (google.api.http).get = "/provenance/registry/v1/registry_classes";
+  }
+
+  // Params returns the registry module parameters, including the default role authorization
+  // policies.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/provenance/registry/v1/params";
   }
 }
 
@@ -172,4 +179,13 @@ message QueryRegistryClassesResponse {
 
   // pagination is the pagination details for this response.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params are the current registry module parameters.
+  Params params = 1 [(gogoproto.nullable) = false];
 }

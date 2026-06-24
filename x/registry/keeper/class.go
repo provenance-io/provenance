@@ -101,8 +101,9 @@ func (k Keeper) GetRegistryClasses(ctx context.Context, pagination *query.PageRe
 //
 //  1. Registry class level (highest priority): if the entry references a registry class that
 //     exists, use the authorization rules defined by that class.
-//  2. Static default (fallback): otherwise use the module's static default policies. Roles not
-//     covered by the returned map fall back to legacy NFT-owner authorization at the call site.
+//  2. Module params default (fallback): otherwise use the module's default policies (governance-
+//     managed via MsgUpdateParams). Roles not covered by the returned map fall back to legacy
+//     NFT-owner authorization at the call site.
 func (k Keeper) roleAuthorizationsForEntry(ctx context.Context, entry *types.RegistryEntry) map[types.RegistryRole]types.RoleAuthorization {
 	if entry != nil && entry.RegistryClassId != "" {
 		class, err := k.GetRegistryClass(ctx, entry.RegistryClassId)
@@ -110,5 +111,5 @@ func (k Keeper) roleAuthorizationsForEntry(ctx context.Context, entry *types.Reg
 			return types.RoleAuthorizationMapFrom(class.RoleAuthorizations)
 		}
 	}
-	return types.RoleAuthorizationMap()
+	return k.GetParams(ctx).RoleAuthorizationMap()
 }

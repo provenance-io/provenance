@@ -14,6 +14,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/gogoproto/proto"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	"github.com/provenance-io/provenance/x/registry/types"
 )
 
@@ -24,6 +27,9 @@ type Keeper struct {
 	Registry           collections.Map[collections.Pair[string, string], types.RegistryEntry]
 	PendingRoleChanges collections.Map[string, types.PendingRoleChange]
 	RegistryClasses    collections.Map[string, types.RegistryClass]
+	Params             collections.Item[types.Params]
+
+	authority string
 
 	NFTKeeper      NFTKeeper
 	MetadataKeeper MetadataKeeper
@@ -59,6 +65,15 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, nftKeep
 			collections.StringKey,
 			codec.CollValue[types.RegistryClass](cdc),
 		),
+
+		Params: collections.NewItem(
+			sb,
+			collections.NewPrefix(paramsPrefix),
+			"params",
+			codec.CollValue[types.Params](cdc),
+		),
+
+		authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 
 		NFTKeeper:      nftKeeper,
 		MetadataKeeper: metaDataKeeper,

@@ -4,7 +4,9 @@ import "fmt"
 
 // DefaultGenesis returns the default genesis state.
 func DefaultGenesis() *GenesisState {
-	return &GenesisState{}
+	return &GenesisState{
+		Params: DefaultParams(),
+	}
 }
 
 // Validate validates the GenesisState.
@@ -24,6 +26,10 @@ func (m *GenesisState) Validate() error {
 			return fmt.Errorf("duplicate registry class id: %q", class.RegistryClassId)
 		}
 		seenClasses[class.RegistryClassId] = true
+	}
+
+	if err := m.Params.Validate(); err != nil {
+		return fmt.Errorf("params: %w", err)
 	}
 
 	return nil

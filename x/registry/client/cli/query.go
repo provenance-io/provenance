@@ -30,6 +30,7 @@ func CmdQuery() *cobra.Command {
 		GetCmdQueryPendingRoleChanges(),
 		GetCmdQueryRegistryClass(),
 		GetCmdQueryRegistryClasses(),
+		GetCmdQueryParams(),
 	)
 
 	return cmd
@@ -283,5 +284,31 @@ func GetCmdQueryRegistryClasses() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "registry-classes")
+	return cmd
+}
+
+// GetCmdQueryParams returns the command for querying the registry module params.
+func GetCmdQueryParams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "params",
+		Short: "Query the registry module parameters",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
