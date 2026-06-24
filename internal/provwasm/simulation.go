@@ -452,7 +452,7 @@ func getRandomBondFee(r *rand.Rand, simState module.SimulationState, spendable s
 // An error is only returned if there was a problem iterating records.
 func getRandomRootNameRecord(r *rand.Rand, ctx sdk.Context, nk namekeeper.Keeper, accs []simtypes.Account) (nametypes.NameRecord, simtypes.Account, bool, error) {
 	var records []nametypes.NameRecord
-	err := nk.IterateRecords(ctx, nametypes.NameKeyPrefix, func(record nametypes.NameRecord) error {
+	err := nk.IterateRecords(ctx, func(record nametypes.NameRecord) error {
 		if len(record.Address) > 0 && !strings.Contains(record.Name, ".") {
 			records = append(records, record)
 		}
