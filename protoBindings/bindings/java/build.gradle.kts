@@ -36,7 +36,7 @@ dependencies {
 
 tasks.jar {
     archiveBaseName.set("proto-${project.name}")
-    exclude("**/google/**")
+//    exclude("**/google/**")
 }
 
 tasks.withType<Javadoc> { enabled = true }
@@ -67,8 +67,8 @@ sourceSets.main {
     proto.srcDirs(protoDirs)
 
     // Exclude Google well-known types from compilation
-    proto.exclude("**/google/**")
-    proto.exclude(excludes)
+//    proto.exclude("**/google/**")
+//    proto.exclude(excludes)
 }
 
 // For more advanced options see: https://github.com/google/protobuf-gradle-plugin
