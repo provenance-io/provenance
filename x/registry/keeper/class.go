@@ -37,6 +37,10 @@ func (k Keeper) SetRegistryClass(ctx context.Context, class types.RegistryClass)
 // CreateRegistryClass stores a new registry class. It returns an error if a class already exists
 // with the same id.
 func (k Keeper) CreateRegistryClass(ctx context.Context, class types.RegistryClass) error {
+	if err := class.Validate(); err != nil {
+		return err
+	}
+
 	has, err := k.RegistryClasses.Has(ctx, class.RegistryClassId)
 	if err != nil {
 		return fmt.Errorf("could not check if registry class exists: %w", err)
@@ -72,6 +76,9 @@ func (k Keeper) UpdateRegistryClassRoleAuthorization(ctx context.Context, signer
 	}
 
 	class.RoleAuthorizations = roleAuths
+	if err = class.Validate(); err != nil {
+		return err
+	}
 	if err = k.SetRegistryClass(ctx, *class); err != nil {
 		return fmt.Errorf("could not set registry class: %w", err)
 	}

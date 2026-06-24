@@ -1,5 +1,58 @@
 package types
 
+import (
+	"fmt"
+
+	"github.com/provenance-io/provenance/internal/provutils"
+)
+
+// Validate returns an error if this SignatureType is not a defined enum entry, or is unspecified.
+func (t SignatureType) Validate() error {
+	if err := provutils.EnumValidateExists(t, SignatureType_name); err != nil {
+		return err
+	}
+	if t == SignatureType_SIGNATURE_TYPE_UNSPECIFIED {
+		return fmt.Errorf("cannot be unspecified")
+	}
+	return nil
+}
+
+// Validate returns an error if this NftRole is not a defined enum entry, or is unspecified.
+func (r NftRole) Validate() error {
+	if err := provutils.EnumValidateExists(r, NftRole_name); err != nil {
+		return err
+	}
+	if r == NftRole_NFT_ROLE_UNSPECIFIED {
+		return fmt.Errorf("cannot be unspecified")
+	}
+	return nil
+}
+
+// Validate returns an error if this Assignment is not a defined enum entry, or is unspecified.
+func (a Assignment) Validate() error {
+	if err := provutils.EnumValidateExists(a, Assignment_name); err != nil {
+		return err
+	}
+	if a == Assignment_ASSIGNMENT_UNSPECIFIED {
+		return fmt.Errorf("cannot be unspecified")
+	}
+	return nil
+}
+
+// IsCurrent reports whether this assignment resolves currently-held addresses (the CURRENT* family)
+// rather than incoming new addresses (the NEW* family). NftRole selectors are only valid with the
+// CURRENT* family because the registry module cannot assign NFT-module roles.
+func (a Assignment) IsCurrent() bool {
+	switch a {
+	case Assignment_ASSIGNMENT_CURRENT,
+		Assignment_ASSIGNMENT_CURRENT_ALL,
+		Assignment_ASSIGNMENT_CURRENT_ANY:
+		return true
+	default:
+		return false
+	}
+}
+
 // ControllerRoleAuthorizations returns the example CONTROLLER authorization policy from the ticket.
 // This is NOT the default chain behavior: by default the registry module has no role policies and
 // every role change falls back to legacy NFT-owner authorization. This policy set is provided as a
