@@ -170,7 +170,8 @@ type RegistryEntry struct {
 	Roles []RolesEntry `protobuf:"bytes,2,rep,name=roles,proto3" json:"roles"`
 	// registry_class_id is the ID of the registry class governing this entry's authorization rules.
 	// If set, role updates for this entry use the authorization rules defined in the referenced
-	// registry class. If empty, role updates fall back to legacy NFT owner authorization.
+	// registry class. If empty, role updates fall back to the module params default policies, and
+	// then to legacy NFT owner authorization for any role with no policy.
 	RegistryClassId string `protobuf:"bytes,3,opt,name=registry_class_id,json=registryClassId,proto3" json:"registryClassId,omitempty"`
 }
 

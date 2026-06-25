@@ -75,7 +75,8 @@ message RegistryEntry {
 
   // registry_class_id is the ID of the registry class governing this entry's authorization rules.
   // If set, role updates for this entry use the authorization rules defined in the referenced
-  // registry class. If empty, role updates fall back to legacy NFT owner authorization.
+  // registry class. If empty, role updates fall back to the module params default policies, and
+  // then to legacy NFT owner authorization for any role with no policy.
   string registry_class_id = 3 [(gogoproto.jsontag) = "registryClassId,omitempty"];
 }
 
