@@ -299,3 +299,109 @@ func (k Keeper) CollectPolicyApprovers(ctx context.Context, roleAuth types.RoleA
 	}
 	return out
 }
+
+// resolveRoleAssignmentSigner is like resolveRoleAssignmentAddresses but also returns the concrete
+// role name that resolved (used to build EventRoleUpdated.signers). For a role_priority selector it
+// returns the first matching priority entry's role name.
+func (k Keeper) resolveRoleAssignmentSigner(ctx context.Context, entry *types.RegistryEntry, ra *types.RoleAssignment, newAddrs []string) (string, []string, bool, error) {
+	if ra == nil {
+		return "", nil, false, nil
+	}
+	switch r := ra.RoleSelector.(type) {
+	case *types.RoleAssignment_RegistryRole:
+		addrs, exists, err := k.resolveRegistryRoleAddresses(entry, r.RegistryRole, ra.Assignment, newAddrs)
+		return r.RegistryRole.String(), addrs, exists, err
+	case *types.RoleAssignment_NftRole:
+		addrs, exists, err := k.resolveNFTRoleAddresses(ctx, entry, r.NftRole, ra.Assignment)
+		return r.NftRole.String(), addrs, exists, err
+	case *types.RoleAssignment_RolePriority:
+		if r.RolePriority == nil {
+			return "", nil, false, nil
+		}
+		for _, e := range r.RolePriority.Entries {
+			switch pe := e.Role.(type) {
+			case *types.RolePriorityEntry_RegistryRole:
+				addrs, exists, err := k.resolveRegistryRoleAddresses(entry, pe.RegistryRole, ra.Assignment, newAddrs)
+				if err != nil {
+					return "", nil, false, err
+				}
+				if exists {
+					return pe.RegistryRole.String(), addrs, true, nil
+				}
+			case *types.RolePriorityEntry_NftRole:
+				addrs, exists, err := k.resolveNFTRoleAddresses(ctx, entry, pe.NftRole, ra.Assignment)
+				if err != nil {
+					return "", nil, false, err
+				}
+				if exists {
+					return pe.NftRole.String(), addrs, true, nil
+				}
+			}
+		}
+		return "", nil, false, nil
+	default:
+		return "", nil, false, nil
+	}
+}
+
+// collectAuthorizationSigners builds the list of RoleSigner entries describing which roles and
+// addresses contributed signatures to satisfy the given (already-satisfied) authorization path.
+func (k Keeper) collectAuthorizationSigners(ctx context.Context, entry *types.RegistryEntry, auth *types.Authorization, newAddrs []string, signerSet map[string]bool) []types.RoleSigner {
+	var signers []types.RoleSigner
+	if auth == nil {
+		return signers
+	}
+	for _, req := range auth.Signatures {
+		if req == nil {
+			continue
+		}
+		switch req.Type {
+		case types.SignatureType_SIGNATURE_TYPE_REQUIRED_ALL,
+			types.SignatureType_SIGNATURE_TYPE_REQUIRED_ALL_IF_SET:
+			// In a satisfied path every resolved (set) role signed, so report all of them.
+			for _, ra := range req.Roles {
+				name, addrs, exists, err := k.resolveRoleAssignmentSigner(ctx, entry, ra, newAddrs)
+				if err != nil || !exists || len(addrs) == 0 {
+					continue
+				}
+				signers = append(signers, types.RoleSigner{Role: name, Assignment: ra.Assignment.String(), Addresses: addrs})
+			}
+		case types.SignatureType_SIGNATURE_TYPE_REQUIRED_ANY,
+			types.SignatureType_SIGNATURE_TYPE_REQUIRED_ANY_IF_SET:
+			// Only the role whose address actually signed contributed; report the signing subset.
+			for _, ra := range req.Roles {
+				name, addrs, exists, err := k.resolveRoleAssignmentSigner(ctx, entry, ra, newAddrs)
+				if err != nil || !exists {
+					continue
+				}
+				var signed []string
+				for _, a := range addrs {
+					if signerSet[a] {
+						signed = append(signed, a)
+					}
+				}
+				if len(signed) > 0 {
+					signers = append(signers, types.RoleSigner{Role: name, Assignment: ra.Assignment.String(), Addresses: signed})
+					break
+				}
+			}
+		}
+	}
+	return signers
+}
+
+// CollectSatisfyingSigners finds the first authorization path satisfied by signers and returns the
+// RoleSigner entries describing who authorized the change. It returns nil if no path is satisfied
+// (e.g. for the legacy NFT-owner fallback, which has no policy).
+func (k Keeper) CollectSatisfyingSigners(ctx context.Context, roleAuth types.RoleAuthorization, entry *types.RegistryEntry, newAddrs []string, signers []string) []types.RoleSigner {
+	signerSet := make(map[string]bool, len(signers))
+	for _, s := range signers {
+		signerSet[s] = true
+	}
+	for _, auth := range roleAuth.Authorizations {
+		if k.evaluateAuthorization(ctx, entry, auth, newAddrs, signerSet) == nil {
+			return k.collectAuthorizationSigners(ctx, entry, auth, newAddrs, signerSet)
+		}
+	}
+	return nil
+}

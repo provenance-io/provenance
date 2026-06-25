@@ -61,6 +61,47 @@ func (k Keeper) GetPendingRoleChanges(ctx context.Context, pagination *query.Pag
 	return changes, pageRes, nil
 }
 
+// EvaluateRoleChange performs a read-only authorization check of a desired-state role-change batch
+// against the supplied approvers, returning the first affected role's authorization error (or nil if
+// every affected role's policy is satisfied). It writes no state and is the basis for the
+// ValidateRoleChange dry-run query.
+func (k Keeper) EvaluateRoleChange(ctx context.Context, key *types.RegistryKey, roleUpdates []types.RoleUpdate, approvers []string) error {
+	entry, err := k.GetRegistry(ctx, key)
+	if err != nil {
+		return err
+	}
+	if entry == nil {
+		return types.NewErrCodeRegistryNotFound(key.String())
+	}
+
+	roleAuths := k.roleAuthorizationsForEntry(ctx, entry)
+	for _, update := range roleUpdates {
+		roleAuth, ok := roleAuths[update.Role]
+		if !ok {
+			// Legacy fallback: at least one approver must own the NFT.
+			owns := false
+			for _, a := range approvers {
+				if k.ValidateNFTOwner(ctx, &key.AssetClassId, &key.NftId, a) == nil {
+					owns = true
+					break
+				}
+			}
+			if !owns {
+				return types.NewErrCodeUnauthorized(
+					"role " + update.Role.ShortString() + " has no authorization policy; the NFT owner must approve",
+				)
+			}
+			continue
+		}
+
+		newAddrs := additions(entry.GetRoleAddrs(update.Role), update.Addresses)
+		if err := k.ValidateRoleChangeAuthorization(ctx, roleAuth, entry, newAddrs, approvers); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // ProposeRoleChange opens (or re-uses) a pending role change for a batch of desired-state role
 // updates and records the proposer's approval. If the accumulated approvals already satisfy every
 // affected role's policy, the change is applied immediately. Returns the change id and whether it
@@ -152,7 +193,7 @@ func (k Keeper) recordApprovalAndMaybeApply(ctx context.Context, entry *types.Re
 		return false, nil
 	}
 
-	if err := k.applyPendingChange(ctx, change); err != nil {
+	if err := k.applyPendingChange(ctx, entry, change); err != nil {
 		return false, err
 	}
 	if err := k.RemovePendingRoleChange(ctx, change.Id); err != nil {
@@ -237,7 +278,17 @@ func additions(current, desired []string) []string {
 	return added
 }
 
-// applyPendingChange applies the batch of role updates as a single atomic desired-state set.
-func (k Keeper) applyPendingChange(ctx context.Context, change *types.PendingRoleChange) error {
-	return k.SetRoles(ctx, change.Key, change.RoleUpdates)
+// applyPendingChange applies the batch of role updates as a single atomic desired-state set and
+// emits an EventRoleUpdated per role using the accumulated approvals as the authorizing signer set.
+// before is the pre-mutation entry, captured for previous addresses and signer resolution.
+func (k Keeper) applyPendingChange(ctx context.Context, before *types.RegistryEntry, change *types.PendingRoleChange) error {
+	if err := k.SetRoles(ctx, change.Key, change.RoleUpdates); err != nil {
+		return err
+	}
+	for _, update := range change.RoleUpdates {
+		newAddrs := additions(before.GetRoleAddrs(update.Role), update.Addresses)
+		signers := k.roleChangeSigners(ctx, before, update.Role, newAddrs, change.Approvals)
+		k.emitRoleUpdated(ctx, before, update.Role, signers)
+	}
+	return nil
 }

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -31,6 +32,7 @@ func CmdQuery() *cobra.Command {
 		GetCmdQueryRegistryClass(),
 		GetCmdQueryRegistryClasses(),
 		GetCmdQueryParams(),
+		GetCmdQueryValidateRoleChange(),
 	)
 
 	return cmd
@@ -309,6 +311,56 @@ func GetCmdQueryParams() *cobra.Command {
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdQueryValidateRoleChange returns the command for the ValidateRoleChange dry-run query.
+func GetCmdQueryValidateRoleChange() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "validate-role-change <asset_class_id> <nft_id> <role_updates_json>",
+		Short: "Dry-run a role-change batch against a set of approvers",
+		Long: `Check whether a set of approvers would satisfy every affected role's policy, without
+writing any state. role_updates_json is a JSON array of RoleUpdate, e.g.:
+
+  '[{"role":"REGISTRY_ROLE_CONTROLLER","addresses":["pb1newcontroller..."]}]'
+
+Pass one or more --approver flags with the candidate approver addresses.`,
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			var roleUpdates []types.RoleUpdate
+			if err := json.Unmarshal([]byte(args[2]), &roleUpdates); err != nil {
+				return fmt.Errorf("failed to parse role_updates_json: %w", err)
+			}
+
+			approvers, err := cmd.Flags().GetStringArray("approver")
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.ValidateRoleChange(context.Background(), &types.QueryValidateRoleChangeRequest{
+				Key: &types.RegistryKey{
+					AssetClassId: args[0],
+					NftId:        args[1],
+				},
+				RoleUpdates: roleUpdates,
+				Approvers:   approvers,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	cmd.Flags().StringArray("approver", nil, "a candidate approver address (repeatable)")
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }

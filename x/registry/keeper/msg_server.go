@@ -86,6 +86,9 @@ func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*typ
 		return nil, err
 	}
 
+	signers := k.roleChangeSigners(ctx, entry, msg.Role, msg.Addresses, []string{msg.Signer})
+	k.emitRoleUpdated(ctx, entry, msg.Role, signers)
+
 	return &types.MsgGrantRoleResponse{}, nil
 }
 
@@ -121,6 +124,9 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*t
 		return nil, err
 	}
 
+	signers := k.roleChangeSigners(ctx, entry, msg.Role, nil, []string{msg.Signer})
+	k.emitRoleUpdated(ctx, entry, msg.Role, signers)
+
 	return &types.MsgRevokeRoleResponse{}, nil
 }
 
@@ -155,6 +161,11 @@ func (k msgServer) SetRoles(ctx context.Context, msg *types.MsgSetRoles) (*types
 
 	if err := k.Keeper.SetRoles(ctx, msg.Key, msg.RoleUpdates); err != nil {
 		return nil, err
+	}
+
+	for _, update := range msg.RoleUpdates {
+		signers := k.roleChangeSigners(ctx, entry, update.Role, update.Addresses, []string{msg.Signer})
+		k.emitRoleUpdated(ctx, entry, update.Role, signers)
 	}
 
 	return &types.MsgSetRolesResponse{}, nil

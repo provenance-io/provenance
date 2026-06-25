@@ -58,6 +58,14 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/provenance/registry/v1/params";
   }
+
+  // ValidateRoleChange performs a read-only dry-run of a role-change batch, reporting whether the
+  // supplied approvers would satisfy every affected role's authorization policy without writing
+  // any state.
+  rpc ValidateRoleChange(QueryValidateRoleChangeRequest) returns (QueryValidateRoleChangeResponse) {
+    option (google.api.http).get =
+        "/provenance/registry/v1/validate_role_change/{key.asset_class_id}/{key.nft_id}";
+  }
 }
 
 // QueryGetRegistryRequest is the request type for the Query/GetRegistry RPC method.
@@ -188,4 +196,27 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params are the current registry module parameters.
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryValidateRoleChangeRequest is the request type for the Query/ValidateRoleChange RPC method.
+// It describes a candidate role-change batch and the set of approvers to test against each affected
+// role's authorization policy.
+message QueryValidateRoleChangeRequest {
+  // key identifies the registry entry the role change targets.
+  RegistryKey key = 1;
+
+  // role_updates is the desired-state batch to evaluate (same shape as MsgSetRoles).
+  repeated RoleUpdate role_updates = 2 [(gogoproto.nullable) = false];
+
+  // approvers is the accumulated/candidate set of approver addresses to test.
+  repeated string approvers = 3;
+}
+
+// QueryValidateRoleChangeResponse is the response type for the Query/ValidateRoleChange RPC method.
+message QueryValidateRoleChangeResponse {
+  // error contains the authorization failure explanation. It is empty when the change is authorized.
+  string error = 1;
+
+  // authorized is true if the supplied approvers satisfy every affected role's policy.
+  bool authorized = 2;
 }

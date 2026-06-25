@@ -184,3 +184,27 @@ func (qs QueryServer) Params(ctx context.Context, req *types.QueryParamsRequest)
 
 	return &types.QueryParamsResponse{Params: qs.keeper.GetParams(sdkCtx)}, nil
 }
+
+// ValidateRoleChange performs a read-only dry-run of a role-change batch, reporting whether the
+// supplied approvers would satisfy every affected role's authorization policy. It writes no state.
+func (qs QueryServer) ValidateRoleChange(ctx context.Context, req *types.QueryValidateRoleChangeRequest) (*types.QueryValidateRoleChangeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if req.Key == nil {
+		return nil, status.Error(codes.InvalidArgument, "key is required")
+	}
+	if err := req.Key.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	if len(req.RoleUpdates) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "at least one role update is required")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if err := qs.keeper.EvaluateRoleChange(sdkCtx, req.Key, req.RoleUpdates, req.Approvers); err != nil {
+		return &types.QueryValidateRoleChangeResponse{Error: err.Error(), Authorized: false}, nil
+	}
+	return &types.QueryValidateRoleChangeResponse{Error: "", Authorized: true}, nil
+}

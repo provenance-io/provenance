@@ -269,6 +269,35 @@ func (k Keeper) RevokeRole(ctx context.Context, key *types.RegistryKey, role typ
 	return nil
 }
 
+// roleChangeSigners resolves the RoleSigner entries describing who authorized a role change for the
+// given role. For a policy-governed role it returns the satisfying authorization path's signers; for
+// a non-policy role it returns the NFT owner among the approvers (the legacy fallback). before is the
+// pre-mutation entry, newAddrs the addresses being assigned to the role, and approvers the signers.
+func (k Keeper) roleChangeSigners(ctx context.Context, before *types.RegistryEntry, role types.RegistryRole, newAddrs, approvers []string) []types.RoleSigner {
+	roleAuths := k.roleAuthorizationsForEntry(ctx, before)
+	if roleAuth, ok := roleAuths[role]; ok {
+		return k.CollectSatisfyingSigners(ctx, roleAuth, before, newAddrs, approvers)
+	}
+	for _, a := range approvers {
+		if k.ValidateNFTOwner(ctx, &before.Key.AssetClassId, &before.Key.NftId, a) == nil {
+			return []types.RoleSigner{types.NewNFTOwnerSigner(a)}
+		}
+	}
+	return nil
+}
+
+// emitRoleUpdated emits the comprehensive EventRoleUpdated for a single role, reading the
+// post-mutation addresses from state. before is the pre-mutation entry (source of previous
+// addresses and registry class id), and signers is the authorizing signer set.
+func (k Keeper) emitRoleUpdated(ctx context.Context, before *types.RegistryEntry, role types.RegistryRole, signers []types.RoleSigner) {
+	previous := before.GetRoleAddrs(role)
+	var current []string
+	if after, err := k.GetRegistry(ctx, before.Key); err == nil && after != nil {
+		current = after.GetRoleAddrs(role)
+	}
+	k.EmitEvent(ctx, types.NewEventRoleUpdated(before.Key, before.RegistryClassId, role, previous, current, signers))
+}
+
 func (k Keeper) HasRole(ctx context.Context, key *types.RegistryKey, role types.RegistryRole, address string) (bool, error) {
 	registryEntry, err := k.Registry.Get(ctx, key.CollKey())
 	if err != nil {
