@@ -132,27 +132,32 @@ func (k Keeper) GetRegistryClasses(ctx context.Context, pagination *query.PageRe
 //  2. Module params default (fallback): otherwise use the module's default policies (governance-
 //     managed via MsgUpdateParams). Roles not covered by the returned map fall back to legacy
 //     NFT-owner authorization at the call site.
-func (k Keeper) roleAuthorizationsForEntry(ctx context.Context, entry *types.RegistryEntry) map[types.RegistryRole]types.RoleAuthorization {
+//
+// It returns a deterministic error (rather than panicking) when a referenced class cannot be
+// resolved: a store read error, a class that is absent from state, or a class whose asset class
+// does not match the entry. These conditions indicate inconsistent state and must fail closed,
+// never silently downgrading to a weaker authorization tier, but they must also not halt block
+// processing.
+func (k Keeper) roleAuthorizationsForEntry(ctx context.Context, entry *types.RegistryEntry) (map[types.RegistryRole]types.RoleAuthorization, error) {
 	if entry != nil && entry.RegistryClassId != "" {
 		class, err := k.GetRegistryClass(ctx, entry.RegistryClassId)
 		if err != nil {
-			// A store/read error must not silently downgrade to a weaker fallback policy. Fail fast
-			// so the authorization decision is never made against the wrong tier.
-			panic(fmt.Errorf("could not resolve registry class %q for authorization: %w", entry.RegistryClassId, err))
+			// A store/read error must not silently downgrade to a weaker fallback policy.
+			return nil, fmt.Errorf("could not resolve registry class %q for authorization: %w", entry.RegistryClassId, err)
 		}
-		if class != nil {
-			// Defense in depth: enforcement at write time (register, bulk update, genesis) keeps the
-			// referenced class scoped to the entry's asset class. If a mismatched class is ever found
-			// in state, fail fast rather than resolve authorization against the wrong policy tier.
-			if entry.Key != nil && class.AssetClassId != entry.Key.AssetClassId {
-				panic(types.NewErrCodeRegistryClassAssetMismatch(entry.RegistryClassId, class.AssetClassId, entry.Key.AssetClassId))
-			}
-			return types.RoleAuthorizationMapFrom(class.RoleAuthorizations)
+		if class == nil {
+			// The entry references a registry class that is not present in state. Falling back to
+			// params/legacy here would be an implicit fail-open authorization downgrade, so fail
+			// closed instead.
+			return nil, types.NewErrCodeRegistryClassNotFound(entry.RegistryClassId)
 		}
-		// The entry references a registry class that is not present in state. Falling back to
-		// params/legacy here would be an implicit fail-open authorization downgrade, so fail closed
-		// instead, consistent with how read errors and asset-class mismatches are handled above.
-		panic(types.NewErrCodeRegistryClassNotFound(entry.RegistryClassId))
+		// Defense in depth: enforcement at write time (register, bulk update, genesis) keeps the
+		// referenced class scoped to the entry's asset class. If a mismatched class is ever found in
+		// state, fail closed rather than resolve authorization against the wrong policy tier.
+		if entry.Key != nil && class.AssetClassId != entry.Key.AssetClassId {
+			return nil, types.NewErrCodeRegistryClassAssetMismatch(entry.RegistryClassId, class.AssetClassId, entry.Key.AssetClassId)
+		}
+		return types.RoleAuthorizationMapFrom(class.RoleAuthorizations), nil
 	}
-	return k.GetParams(ctx).RoleAuthorizationMap()
+	return k.GetParams(ctx).RoleAuthorizationMap(), nil
 }

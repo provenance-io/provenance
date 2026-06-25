@@ -285,30 +285,36 @@ func (k Keeper) RevokeRole(ctx context.Context, key *types.RegistryKey, role typ
 // given role. For a policy-governed role it returns the satisfying authorization path's signers; for
 // a non-policy role it returns the NFT owner among the approvers (the legacy fallback). before is the
 // pre-mutation entry, newAddrs the addresses being assigned to the role, and approvers the signers.
-func (k Keeper) roleChangeSigners(ctx context.Context, before *types.RegistryEntry, role types.RegistryRole, newAddrs, approvers []string) []types.RoleSigner {
-	roleAuths := k.roleAuthorizationsForEntry(ctx, before)
+func (k Keeper) roleChangeSigners(ctx context.Context, before *types.RegistryEntry, role types.RegistryRole, newAddrs, approvers []string) ([]types.RoleSigner, error) {
+	roleAuths, err := k.roleAuthorizationsForEntry(ctx, before)
+	if err != nil {
+		return nil, err
+	}
 	if roleAuth, ok := roleAuths[role]; ok {
-		return k.CollectSatisfyingSigners(ctx, roleAuth, before, newAddrs, approvers)
+		return k.CollectSatisfyingSigners(ctx, roleAuth, before, newAddrs, approvers), nil
 	}
 	for _, a := range approvers {
 		if k.ValidateNFTOwner(ctx, &before.Key.AssetClassId, &before.Key.NftId, a) == nil {
-			return []types.RoleSigner{types.NewNFTOwnerSigner(a)}
+			return []types.RoleSigner{types.NewNFTOwnerSigner(a)}, nil
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 // emitRoleUpdated emits the comprehensive EventRoleUpdated for a single role, reading the
 // post-mutation addresses from state. before is the pre-mutation entry (source of previous
-// addresses and registry class id), and signers is the authorizing signer set.
-func (k Keeper) emitRoleUpdated(ctx context.Context, before *types.RegistryEntry, role types.RegistryRole, signers []types.RoleSigner) {
+// addresses and registry class id), and signers is the authorizing signer set. It returns a
+// deterministic error (rather than panicking) if the post-mutation read-back fails, so an
+// inconsistent store cannot halt block processing.
+func (k Keeper) emitRoleUpdated(ctx context.Context, before *types.RegistryEntry, role types.RegistryRole, signers []types.RoleSigner) error {
 	previous := before.GetRoleAddrs(role)
 	var current []string
 	after, err := k.GetRegistry(ctx, before.Key)
 	if err != nil {
 		// The mutation has already been committed; a read-back error means the store is
-		// inconsistent. Fail fast rather than emit a misleading audit event with empty addresses.
-		panic(fmt.Errorf("could not read back registry %q for EventRoleUpdated: %w", before.Key.String(), err))
+		// inconsistent. Surface the error rather than emit a misleading audit event with empty
+		// addresses; returning it rolls back the transaction deterministically.
+		return fmt.Errorf("could not read back registry %q for EventRoleUpdated: %w", before.Key.String(), err)
 	}
 	// after may legitimately be nil if the role change removed the entry's last role and the entry
 	// was cleaned up; in that case current is correctly empty.
@@ -316,6 +322,7 @@ func (k Keeper) emitRoleUpdated(ctx context.Context, before *types.RegistryEntry
 		current = after.GetRoleAddrs(role)
 	}
 	k.EmitEvent(ctx, types.NewEventRoleUpdated(before.Key, before.RegistryClassId, role, previous, current, signers))
+	return nil
 }
 
 func (k Keeper) HasRole(ctx context.Context, key *types.RegistryKey, role types.RegistryRole, address string) (bool, error) {

@@ -354,6 +354,37 @@ func (m QueryRegistryClassesRequest) Validate() error {
 	return nil
 }
 
+// Validate validates the QueryValidateRoleChangeRequest. Beyond requiring a key and at least one
+// role update, it applies the same role-update invariants as MsgSetRoles/MsgProposeRoleChange
+// (known/specified roles, no duplicate roles, valid and non-duplicate addresses) and verifies that
+// each approver is a valid bech32 address, so malformed requests fail fast with a precise error
+// rather than surfacing as a confusing authorization or policy-evaluation failure later.
+func (m QueryValidateRoleChangeRequest) Validate() error {
+	var errs []error
+	if m.Key == nil {
+		errs = append(errs, NewErrCodeInvalidField("key", "key is required"))
+	} else if err := m.Key.Validate(); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("key", "%s", err))
+	}
+
+	errs = append(errs, validateRoleUpdates(m.RoleUpdates)...)
+
+	seenApprovers := make(map[string]bool, len(m.Approvers))
+	for _, approver := range m.Approvers {
+		if _, err := sdk.AccAddressFromBech32(approver); err != nil {
+			errs = append(errs, NewErrCodeInvalidField("approvers", "invalid address: %s", err))
+			continue
+		}
+		if seenApprovers[approver] {
+			errs = append(errs, NewErrCodeInvalidField("approvers", "duplicate address: %s", approver))
+			continue
+		}
+		seenApprovers[approver] = true
+	}
+
+	return errors.Join(errs...)
+}
+
 // ValidateStringLength checks several conditions in order:
 //  1. length is not between the minimum and maximum length returns an ErrCodeInvalidField error.
 //  2. contains whitespace returns an ErrCodeInvalidField error.

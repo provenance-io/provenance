@@ -156,8 +156,9 @@ func (s *KeeperTestSuite) TestCreateRegistry_RejectsInvalidClassReference() {
 }
 
 // TestRoleAuthorizationsForEntry_FailsClosedOnMissingClass verifies that resolving authorization for
-// an entry whose registry class id is absent from state fails closed (panics) rather than silently
-// downgrading to the params/legacy authorization tier.
+// an entry whose registry class id is absent from state fails closed: the role-change message
+// returns a deterministic error (rather than panicking or silently downgrading to the params/legacy
+// authorization tier), so an inconsistent store cannot halt block processing.
 func (s *KeeperTestSuite) TestRoleAuthorizationsForEntry_FailsClosedOnMissingClass() {
 	key := &types.RegistryKey{
 		AssetClassId: s.validNFTClass.Id,
@@ -171,14 +172,13 @@ func (s *KeeperTestSuite) TestRoleAuthorizationsForEntry_FailsClosedOnMissingCla
 	}))
 
 	msgServer := keeper.NewMsgServer(s.app.RegistryKeeper)
-	s.Require().Panics(func() {
-		_, _ = msgServer.GrantRole(s.ctx, &types.MsgGrantRole{
-			Signer:    s.user1,
-			Key:       key,
-			Role:      types.RegistryRole_REGISTRY_ROLE_SERVICER,
-			Addresses: []string{s.user1},
-		})
+	_, err := msgServer.GrantRole(s.ctx, &types.MsgGrantRole{
+		Signer:    s.user1,
+		Key:       key,
+		Role:      types.RegistryRole_REGISTRY_ROLE_SERVICER,
+		Addresses: []string{s.user1},
 	})
+	s.Require().ErrorIs(err, types.NewErrCodeRegistryClassNotFound("missing-class"))
 }
 
 func (s *KeeperTestSuite) TestGrantRole() {

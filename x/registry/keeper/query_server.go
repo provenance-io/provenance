@@ -191,14 +191,8 @@ func (qs QueryServer) ValidateRoleChange(ctx context.Context, req *types.QueryVa
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	if req.Key == nil {
-		return nil, status.Error(codes.InvalidArgument, "key is required")
-	}
-	if err := req.Key.Validate(); err != nil {
+	if err := req.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-	if len(req.RoleUpdates) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "at least one role update is required")
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

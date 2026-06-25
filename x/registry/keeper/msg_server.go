@@ -60,7 +60,10 @@ func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*typ
 		return nil, types.NewErrCodeRegistryNotFound(msg.Key.String())
 	}
 
-	roleAuths := k.roleAuthorizationsForEntry(ctx, entry)
+	roleAuths, err := k.roleAuthorizationsForEntry(ctx, entry)
+	if err != nil {
+		return nil, err
+	}
 	if roleAuth, ok := roleAuths[msg.Role]; ok {
 		// Policy-based path: the incoming addresses are the "new" assignment. A single signer must
 		// satisfy the policy on its own; multi-party changes go through ProposeRoleChange.
@@ -80,8 +83,13 @@ func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*typ
 		return nil, err
 	}
 
-	signers := k.roleChangeSigners(ctx, entry, msg.Role, msg.Addresses, []string{msg.Signer})
-	k.emitRoleUpdated(ctx, entry, msg.Role, signers)
+	signers, err := k.roleChangeSigners(ctx, entry, msg.Role, msg.Addresses, []string{msg.Signer})
+	if err != nil {
+		return nil, err
+	}
+	if err := k.emitRoleUpdated(ctx, entry, msg.Role, signers); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgGrantRoleResponse{}, nil
 }
@@ -98,7 +106,10 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*t
 		return nil, types.NewErrCodeRegistryNotFound(msg.Key.String())
 	}
 
-	roleAuths := k.roleAuthorizationsForEntry(ctx, entry)
+	roleAuths, err := k.roleAuthorizationsForEntry(ctx, entry)
+	if err != nil {
+		return nil, err
+	}
 	if roleAuth, ok := roleAuths[msg.Role]; ok {
 		// Policy-based path. For revoke, no new addresses are being assigned. A single signer must
 		// satisfy the policy on its own; multi-party changes go through ProposeRoleChange.
@@ -118,8 +129,13 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*t
 		return nil, err
 	}
 
-	signers := k.roleChangeSigners(ctx, entry, msg.Role, nil, []string{msg.Signer})
-	k.emitRoleUpdated(ctx, entry, msg.Role, signers)
+	signers, err := k.roleChangeSigners(ctx, entry, msg.Role, nil, []string{msg.Signer})
+	if err != nil {
+		return nil, err
+	}
+	if err := k.emitRoleUpdated(ctx, entry, msg.Role, signers); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgRevokeRoleResponse{}, nil
 }
@@ -137,7 +153,10 @@ func (k msgServer) SetRoles(ctx context.Context, msg *types.MsgSetRoles) (*types
 		return nil, types.NewErrCodeRegistryNotFound(msg.Key.String())
 	}
 
-	roleAuths := k.roleAuthorizationsForEntry(ctx, entry)
+	roleAuths, err := k.roleAuthorizationsForEntry(ctx, entry)
+	if err != nil {
+		return nil, err
+	}
 	for _, update := range msg.RoleUpdates {
 		if roleAuth, ok := roleAuths[update.Role]; ok {
 			// ASSIGNMENT_NEW resolves only the newly-added addresses, so authorize against the
@@ -161,8 +180,13 @@ func (k msgServer) SetRoles(ctx context.Context, msg *types.MsgSetRoles) (*types
 
 	for _, update := range msg.RoleUpdates {
 		newAddrs := additions(entry.GetRoleAddrs(update.Role), update.Addresses)
-		signers := k.roleChangeSigners(ctx, entry, update.Role, newAddrs, []string{msg.Signer})
-		k.emitRoleUpdated(ctx, entry, update.Role, signers)
+		signers, err := k.roleChangeSigners(ctx, entry, update.Role, newAddrs, []string{msg.Signer})
+		if err != nil {
+			return nil, err
+		}
+		if err := k.emitRoleUpdated(ctx, entry, update.Role, signers); err != nil {
+			return nil, err
+		}
 	}
 
 	return &types.MsgSetRolesResponse{}, nil

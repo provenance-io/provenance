@@ -282,3 +282,37 @@ func TestMsgRegistryBulkUpdate_ValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+func TestQueryValidateRoleChangeRequest_Validate(t *testing.T) {
+	validAddr := sdk.AccAddress("vrc_approver___________").String()
+	otherAddr := sdk.AccAddress("vrc_other_addr_________").String()
+	validKey := &RegistryKey{AssetClassId: "aclass", NftId: "nft1"}
+	validUpdate := RoleUpdate{Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Addresses: []string{otherAddr}}
+
+	tests := []struct {
+		name string
+		req  QueryValidateRoleChangeRequest
+		exp  string
+	}{
+		{name: "valid", req: QueryValidateRoleChangeRequest{Key: validKey, RoleUpdates: []RoleUpdate{validUpdate}, Approvers: []string{validAddr}}},
+		{name: "valid no approvers", req: QueryValidateRoleChangeRequest{Key: validKey, RoleUpdates: []RoleUpdate{validUpdate}}},
+		{name: "nil key", req: QueryValidateRoleChangeRequest{Key: nil, RoleUpdates: []RoleUpdate{validUpdate}}, exp: "invalid key: key is required"},
+		{name: "no role_updates", req: QueryValidateRoleChangeRequest{Key: validKey, RoleUpdates: []RoleUpdate{}}, exp: "invalid role_updates: at least one role update is required"},
+		{name: "unspecified role", req: QueryValidateRoleChangeRequest{Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_UNSPECIFIED}}}, exp: "invalid role_updates: 0: role cannot be unspecified"},
+		{name: "duplicate role", req: QueryValidateRoleChangeRequest{Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Addresses: []string{otherAddr}}, {Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Addresses: []string{validAddr}}}}, exp: "invalid role_updates: 1: duplicate role CONTROLLER"},
+		{name: "bad address in update", req: QueryValidateRoleChangeRequest{Key: validKey, RoleUpdates: []RoleUpdate{{Role: RegistryRole_REGISTRY_ROLE_CONTROLLER, Addresses: []string{"bad"}}}}, exp: "invalid role_updates: 0: invalid address"},
+		{name: "bad approver", req: QueryValidateRoleChangeRequest{Key: validKey, RoleUpdates: []RoleUpdate{validUpdate}, Approvers: []string{"bad"}}, exp: "invalid approvers: invalid address"},
+		{name: "duplicate approver", req: QueryValidateRoleChangeRequest{Key: validKey, RoleUpdates: []RoleUpdate{validUpdate}, Approvers: []string{validAddr, validAddr}}, exp: "invalid approvers: duplicate address"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.req.Validate()
+			if tc.exp == "" {
+				assertions.RequireErrorContents(t, err, nil)
+			} else {
+				assertions.RequireErrorContents(t, err, []string{tc.exp})
+			}
+		})
+	}
+}
