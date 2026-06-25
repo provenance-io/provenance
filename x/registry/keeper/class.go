@@ -149,6 +149,10 @@ func (k Keeper) roleAuthorizationsForEntry(ctx context.Context, entry *types.Reg
 			}
 			return types.RoleAuthorizationMapFrom(class.RoleAuthorizations)
 		}
+		// The entry references a registry class that is not present in state. Falling back to
+		// params/legacy here would be an implicit fail-open authorization downgrade, so fail closed
+		// instead, consistent with how read errors and asset-class mismatches are handled above.
+		panic(types.NewErrCodeRegistryClassNotFound(entry.RegistryClassId))
 	}
 	return k.GetParams(ctx).RoleAuthorizationMap()
 }

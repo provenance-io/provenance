@@ -124,6 +124,18 @@ func (k Keeper) CreateDefaultRegistry(ctx context.Context, ownerAddrStr string, 
 // CreateRegistry stores a new registry entry in state.
 // Returns an error if the registry already exists, or if there's a problem.
 func (k Keeper) CreateRegistry(ctx context.Context, key *types.RegistryKey, roles []types.RolesEntry, registryClassID string) error {
+	if key == nil {
+		return fmt.Errorf("registry key must not be nil")
+	}
+
+	// Defense in depth: enforce the registry class invariant at the keeper layer so invalid state
+	// cannot be introduced via direct keeper calls (other modules/tests) that bypass the msg and
+	// genesis validation paths. When set, the class must exist and be scoped to this entry's asset
+	// class; otherwise authorization would later resolve against the wrong policy tier.
+	if err := k.validateRegistryClassForEntry(ctx, registryClassID, key.AssetClassId); err != nil {
+		return err
+	}
+
 	// Already exists check
 	has, err := k.Registry.Has(ctx, key.CollKey())
 	if err != nil {

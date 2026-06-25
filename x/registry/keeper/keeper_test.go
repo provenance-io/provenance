@@ -132,6 +132,55 @@ func (s *KeeperTestSuite) TestCreateRegistry() {
 	s.Require().EqualError(err, expDupErr)
 }
 
+// TestCreateRegistry_RejectsInvalidClassReference verifies the keeper-layer invariant that an entry
+// may only be created with a registry class id that exists and is scoped to the entry's asset class.
+// This guards against invalid state introduced via direct keeper calls that bypass msg/genesis.
+func (s *KeeperTestSuite) TestCreateRegistry_RejectsInvalidClassReference() {
+	key := &types.RegistryKey{
+		AssetClassId: s.validNFTClass.Id,
+		NftId:        "create-registry-bad-class-nft",
+	}
+
+	// A nil key must be rejected rather than panic.
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, nil, nil, "")
+	s.Require().EqualError(err, "registry key must not be nil")
+
+	// Referencing a class that does not exist must fail closed.
+	err = s.app.RegistryKeeper.CreateRegistry(s.ctx, key, nil, "missing-class")
+	s.Require().ErrorIs(err, types.NewErrCodeRegistryClassNotFound("missing-class"))
+
+	// The entry must not have been written.
+	entry, err := s.app.RegistryKeeper.GetRegistry(s.ctx, key)
+	s.Require().NoError(err)
+	s.Require().Nil(entry)
+}
+
+// TestRoleAuthorizationsForEntry_FailsClosedOnMissingClass verifies that resolving authorization for
+// an entry whose registry class id is absent from state fails closed (panics) rather than silently
+// downgrading to the params/legacy authorization tier.
+func (s *KeeperTestSuite) TestRoleAuthorizationsForEntry_FailsClosedOnMissingClass() {
+	key := &types.RegistryKey{
+		AssetClassId: s.validNFTClass.Id,
+		NftId:        "fail-closed-missing-class-nft",
+	}
+	// Seed the entry directly to bypass CreateRegistry's validation, simulating corrupt state or a
+	// class that was removed after the entry referenced it.
+	s.Require().NoError(s.app.RegistryKeeper.SetRegistry(s.ctx, types.RegistryEntry{
+		Key:             key,
+		RegistryClassId: "missing-class",
+	}))
+
+	msgServer := keeper.NewMsgServer(s.app.RegistryKeeper)
+	s.Require().Panics(func() {
+		_, _ = msgServer.GrantRole(s.ctx, &types.MsgGrantRole{
+			Signer:    s.user1,
+			Key:       key,
+			Role:      types.RegistryRole_REGISTRY_ROLE_SERVICER,
+			Addresses: []string{s.user1},
+		})
+	})
+}
+
 func (s *KeeperTestSuite) TestGrantRole() {
 	// Create a base registry for testing
 	baseKey := &types.RegistryKey{
