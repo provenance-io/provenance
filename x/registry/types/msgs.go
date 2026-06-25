@@ -342,6 +342,9 @@ func (m QueryRegistryClassRequest) Validate() error {
 	if len(m.RegistryClassId) == 0 {
 		return NewErrCodeInvalidField("registry_class_id", "registry_class_id cannot be empty")
 	}
+	if err := ValidateRegistryClassID(m.RegistryClassId); err != nil {
+		return NewErrCodeInvalidField("registry_class_id", "%v", err)
+	}
 	return nil
 }
 

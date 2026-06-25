@@ -409,6 +409,11 @@ func (s *KeeperTestSuite) TestQueryRegistryClass() {
 			expErr: "registry_class_id cannot be empty",
 		},
 		{
+			name:   "malformed registry_class_id",
+			req:    &types.QueryRegistryClassRequest{RegistryClassId: "bad id!"},
+			expErr: "alphanumeric",
+		},
+		{
 			name:   "class does not exist",
 			req:    &types.QueryRegistryClassRequest{RegistryClassId: "nonexistent"},
 			expErr: "registry class",

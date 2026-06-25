@@ -292,7 +292,15 @@ func (k Keeper) roleChangeSigners(ctx context.Context, before *types.RegistryEnt
 func (k Keeper) emitRoleUpdated(ctx context.Context, before *types.RegistryEntry, role types.RegistryRole, signers []types.RoleSigner) {
 	previous := before.GetRoleAddrs(role)
 	var current []string
-	if after, err := k.GetRegistry(ctx, before.Key); err == nil && after != nil {
+	after, err := k.GetRegistry(ctx, before.Key)
+	if err != nil {
+		// The mutation has already been committed; a read-back error means the store is
+		// inconsistent. Fail fast rather than emit a misleading audit event with empty addresses.
+		panic(fmt.Errorf("could not read back registry %q for EventRoleUpdated: %w", before.Key.String(), err))
+	}
+	// after may legitimately be nil if the role change removed the entry's last role and the entry
+	// was cleaned up; in that case current is correctly empty.
+	if after != nil {
 		current = after.GetRoleAddrs(role)
 	}
 	k.EmitEvent(ctx, types.NewEventRoleUpdated(before.Key, before.RegistryClassId, role, previous, current, signers))
