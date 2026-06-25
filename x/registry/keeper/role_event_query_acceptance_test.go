@@ -180,6 +180,37 @@ func (s *RoleEventAndQueryAcceptanceTestSuite) TestEventRoleUpdated_PolicyAccumu
 	s.Require().Equal([]string{s.newController}, got["REGISTRY_ROLE_CONTROLLER|ASSIGNMENT_NEW"])
 }
 
+// TestEventRoleUpdated_Revoke: a revoke (removing an address from a role) emits EventRoleUpdated
+// with the resulting (empty) address set and the prior addresses, authorized via the NFT-owner
+// fallback for a role with no policy.
+func (s *RoleEventAndQueryAcceptanceTestSuite) TestEventRoleUpdated_Revoke() {
+	key := s.mintNFT("evt-revoke")
+	servicer := genAddr()
+	s.Require().NoError(s.registryKeeper.CreateRegistry(s.ctx, key, []types.RolesEntry{
+		{Role: types.RegistryRole_REGISTRY_ROLE_SERVICER, Addresses: []string{servicer}},
+	}, ""))
+
+	s.resetEvents()
+	// SERVICER has no policy, so the NFT owner authorizes the revoke.
+	_, err := s.msgServer.RevokeRole(s.ctx, &types.MsgRevokeRole{
+		Signer:    s.nftOwner,
+		Key:       key,
+		Role:      types.RegistryRole_REGISTRY_ROLE_SERVICER,
+		Addresses: []string{servicer},
+	})
+	s.Require().NoError(err)
+
+	evts := s.roleUpdatedEvents()
+	s.Require().Len(evts, 1)
+	ev := evts[0]
+	s.Require().Equal("SERVICER", ev.Role)
+	s.Require().Empty(ev.Addresses)
+	s.Require().Equal([]string{servicer}, ev.PreviousAddresses)
+	s.Require().Len(ev.Signers, 1)
+	s.Require().Equal("NFT_ROLE_NFT_OWNER", ev.Signers[0].Role)
+	s.Require().Equal([]string{s.nftOwner}, ev.Signers[0].Addresses)
+}
+
 // TestEventRoleUpdated_RegistryClassId: an entry registered under a class carries that class id on
 // the event.
 func (s *RoleEventAndQueryAcceptanceTestSuite) TestEventRoleUpdated_RegistryClassId() {

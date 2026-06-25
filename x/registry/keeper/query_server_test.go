@@ -371,3 +371,174 @@ func (s *KeeperTestSuite) TestQueryHasRole() {
 		})
 	}
 }
+
+// createQueryTestClass stores a minimal, valid registry class for query-server tests and returns it.
+func (s *KeeperTestSuite) createQueryTestClass(classID string) types.RegistryClass {
+	class := types.RegistryClass{
+		RegistryClassId: classID,
+		AssetClassId:    s.validNFTClass.Id,
+		Maintainer:      s.user1,
+		RoleAuthorizations: []types.RoleAuthorization{
+			singleSigPolicy(&types.RoleAssignment{
+				RoleSelector: &types.RoleAssignment_RegistryRole{RegistryRole: types.RegistryRole_REGISTRY_ROLE_CONTROLLER},
+				Assignment:   types.Assignment_ASSIGNMENT_CURRENT,
+			}),
+		},
+	}
+	s.Require().NoError(s.app.RegistryKeeper.CreateRegistryClass(s.ctx, class))
+	return class
+}
+
+func (s *KeeperTestSuite) TestQueryRegistryClass() {
+	stored := s.createQueryTestClass("query-class-1")
+	queryServer := keeper.NewQueryServer(s.app.RegistryKeeper)
+
+	tests := []struct {
+		name   string
+		req    *types.QueryRegistryClassRequest
+		expErr string
+	}{
+		{
+			name:   "nil request",
+			req:    nil,
+			expErr: "empty request",
+		},
+		{
+			name:   "empty registry_class_id",
+			req:    &types.QueryRegistryClassRequest{RegistryClassId: ""},
+			expErr: "registry_class_id cannot be empty",
+		},
+		{
+			name:   "class does not exist",
+			req:    &types.QueryRegistryClassRequest{RegistryClassId: "nonexistent"},
+			expErr: "registry class",
+		},
+		{
+			name: "class exists",
+			req:  &types.QueryRegistryClassRequest{RegistryClassId: stored.RegistryClassId},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			resp, err := queryServer.RegistryClass(s.ctx, tc.req)
+			if tc.expErr != "" {
+				assertions.RequireErrorContents(s.T(), err, []string{tc.expErr})
+				s.Require().Nil(resp)
+			} else {
+				assertions.RequireErrorContents(s.T(), err, nil)
+				s.Require().NotNil(resp)
+				s.Require().Equal(stored.RegistryClassId, resp.RegistryClass.RegistryClassId)
+				s.Require().Equal(stored.Maintainer, resp.RegistryClass.Maintainer)
+				s.Require().Len(resp.RegistryClass.RoleAuthorizations, 1)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestQueryRegistryClasses() {
+	s.createQueryTestClass("query-classes-a")
+	s.createQueryTestClass("query-classes-b")
+	s.createQueryTestClass("query-classes-c")
+	queryServer := keeper.NewQueryServer(s.app.RegistryKeeper)
+
+	tests := []struct {
+		name     string
+		req      *types.QueryRegistryClassesRequest
+		expErr   string
+		expCount int
+	}{
+		{
+			name:   "nil request",
+			req:    nil,
+			expErr: "empty request",
+		},
+		{
+			name:     "all classes",
+			req:      &types.QueryRegistryClassesRequest{},
+			expCount: 3,
+		},
+		{
+			name: "pagination limit",
+			req: &types.QueryRegistryClassesRequest{
+				Pagination: &query.PageRequest{Limit: 2, CountTotal: true},
+			},
+			expCount: 2,
+		},
+		{
+			name: "pagination offset",
+			req: &types.QueryRegistryClassesRequest{
+				Pagination: &query.PageRequest{Offset: 2, Limit: 2},
+			},
+			expCount: 1,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			resp, err := queryServer.RegistryClasses(s.ctx, tc.req)
+			if tc.expErr != "" {
+				assertions.RequireErrorContents(s.T(), err, []string{tc.expErr})
+				s.Require().Nil(resp)
+			} else {
+				assertions.RequireErrorContents(s.T(), err, nil)
+				s.Require().NotNil(resp)
+				s.Require().Len(resp.RegistryClasses, tc.expCount)
+				if tc.req.Pagination != nil && tc.req.Pagination.CountTotal {
+					s.Require().NotNil(resp.Pagination)
+				}
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestQueryParams() {
+	queryServer := keeper.NewQueryServer(s.app.RegistryKeeper)
+
+	s.Run("nil request", func() {
+		resp, err := queryServer.Params(s.ctx, nil)
+		assertions.RequireErrorContents(s.T(), err, []string{"empty request"})
+		s.Require().Nil(resp)
+	})
+
+	s.Run("default params", func() {
+		resp, err := queryServer.Params(s.ctx, &types.QueryParamsRequest{})
+		assertions.RequireErrorContents(s.T(), err, nil)
+		s.Require().NotNil(resp)
+		s.Require().Empty(resp.Params.RoleAuthorizations)
+	})
+
+	s.Run("reflects set params", func() {
+		s.Require().NoError(s.app.RegistryKeeper.SetParams(s.ctx, types.Params{
+			RoleAuthorizations: types.ControllerRoleAuthorizations(),
+		}))
+		resp, err := queryServer.Params(s.ctx, &types.QueryParamsRequest{})
+		assertions.RequireErrorContents(s.T(), err, nil)
+		s.Require().NotNil(resp)
+		s.Require().Len(resp.Params.RoleAuthorizations, 1)
+		s.Require().Equal(types.RegistryRole_REGISTRY_ROLE_CONTROLLER, resp.Params.RoleAuthorizations[0].Role)
+	})
+}
+
+// TestKeeperRegistryClassLifecycle exercises the keeper-level class store accessors directly:
+// HasRegistryClass before/after creation and GetRegistryClasses listing.
+func (s *KeeperTestSuite) TestKeeperRegistryClassLifecycle() {
+	has, err := s.app.RegistryKeeper.HasRegistryClass(s.ctx, "lifecycle-class")
+	s.Require().NoError(err)
+	s.Require().False(has)
+
+	got, err := s.app.RegistryKeeper.GetRegistryClass(s.ctx, "lifecycle-class")
+	s.Require().NoError(err)
+	s.Require().Nil(got)
+
+	s.createQueryTestClass("lifecycle-class")
+
+	has, err = s.app.RegistryKeeper.HasRegistryClass(s.ctx, "lifecycle-class")
+	s.Require().NoError(err)
+	s.Require().True(has)
+
+	classes, _, err := s.app.RegistryKeeper.GetRegistryClasses(s.ctx, nil)
+	s.Require().NoError(err)
+	s.Require().Len(classes, 1)
+	s.Require().Equal("lifecycle-class", classes[0].RegistryClassId)
+}
