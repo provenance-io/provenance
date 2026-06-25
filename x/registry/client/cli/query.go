@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -333,25 +332,27 @@ Pass one or more --approver flags with the candidate approver addresses.`,
 				return err
 			}
 
-			var roleUpdates []types.RoleUpdate
-			if err := json.Unmarshal([]byte(args[2]), &roleUpdates); err != nil {
-				return fmt.Errorf("failed to parse role_updates_json: %w", err)
-			}
-
 			approvers, err := cmd.Flags().GetStringArray("approver")
 			if err != nil {
 				return err
 			}
 
+			// Parse via the proto-JSON codec so enum fields (e.g. role) accept their string names
+			// like "REGISTRY_ROLE_CONTROLLER" rather than only numeric values. The role_updates_json
+			// argument is the array; wrap it in the request message to decode it.
+			req := &types.QueryValidateRoleChangeRequest{}
+			wrapped := fmt.Sprintf(`{"role_updates": %s}`, args[2])
+			if err := clientCtx.Codec.UnmarshalJSON([]byte(wrapped), req); err != nil {
+				return fmt.Errorf("failed to parse role_updates_json: %w", err)
+			}
+			req.Key = &types.RegistryKey{
+				AssetClassId: args[0],
+				NftId:        args[1],
+			}
+			req.Approvers = approvers
+
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.ValidateRoleChange(context.Background(), &types.QueryValidateRoleChangeRequest{
-				Key: &types.RegistryKey{
-					AssetClassId: args[0],
-					NftId:        args[1],
-				},
-				RoleUpdates: roleUpdates,
-				Approvers:   approvers,
-			})
+			res, err := queryClient.ValidateRoleChange(context.Background(), req)
 			if err != nil {
 				return err
 			}
