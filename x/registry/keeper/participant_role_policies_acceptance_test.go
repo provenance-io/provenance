@@ -20,12 +20,12 @@ import (
 	"github.com/provenance-io/provenance/x/registry/types"
 )
 
-// DartRolePoliciesAcceptanceTestSuite proves that the DART participant role policies described in
-// the ticket (sc-512248, requirements.md §"DART Participant Roles") are expressible as ordinary
+// ParticipantRolePoliciesAcceptanceTestSuite proves that the participant role policies described in
+// the ticket (sc-512248, requirements.md §"Participant Roles") are expressible as ordinary
 // RegistryClass.role_authorizations data and are correctly evaluated by the policy engine — without
 // any hard-coded, per-role chain logic. The same policies double as the example fixture shipped in
-// x/registry/spec/examples/dart_registry_class.json.
-type DartRolePoliciesAcceptanceTestSuite struct {
+// x/registry/spec/examples/example_registry_class.json.
+type ParticipantRolePoliciesAcceptanceTestSuite struct {
 	suite.Suite
 
 	app *app.App
@@ -41,13 +41,13 @@ type DartRolePoliciesAcceptanceTestSuite struct {
 	nftOwner   string
 }
 
-func TestDartRolePoliciesAcceptanceTestSuite(t *testing.T) {
-	suite.Run(t, new(DartRolePoliciesAcceptanceTestSuite))
+func TestParticipantRolePoliciesAcceptanceTestSuite(t *testing.T) {
+	suite.Run(t, new(ParticipantRolePoliciesAcceptanceTestSuite))
 }
 
-const dartClassID = "dart-loan-v1"
+const exampleClassID = "loan-registry-v1"
 
-func (s *DartRolePoliciesAcceptanceTestSuite) SetupTest() {
+func (s *ParticipantRolePoliciesAcceptanceTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now()}).WithBlockTime(time.Now())
 
@@ -58,35 +58,35 @@ func (s *DartRolePoliciesAcceptanceTestSuite) SetupTest() {
 	s.maintainer = genAddr()
 	s.nftOwner = genAddr()
 
-	s.nftClass = nft.Class{Id: "dart-roles-test-nft-class"}
+	s.nftClass = nft.Class{Id: "participant-roles-test-nft-class"}
 	s.nftKeeper.SaveClass(s.ctx, s.nftClass)
 
-	// Install the full DART registry class so every classed entry is governed by these policies.
+	// Install the full participant registry class so every classed entry is governed by these policies.
 	_, err := s.msgServer.CreateRegistryClass(s.ctx, &types.MsgCreateRegistryClass{
 		Signer:             s.maintainer,
-		RegistryClassId:    dartClassID,
+		RegistryClassId:    exampleClassID,
 		AssetClassId:       s.nftClass.Id,
 		Maintainer:         s.maintainer,
-		RoleAuthorizations: dartRoleAuthorizations(),
+		RoleAuthorizations: participantRoleAuthorizations(),
 	})
 	s.Require().NoError(err)
 }
 
-// registerWithRoles mints an NFT owned by s.nftOwner, registers it under the DART class, and seeds
+// registerWithRoles mints an NFT owned by s.nftOwner, registers it under the participant class, and seeds
 // the given initial roles. It returns the registry key.
-func (s *DartRolePoliciesAcceptanceTestSuite) registerWithRoles(id string, roles []types.RolesEntry) *types.RegistryKey {
+func (s *ParticipantRolePoliciesAcceptanceTestSuite) registerWithRoles(id string, roles []types.RolesEntry) *types.RegistryKey {
 	n := nft.NFT{ClassId: s.nftClass.Id, Id: id}
 	ownerAddr, err := sdk.AccAddressFromBech32(s.nftOwner)
 	s.Require().NoError(err)
 	s.Require().NoError(s.nftKeeper.Mint(s.ctx, n, ownerAddr))
 
 	key := &types.RegistryKey{AssetClassId: s.nftClass.Id, NftId: id}
-	s.Require().NoError(s.registryKeeper.CreateRegistry(s.ctx, key, roles, dartClassID))
+	s.Require().NoError(s.registryKeeper.CreateRegistry(s.ctx, key, roles, exampleClassID))
 	return key
 }
 
 // propose opens a pending role change and returns the change id and whether it applied immediately.
-func (s *DartRolePoliciesAcceptanceTestSuite) propose(key *types.RegistryKey, signer string, role types.RegistryRole, addrs []string) (string, bool) {
+func (s *ParticipantRolePoliciesAcceptanceTestSuite) propose(key *types.RegistryKey, signer string, role types.RegistryRole, addrs []string) (string, bool) {
 	resp, err := s.msgServer.ProposeRoleChange(s.ctx, &types.MsgProposeRoleChange{
 		Signer:      signer,
 		Key:         key,
@@ -98,7 +98,7 @@ func (s *DartRolePoliciesAcceptanceTestSuite) propose(key *types.RegistryKey, si
 
 // proposeErr attempts a proposal expected to be rejected because the proposer is not an eligible
 // approver of the change, and returns the error.
-func (s *DartRolePoliciesAcceptanceTestSuite) proposeErr(key *types.RegistryKey, signer string, role types.RegistryRole, addrs []string) error {
+func (s *ParticipantRolePoliciesAcceptanceTestSuite) proposeErr(key *types.RegistryKey, signer string, role types.RegistryRole, addrs []string) error {
 	_, err := s.msgServer.ProposeRoleChange(s.ctx, &types.MsgProposeRoleChange{
 		Signer:      signer,
 		Key:         key,
@@ -108,7 +108,7 @@ func (s *DartRolePoliciesAcceptanceTestSuite) proposeErr(key *types.RegistryKey,
 }
 
 // approve records an approval for a pending change and returns whether it applied.
-func (s *DartRolePoliciesAcceptanceTestSuite) approve(changeID, signer string) bool {
+func (s *ParticipantRolePoliciesAcceptanceTestSuite) approve(changeID, signer string) bool {
 	resp, err := s.msgServer.ApproveRoleChange(s.ctx, &types.MsgApproveRoleChange{
 		Signer:   signer,
 		ChangeId: changeID,
@@ -118,7 +118,7 @@ func (s *DartRolePoliciesAcceptanceTestSuite) approve(changeID, signer string) b
 }
 
 // roleAddresses returns the addresses currently assigned to role on the entry.
-func (s *DartRolePoliciesAcceptanceTestSuite) roleAddresses(key *types.RegistryKey, role types.RegistryRole) []string {
+func (s *ParticipantRolePoliciesAcceptanceTestSuite) roleAddresses(key *types.RegistryKey, role types.RegistryRole) []string {
 	entry, err := s.registryKeeper.GetRegistry(s.ctx, key)
 	s.Require().NoError(err)
 	s.Require().NotNil(entry)
@@ -134,7 +134,7 @@ func (s *DartRolePoliciesAcceptanceTestSuite) roleAddresses(key *types.RegistryK
 
 // TestOriginator: an originator update requires the current originator (or NFT owner if unset) plus
 // the incoming new originator.
-func (s *DartRolePoliciesAcceptanceTestSuite) TestOriginator() {
+func (s *ParticipantRolePoliciesAcceptanceTestSuite) TestOriginator() {
 	role := types.RegistryRole_REGISTRY_ROLE_ORIGINATOR
 	currentOriginator := genAddr()
 	newOriginator := genAddr()
@@ -172,7 +172,7 @@ func (s *DartRolePoliciesAcceptanceTestSuite) TestOriginator() {
 
 // TestLienOwnerStandard: a standard lien owner transfer requires the current lien owner, the current
 // Secured Party for Lien (if set), and the new lien owner.
-func (s *DartRolePoliciesAcceptanceTestSuite) TestLienOwnerStandard() {
+func (s *ParticipantRolePoliciesAcceptanceTestSuite) TestLienOwnerStandard() {
 	lienOwner := types.RegistryRole_REGISTRY_ROLE_LIEN_OWNER
 	securedParty := types.RegistryRole_REGISTRY_ROLE_SECURED_PARTY_FOR_LIEN
 
@@ -214,7 +214,7 @@ func (s *DartRolePoliciesAcceptanceTestSuite) TestLienOwnerStandard() {
 // TestLienOwnerForeclosure: the Secured Party for Lien can unilaterally become the Lien Owner. A
 // single proposal by the secured party (assigning the lien owner role to itself) satisfies the
 // dedicated foreclosure authorization path.
-func (s *DartRolePoliciesAcceptanceTestSuite) TestLienOwnerForeclosure() {
+func (s *ParticipantRolePoliciesAcceptanceTestSuite) TestLienOwnerForeclosure() {
 	lienOwner := types.RegistryRole_REGISTRY_ROLE_LIEN_OWNER
 	securedParty := types.RegistryRole_REGISTRY_ROLE_SECURED_PARTY_FOR_LIEN
 
@@ -246,7 +246,7 @@ func (s *DartRolePoliciesAcceptanceTestSuite) TestLienOwnerForeclosure() {
 }
 
 // TestControllerForeclosure: the Secured Party for eNote can unilaterally become the Controller.
-func (s *DartRolePoliciesAcceptanceTestSuite) TestControllerForeclosure() {
+func (s *ParticipantRolePoliciesAcceptanceTestSuite) TestControllerForeclosure() {
 	controller := types.RegistryRole_REGISTRY_ROLE_CONTROLLER
 	securedParty := types.RegistryRole_REGISTRY_ROLE_SECURED_PARTY_FOR_ENOTE
 
@@ -266,7 +266,7 @@ func (s *DartRolePoliciesAcceptanceTestSuite) TestControllerForeclosure() {
 // TestServicer exercises a policy whose conditional requirement uses a role_priority selector
 // (Secured Party for eNote, falling back to Pledgee). Granting a servicer requires the current
 // controller, the conditional approver, and the new servicer.
-func (s *DartRolePoliciesAcceptanceTestSuite) TestServicer() {
+func (s *ParticipantRolePoliciesAcceptanceTestSuite) TestServicer() {
 	servicer := types.RegistryRole_REGISTRY_ROLE_SERVICER
 	controller := types.RegistryRole_REGISTRY_ROLE_CONTROLLER
 	spEnote := types.RegistryRole_REGISTRY_ROLE_SECURED_PARTY_FOR_ENOTE
@@ -305,17 +305,17 @@ func (s *DartRolePoliciesAcceptanceTestSuite) TestServicer() {
 	})
 }
 
-// TestAllDartPoliciesCoexist confirms the full set validates and persists together.
-func (s *DartRolePoliciesAcceptanceTestSuite) TestAllDartPoliciesCoexist() {
-	got, err := s.registryKeeper.GetRegistryClass(s.ctx, dartClassID)
+// TestAllParticipantPoliciesCoexist confirms the full set validates and persists together.
+func (s *ParticipantRolePoliciesAcceptanceTestSuite) TestAllParticipantPoliciesCoexist() {
+	got, err := s.registryKeeper.GetRegistryClass(s.ctx, exampleClassID)
 	s.Require().NoError(err)
 	s.Require().NotNil(got)
-	s.Require().Len(got.RoleAuthorizations, len(dartRoleAuthorizations()))
+	s.Require().Len(got.RoleAuthorizations, len(participantRoleAuthorizations()))
 }
 
 // TestMalformedPolicyRejected verifies the deepened create-time validation rejects malformed
 // authorization paths instead of letting them fail closed only at evaluation time.
-func (s *DartRolePoliciesAcceptanceTestSuite) TestMalformedPolicyRejected() {
+func (s *ParticipantRolePoliciesAcceptanceTestSuite) TestMalformedPolicyRejected() {
 	cases := []struct {
 		name    string
 		auth    types.RoleAuthorization
@@ -388,36 +388,36 @@ func (s *DartRolePoliciesAcceptanceTestSuite) TestMalformedPolicyRejected() {
 }
 
 // TestExampleFixtureInSync verifies the committed example fixture proto-JSON decodes to exactly the
-// DART policies built in code. Set REGEN_DART_FIXTURE=1 to (re)generate the fixture file.
-func (s *DartRolePoliciesAcceptanceTestSuite) TestExampleFixtureInSync() {
-	path := filepath.Join("..", "spec", "examples", "dart_registry_class.json")
+// participant policies built in code. Set REGEN_EXAMPLE_FIXTURE=1 to (re)generate the fixture file.
+func (s *ParticipantRolePoliciesAcceptanceTestSuite) TestExampleFixtureInSync() {
+	path := filepath.Join("..", "spec", "examples", "example_registry_class.json")
 
 	want := types.RegistryClass{
-		RegistryClassId:    dartClassID,
+		RegistryClassId:    exampleClassID,
 		AssetClassId:       "loan.asset",
 		Maintainer:         "pb1maintainerplaceholder0000000000000000000",
-		RoleAuthorizations: dartRoleAuthorizations(),
+		RoleAuthorizations: participantRoleAuthorizations(),
 	}
 
-	if os.Getenv("REGEN_DART_FIXTURE") == "1" {
+	if os.Getenv("REGEN_EXAMPLE_FIXTURE") == "1" {
 		bz, err := s.app.AppCodec().MarshalJSON(&want)
 		s.Require().NoError(err)
 		s.Require().NoError(os.WriteFile(path, append(bz, '\n'), 0o644))
 	}
 
 	bz, err := os.ReadFile(path)
-	s.Require().NoError(err, "example fixture missing; run with REGEN_DART_FIXTURE=1 to generate")
+	s.Require().NoError(err, "example fixture missing; run with REGEN_EXAMPLE_FIXTURE=1 to generate")
 
 	var got types.RegistryClass
 	s.Require().NoError(s.app.AppCodec().UnmarshalJSON(bz, &got))
 	s.Require().Equal(want.RoleAuthorizations, got.RoleAuthorizations,
-		"example fixture is out of sync with code; run with REGEN_DART_FIXTURE=1 to regenerate")
+		"example fixture is out of sync with code; run with REGEN_EXAMPLE_FIXTURE=1 to regenerate")
 }
 
-// --- DART policy builders (mirror requirements.md §"DART Participant Roles") ---------------------
+// --- Participant policy builders (mirror requirements.md §"Participant Roles") ---------------------
 
-// dartRoleAuthorizations returns the full set of DART participant role policies.
-func dartRoleAuthorizations() []types.RoleAuthorization {
+// participantRoleAuthorizations returns the full set of participant role policies.
+func participantRoleAuthorizations() []types.RoleAuthorization {
 	return []types.RoleAuthorization{
 		originatorPolicy(),
 		lienOwnerPolicy(),

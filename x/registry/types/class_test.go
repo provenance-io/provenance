@@ -40,7 +40,7 @@ func validRoleAuthorization() types.RoleAuthorization {
 // validRegistryClass returns a well-formed RegistryClass that each negative case mutates.
 func validRegistryClass() *types.RegistryClass {
 	return &types.RegistryClass{
-		RegistryClassId:    "dart-loan-v1",
+		RegistryClassId:    "loan-registry-v1",
 		AssetClassId:       "asset-class-1",
 		Maintainer:         sdk.AccAddress("class_maintainer_addr_").String(),
 		RoleAuthorizations: []types.RoleAuthorization{validRoleAuthorization()},
@@ -295,7 +295,7 @@ func TestValidateRegistryClassID(t *testing.T) {
 		classID string
 		expErr  string
 	}{
-		{name: "valid alphanumeric", classID: "dart-loan-v1"},
+		{name: "valid alphanumeric", classID: "loan-registry-v1"},
 		{name: "valid with dots", classID: "a.b.c"},
 		{name: "empty", classID: "", expErr: "must be between"},
 		{name: "illegal character", classID: "has space", expErr: "alphanumeric"},

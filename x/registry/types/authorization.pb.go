@@ -158,7 +158,7 @@ func (Assignment) EnumDescriptor() ([]byte, []int) {
 // It defines authorization rules for an entire NFT collection (asset class), allowing the
 // maintainer to establish custom role update policies without requiring governance proposals.
 type RegistryClass struct {
-	// registry_class_id is the unique identifier for this registry class (e.g. "dart-loan-v1").
+	// registry_class_id is the unique identifier for this registry class (e.g. "loan-registry-v1").
 	// It is required since NFT classes do not have an inherent owner, and must be unique across
 	// all registry classes.
 	RegistryClassId string `protobuf:"bytes,1,opt,name=registry_class_id,json=registryClassId,proto3" json:"registryClassId,omitempty"`

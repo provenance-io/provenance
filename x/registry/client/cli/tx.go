@@ -307,7 +307,7 @@ func CmdCreateRegistryClass() *cobra.Command {
 
 The file is a proto-JSON RegistryClass, e.g.:
 {
-  "registryClassId": "dart-loan-v1",
+  "registryClassId": "loan-registry-v1",
   "asset_class_id": "loan.asset",
   "maintainer": "pb1...",
   "role_authorizations": [ { "role": "REGISTRY_ROLE_CONTROLLER", "authorizations": [ ... ] } ]
