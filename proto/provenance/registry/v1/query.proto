@@ -63,8 +63,12 @@ service Query {
   // supplied approvers would satisfy every affected role's authorization policy without writing
   // any state.
   rpc ValidateRoleChange(QueryValidateRoleChangeRequest) returns (QueryValidateRoleChangeResponse) {
-    option (google.api.http).get =
-        "/provenance/registry/v1/validate_role_change/{key.asset_class_id}/{key.nft_id}";
+    // This is a read-only query, but it is exposed over POST because the request carries the full
+    // role_updates and approvers lists, which cannot be supplied via a GET query string.
+    option (google.api.http) = {
+      post: "/provenance/registry/v1/validate_role_change"
+      body: "*"
+    };
   }
 }
 
