@@ -11,9 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
+	"github.com/provenance-io/provenance/internal/provcli"
 	"github.com/provenance-io/provenance/x/registry/types"
 )
 
@@ -395,21 +395,19 @@ role_authorizations field is used.`,
 }
 
 // CmdUpdateParams returns the command to update the registry module params via a governance
-// proposal. The params are read from a proto-JSON Params file. This message must be submitted
-// through governance; the authority defaults to the governance module account address and may be
-// overridden with --authority.
+// proposal. The params are read from a proto-JSON Params file and wrapped in a gov proposal, since
+// MsgUpdateParams is authorized by the governance module account.
 func CmdUpdateParams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-params <params_json_file>",
-		Short: "Update the registry module params from a JSON file (governance)",
-		Long: `Update the registry module params from a proto-JSON Params file, e.g.:
+		Short: "Submit a governance proposal to update the registry module params from a JSON file",
+		Long: `Submit a governance proposal to update the registry module params from a proto-JSON Params file, e.g.:
 {
   "role_authorizations": [ { "role": "REGISTRY_ROLE_CONTROLLER", "authorizations": [ ... ] } ]
 }
 
-This message must be authorized by governance. The authority defaults to the governance module
-account address; use --authority to override. Submit the generated message through
-"tx gov submit-proposal".`,
+The message is wrapped in a governance proposal and must be passed by governance. The authority
+defaults to the governance module account address; use --authority to override.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -427,24 +425,18 @@ account address; use --authority to override. Submit the generated message throu
 				return fmt.Errorf("failed to unmarshal params JSON: %w", err)
 			}
 
-			authority, err := cmd.Flags().GetString("authority")
-			if err != nil {
-				return err
-			}
-			if authority == "" {
-				authority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
-			}
-
+			flagSet := cmd.Flags()
 			msg := types.MsgUpdateParams{
-				Authority: authority,
+				Authority: provcli.GetAuthority(flagSet),
 				Params:    params,
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, &msg)
 		},
 	}
 
-	cmd.Flags().String("authority", "", "the authority address (defaults to the gov module account)")
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

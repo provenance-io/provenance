@@ -114,7 +114,12 @@ func (k Keeper) GetRegistryClasses(ctx context.Context, pagination *query.PageRe
 func (k Keeper) roleAuthorizationsForEntry(ctx context.Context, entry *types.RegistryEntry) map[types.RegistryRole]types.RoleAuthorization {
 	if entry != nil && entry.RegistryClassId != "" {
 		class, err := k.GetRegistryClass(ctx, entry.RegistryClassId)
-		if err == nil && class != nil {
+		if err != nil {
+			// A store/read error must not silently downgrade to a weaker fallback policy. Fail fast
+			// so the authorization decision is never made against the wrong tier.
+			panic(fmt.Errorf("could not resolve registry class %q for authorization: %w", entry.RegistryClassId, err))
+		}
+		if class != nil {
 			return types.RoleAuthorizationMapFrom(class.RoleAuthorizations)
 		}
 	}

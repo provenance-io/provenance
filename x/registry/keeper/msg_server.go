@@ -146,9 +146,11 @@ func (k msgServer) SetRoles(ctx context.Context, msg *types.MsgSetRoles) (*types
 	roleAuths := k.roleAuthorizationsForEntry(ctx, entry)
 	for _, update := range msg.RoleUpdates {
 		if roleAuth, ok := roleAuths[update.Role]; ok {
-			// The new addresses for this role are the desired state from the update. A single signer
+			// ASSIGNMENT_NEW resolves only the newly-added addresses, so authorize against the
+			// additions relative to the current state (not the full desired set). A single signer
 			// must satisfy the policy on its own; multi-party changes go through ProposeRoleChange.
-			if err := k.Keeper.ValidateRoleChangeAuthorization(ctx, roleAuth, entry, update.Addresses, []string{msg.Signer}); err != nil {
+			newAddrs := additions(entry.GetRoleAddrs(update.Role), update.Addresses)
+			if err := k.Keeper.ValidateRoleChangeAuthorization(ctx, roleAuth, entry, newAddrs, []string{msg.Signer}); err != nil {
 				return nil, err
 			}
 		} else {
@@ -164,7 +166,8 @@ func (k msgServer) SetRoles(ctx context.Context, msg *types.MsgSetRoles) (*types
 	}
 
 	for _, update := range msg.RoleUpdates {
-		signers := k.roleChangeSigners(ctx, entry, update.Role, update.Addresses, []string{msg.Signer})
+		newAddrs := additions(entry.GetRoleAddrs(update.Role), update.Addresses)
+		signers := k.roleChangeSigners(ctx, entry, update.Role, newAddrs, []string{msg.Signer})
 		k.emitRoleUpdated(ctx, entry, update.Role, signers)
 	}
 

@@ -321,24 +321,60 @@ func TestGenesisState_Validate(t *testing.T) {
 			expErr: "",
 		},
 		{
-			name: "valid entry - multiple addresses",
+			name: "valid entry - references existing registry class",
 			genesis: &types.GenesisState{
+				RegistryClasses: []types.RegistryClass{
+					{
+						RegistryClassId: "class-a",
+						AssetClassId:    "class1",
+						Maintainer:      validAddr,
+					},
+				},
 				Entries: []types.RegistryEntry{
 					{
 						Key: &types.RegistryKey{
 							AssetClassId: "class1",
 							NftId:        "nft1",
 						},
+						RegistryClassId: "class-a",
 						Roles: []types.RolesEntry{
 							{
 								Role:      types.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
-								Addresses: []string{validAddr, "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"},
+								Addresses: []string{validAddr},
 							},
 						},
 					},
 				},
 			},
 			expErr: "",
+		},
+		{
+			name: "invalid entry - references unknown registry class",
+			genesis: &types.GenesisState{
+				RegistryClasses: []types.RegistryClass{
+					{
+						RegistryClassId: "class-a",
+						AssetClassId:    "class1",
+						Maintainer:      validAddr,
+					},
+				},
+				Entries: []types.RegistryEntry{
+					{
+						Key: &types.RegistryKey{
+							AssetClassId: "class1",
+							NftId:        "nft1",
+						},
+						RegistryClassId: "class-missing",
+						Roles: []types.RolesEntry{
+							{
+								Role:      types.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
+								Addresses: []string{validAddr},
+							},
+						},
+					},
+				},
+			},
+			expErr: "references unknown registry class id",
 		},
 	}
 

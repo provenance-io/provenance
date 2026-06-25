@@ -222,6 +222,69 @@ func (s *RoleEventAndQueryAcceptanceTestSuite) TestEventRoleUpdated_RegistryClas
 	s.Require().Equal([]string{s.currentController}, ev.Signers[0].Addresses)
 }
 
+// TestSetRoles_AdditionsOnlyForNewAssignment: MsgSetRoles takes the full desired address set, but
+// the authorization engine's ASSIGNMENT_NEW must resolve only the newly-added addresses. A policy
+// that requires the incoming (NEW) member to sign must be satisfiable single-signer by that member
+// even when the desired set also contains already-current members.
+func (s *RoleEventAndQueryAcceptanceTestSuite) TestSetRoles_AdditionsOnlyForNewAssignment() {
+	// Policy: a SERVICER may be added if the newly-assigned servicer signs (SERVICER@NEW).
+	selfAddServicer := types.RoleAuthorization{
+		Role: types.RegistryRole_REGISTRY_ROLE_SERVICER,
+		Authorizations: []*types.Authorization{{
+			Description: "a new servicer may add themselves",
+			Signatures: []*types.SignatureRequirement{{
+				Type: types.SignatureType_SIGNATURE_TYPE_REQUIRED_ALL,
+				Roles: []*types.RoleAssignment{{
+					RoleSelector: &types.RoleAssignment_RegistryRole{
+						RegistryRole: types.RegistryRole_REGISTRY_ROLE_SERVICER,
+					},
+					Assignment: types.Assignment_ASSIGNMENT_NEW,
+				}},
+			}},
+		}},
+	}
+	maintainer := genAddr()
+	_, err := s.msgServer.CreateRegistryClass(s.ctx, &types.MsgCreateRegistryClass{
+		Signer:             maintainer,
+		RegistryClassId:    "servicer-class",
+		AssetClassId:       s.nftClass.Id,
+		Maintainer:         maintainer,
+		RoleAuthorizations: []types.RoleAuthorization{selfAddServicer},
+	})
+	s.Require().NoError(err)
+
+	existingServicer := genAddr()
+	newServicer := genAddr()
+	key := s.mintNFT("evt-additions")
+	s.Require().NoError(s.registryKeeper.CreateRegistry(s.ctx, key, []types.RolesEntry{
+		{Role: types.RegistryRole_REGISTRY_ROLE_SERVICER, Addresses: []string{existingServicer}},
+	}, "servicer-class"))
+
+	s.resetEvents()
+	// Desired state is [existing, new]; only the addition (newServicer) needs to sign. Before the
+	// additions fix this errored because ASSIGNMENT_NEW resolved to both addresses.
+	_, err = s.msgServer.SetRoles(s.ctx, &types.MsgSetRoles{
+		Signer: newServicer,
+		Key:    key,
+		RoleUpdates: []types.RoleUpdate{{
+			Role:      types.RegistryRole_REGISTRY_ROLE_SERVICER,
+			Addresses: []string{existingServicer, newServicer},
+		}},
+	})
+	s.Require().NoError(err)
+
+	evts := s.roleUpdatedEvents()
+	s.Require().Len(evts, 1)
+	ev := evts[0]
+	s.Require().Equal("SERVICER", ev.Role)
+	s.Require().Equal([]string{existingServicer, newServicer}, ev.Addresses)
+	s.Require().Equal([]string{existingServicer}, ev.PreviousAddresses)
+	s.Require().Len(ev.Signers, 1)
+	s.Require().Equal("REGISTRY_ROLE_SERVICER", ev.Signers[0].Role)
+	s.Require().Equal("ASSIGNMENT_NEW", ev.Signers[0].Assignment)
+	s.Require().Equal([]string{newServicer}, ev.Signers[0].Addresses)
+}
+
 // --- Phase C5: ValidateRoleChange query ---------------------------------------------------------
 
 func (s *RoleEventAndQueryAcceptanceTestSuite) controllerUpdate() []types.RoleUpdate {
