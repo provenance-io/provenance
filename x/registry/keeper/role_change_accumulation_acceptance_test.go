@@ -21,7 +21,7 @@ import (
 	"github.com/provenance-io/provenance/x/registry/types"
 )
 
-// RoleChangeAccumulationAcceptanceTestSuite implements the ticket (sc-512248) Controller
+// RoleChangeAccumulationAcceptanceTestSuite implements the Controller
 // authorization matrix using Option B: single-signer messages whose approvals accumulate in
 // registry state until the role's policy is satisfied, at which point the change auto-applies.
 //
@@ -309,7 +309,7 @@ func (s *RoleChangeAccumulationAcceptanceTestSuite) TestControllerSet_WithSecure
 
 // --- AuthZ delegation -----------------------------------------------------------------
 //
-// The single-signer accumulation model is the whole reason Option B satisfies the ticket's authz
+// The single-signer accumulation model is the whole reason Option B satisfies the authz
 // requirement: because each MsgApproveRoleChange has exactly one signer, a party can grant another
 // account authority to submit its approval via authz MsgExec. This is impossible with the native
 // multi-signer MsgGrantRole (see authorization_acceptance_test.go,
@@ -420,7 +420,7 @@ func (s *RoleChangeAccumulationAcceptanceTestSuite) TestControllerUpdate_NoSecur
 	s.Require().Nil(pending, "pending change should be removed after it applies")
 }
 
-// TestControllerUpdate_RejectMatrix_ViaAuthz re-runs the ticket's reject scenarios with every
+// TestControllerUpdate_RejectMatrix_ViaAuthz re-runs the reject scenarios with every
 // approval (and the proposal) delegated through authz MsgExec, proving that an incomplete set of
 // authz-delegated approvals never satisfies the policy. A neutral executor carries each party's
 // delegated authority, so no required party ever signs a transaction directly.
@@ -512,7 +512,7 @@ func (s *RoleChangeAccumulationAcceptanceTestSuite) TestControllerRevoke_Accumul
 //
 // The accumulation engine re-resolves roles against live registry state on every approval, so an
 // approval recorded by a party that is no longer the current role holder cannot satisfy the policy.
-// This is the ticket's invalidation guarantee without a separate expiry mechanism.
+// This is the invalidation guarantee without a separate expiry mechanism.
 
 func (s *RoleChangeAccumulationAcceptanceTestSuite) TestControllerUpdate_InvalidationOnRoleChange() {
 	controllerRole := types.RegistryRole_REGISTRY_ROLE_CONTROLLER

@@ -21,7 +21,7 @@ import (
 )
 
 // ParticipantRolePoliciesAcceptanceTestSuite proves that the participant role policies described in
-// the ticket (sc-512248, requirements.md §"Participant Roles") are expressible as ordinary
+// the requirements (§"Participant Roles") are expressible as ordinary
 // RegistryClass.role_authorizations data and are correctly evaluated by the policy engine — without
 // any hard-coded, per-role chain logic. The same policies double as the example fixture shipped in
 // x/registry/spec/examples/example_registry_class.json.

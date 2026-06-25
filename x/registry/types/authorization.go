@@ -53,7 +53,7 @@ func (a Assignment) IsCurrent() bool {
 	}
 }
 
-// ControllerRoleAuthorizations returns the example CONTROLLER authorization policy from the ticket.
+// ControllerRoleAuthorizations returns an example CONTROLLER authorization policy.
 // This is NOT the default chain behavior: by default the registry module has no role policies and
 // every role change falls back to legacy NFT-owner authorization. This policy set is provided as a
 // reusable example that governance can install via MsgUpdateParams, or that a registry-class

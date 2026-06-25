@@ -4,8 +4,8 @@ This directory holds example registry classes that can be created with the regis
 
 ## `example_registry_class.json`
 
-A complete example registry class expressing the participant role policies from the ticket
-(sc-512248) as ordinary `role_authorizations` data: Originator, Lien Owner (with foreclosure),
+A complete example registry class expressing the participant role policies as ordinary
+`role_authorizations` data: Originator, Lien Owner (with foreclosure),
 Controller (with foreclosure), Secured Party for Lien, Secured Party for eNote, Pledgee, Servicer,
 and Sub-servicer.
 
