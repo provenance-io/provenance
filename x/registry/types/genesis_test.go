@@ -376,6 +376,34 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			expErr: "references unknown registry class id",
 		},
+		{
+			name: "invalid entry - references class for different asset class",
+			genesis: &types.GenesisState{
+				RegistryClasses: []types.RegistryClass{
+					{
+						RegistryClassId: "class-a",
+						AssetClassId:    "class1",
+						Maintainer:      validAddr,
+					},
+				},
+				Entries: []types.RegistryEntry{
+					{
+						Key: &types.RegistryKey{
+							AssetClassId: "class2",
+							NftId:        "nft1",
+						},
+						RegistryClassId: "class-a",
+						Roles: []types.RolesEntry{
+							{
+								Role:      types.RegistryRole_REGISTRY_ROLE_ORIGINATOR,
+								Addresses: []string{validAddr},
+							},
+						},
+					},
+				},
+			},
+			expErr: "registry class \"class-a\" is for asset class \"class1\", not \"class2\"",
+		},
 	}
 
 	for _, tc := range tests {

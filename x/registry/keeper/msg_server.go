@@ -34,15 +34,9 @@ func (k msgServer) RegisterNFT(ctx context.Context, msg *types.MsgRegisterNFT) (
 		return nil, err
 	}
 
-	// If a registry class is referenced, it must exist.
-	if msg.RegistryClassId != "" {
-		has, err := k.HasRegistryClass(ctx, msg.RegistryClassId)
-		if err != nil {
-			return nil, err
-		}
-		if !has {
-			return nil, types.NewErrCodeRegistryClassNotFound(msg.RegistryClassId)
-		}
+	// If a registry class is referenced, it must exist and match this entry's asset class.
+	if err := k.validateRegistryClassForEntry(ctx, msg.RegistryClassId, msg.Key.AssetClassId); err != nil {
+		return nil, err
 	}
 
 	// Store the registry in state.
@@ -269,15 +263,9 @@ func (k msgServer) RegistryBulkUpdate(ctx context.Context, msg *types.MsgRegistr
 			}
 		}
 
-		// If a registry class is referenced, it must exist.
-		if entry.RegistryClassId != "" {
-			has, err := k.HasRegistryClass(ctx, entry.RegistryClassId)
-			if err != nil {
-				return nil, fmt.Errorf("[%d]: %w", i, err)
-			}
-			if !has {
-				return nil, fmt.Errorf("[%d]: %w", i, types.NewErrCodeRegistryClassNotFound(entry.RegistryClassId))
-			}
+		// If a registry class is referenced, it must exist and match this entry's asset class.
+		if err := k.validateRegistryClassForEntry(ctx, entry.RegistryClassId, entry.Key.AssetClassId); err != nil {
+			return nil, fmt.Errorf("[%d]: %w", i, err)
 		}
 
 		// Get the original registry, so we know what we're updating.

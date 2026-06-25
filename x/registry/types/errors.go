@@ -29,33 +29,35 @@ import (
 type ErrCode string
 
 const (
-	ErrCodeRegistryAlreadyExists  ErrCode = "REGISTRY_ALREADY_EXISTS"
-	ErrCodeNFTNotFound            ErrCode = "NFT_NOT_FOUND"
-	ErrCodeUnauthorized           ErrCode = "UNAUTHORIZED"
-	ErrCodeInvalidRole            ErrCode = "INVALID_ROLE"
-	ErrCodeRegistryNotFound       ErrCode = "REGISTRY_NOT_FOUND"
-	ErrCodeAddressAlreadyHasRole  ErrCode = "ADDRESS_ALREADY_HAS_ROLE"
-	ErrCodeInvalidKey             ErrCode = "INVALID_KEY"
-	ErrCodeAddressDoesNotHaveRole ErrCode = "ADDRESS_DOES_NOT_HAVE_ROLE"
-	ErrCodeInvalidField           ErrCode = "INVALID_FIELD"
-	ErrCodePendingChangeNotFound  ErrCode = "PENDING_CHANGE_NOT_FOUND"
-	ErrCodeRegistryClassExists    ErrCode = "REGISTRY_CLASS_ALREADY_EXISTS"
-	ErrCodeRegistryClassNotFound  ErrCode = "REGISTRY_CLASS_NOT_FOUND"
+	ErrCodeRegistryAlreadyExists      ErrCode = "REGISTRY_ALREADY_EXISTS"
+	ErrCodeNFTNotFound                ErrCode = "NFT_NOT_FOUND"
+	ErrCodeUnauthorized               ErrCode = "UNAUTHORIZED"
+	ErrCodeInvalidRole                ErrCode = "INVALID_ROLE"
+	ErrCodeRegistryNotFound           ErrCode = "REGISTRY_NOT_FOUND"
+	ErrCodeAddressAlreadyHasRole      ErrCode = "ADDRESS_ALREADY_HAS_ROLE"
+	ErrCodeInvalidKey                 ErrCode = "INVALID_KEY"
+	ErrCodeAddressDoesNotHaveRole     ErrCode = "ADDRESS_DOES_NOT_HAVE_ROLE"
+	ErrCodeInvalidField               ErrCode = "INVALID_FIELD"
+	ErrCodePendingChangeNotFound      ErrCode = "PENDING_CHANGE_NOT_FOUND"
+	ErrCodeRegistryClassExists        ErrCode = "REGISTRY_CLASS_ALREADY_EXISTS"
+	ErrCodeRegistryClassNotFound      ErrCode = "REGISTRY_CLASS_NOT_FOUND"
+	ErrCodeRegistryClassAssetMismatch ErrCode = "REGISTRY_CLASS_ASSET_MISMATCH"
 )
 
 var (
-	ErrRegistryAlreadyExists  = cerrs.Register(ModuleName, 1, "registry already exists")
-	ErrNFTNotFound            = cerrs.Register(ModuleName, 2, "NFT does not exist")
-	ErrUnauthorized           = cerrs.Register(ModuleName, 3, "unauthorized")
-	ErrInvalidRole            = cerrs.Register(ModuleName, 4, "invalid role")
-	ErrRegistryNotFound       = cerrs.Register(ModuleName, 5, "registry not found")
-	ErrAddressAlreadyHasRole  = cerrs.Register(ModuleName, 6, "address already has role")
-	ErrInvalidKey             = cerrs.Register(ModuleName, 7, "invalid key")
-	ErrAddressDoesNotHaveRole = cerrs.Register(ModuleName, 8, "address does not have role")
-	ErrInvalidField           = cerrs.Register(ModuleName, 9, "invalid field")
-	ErrPendingChangeNotFound  = cerrs.Register(ModuleName, 10, "pending role change not found")
-	ErrRegistryClassExists    = cerrs.Register(ModuleName, 11, "registry class already exists")
-	ErrRegistryClassNotFound  = cerrs.Register(ModuleName, 12, "registry class not found")
+	ErrRegistryAlreadyExists      = cerrs.Register(ModuleName, 1, "registry already exists")
+	ErrNFTNotFound                = cerrs.Register(ModuleName, 2, "NFT does not exist")
+	ErrUnauthorized               = cerrs.Register(ModuleName, 3, "unauthorized")
+	ErrInvalidRole                = cerrs.Register(ModuleName, 4, "invalid role")
+	ErrRegistryNotFound           = cerrs.Register(ModuleName, 5, "registry not found")
+	ErrAddressAlreadyHasRole      = cerrs.Register(ModuleName, 6, "address already has role")
+	ErrInvalidKey                 = cerrs.Register(ModuleName, 7, "invalid key")
+	ErrAddressDoesNotHaveRole     = cerrs.Register(ModuleName, 8, "address does not have role")
+	ErrInvalidField               = cerrs.Register(ModuleName, 9, "invalid field")
+	ErrPendingChangeNotFound      = cerrs.Register(ModuleName, 10, "pending role change not found")
+	ErrRegistryClassExists        = cerrs.Register(ModuleName, 11, "registry class already exists")
+	ErrRegistryClassNotFound      = cerrs.Register(ModuleName, 12, "registry class not found")
+	ErrRegistryClassAssetMismatch = cerrs.Register(ModuleName, 13, "registry class asset class mismatch")
 )
 
 func NewErrCodeRegistryAlreadyExists(key string) error {
@@ -100,4 +102,14 @@ func NewErrCodeRegistryClassExists(registryClassID string) error {
 
 func NewErrCodeRegistryClassNotFound(registryClassID string) error {
 	return cerrs.Wrapf(ErrRegistryClassNotFound, "registry class not found: %q", registryClassID)
+}
+
+// NewErrCodeRegistryClassAssetMismatch reports that a registry entry references a registry class
+// whose asset class id does not match the entry's asset class id. A registry class only governs
+// entries within its own asset class, so applying it across collections would resolve authorization
+// against the wrong policy tier.
+func NewErrCodeRegistryClassAssetMismatch(registryClassID, classAssetClassID, entryAssetClassID string) error {
+	return cerrs.Wrapf(ErrRegistryClassAssetMismatch,
+		"registry class %q is for asset class %q, not %q",
+		registryClassID, classAssetClassID, entryAssetClassID)
 }

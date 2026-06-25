@@ -207,6 +207,26 @@ func (s *RegistryClassAcceptanceTestSuite) TestRegisterNFTWithRegistryClass() {
 		s.Require().ErrorContains(err, "no-such-class")
 	})
 
+	s.Run("reject: registry class for a different asset class", func() {
+		_, err := s.msgServer.CreateRegistryClass(s.ctx, &types.MsgCreateRegistryClass{
+			Signer:             s.maintainer,
+			RegistryClassId:    "class-other-asset",
+			AssetClassId:       "some-other-asset-class",
+			Maintainer:         s.maintainer,
+			RoleAuthorizations: []types.RoleAuthorization{servicerRoleAuthorization()},
+		})
+		s.Require().NoError(err)
+
+		key := s.mintNFT("nft-mismatched-class")
+		_, err = s.msgServer.RegisterNFT(s.ctx, &types.MsgRegisterNFT{
+			Signer:          s.nftOwner,
+			Key:             key,
+			RegistryClassId: "class-other-asset",
+		})
+		s.Require().Error(err)
+		s.Require().ErrorContains(err, "is for asset class \"some-other-asset-class\"")
+	})
+
 	s.Run("success: entry stores registry class id", func() {
 		key := s.mintNFT("nft-with-class")
 		_, err := s.msgServer.RegisterNFT(s.ctx, &types.MsgRegisterNFT{

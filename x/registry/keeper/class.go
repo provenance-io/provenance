@@ -29,6 +29,27 @@ func (k Keeper) HasRegistryClass(ctx context.Context, registryClassID string) (b
 	return k.RegistryClasses.Has(ctx, registryClassID)
 }
 
+// validateRegistryClassForEntry verifies that an entry may reference the given registry class id.
+// When the id is empty there is nothing to check. Otherwise the class must exist and its asset
+// class id must match the entry's asset class id; a registry class only governs entries within its
+// own asset class, so a mismatch would resolve authorization against the wrong policy tier.
+func (k Keeper) validateRegistryClassForEntry(ctx context.Context, registryClassID, assetClassID string) error {
+	if registryClassID == "" {
+		return nil
+	}
+	class, err := k.GetRegistryClass(ctx, registryClassID)
+	if err != nil {
+		return err
+	}
+	if class == nil {
+		return types.NewErrCodeRegistryClassNotFound(registryClassID)
+	}
+	if class.AssetClassId != assetClassID {
+		return types.NewErrCodeRegistryClassAssetMismatch(registryClassID, class.AssetClassId, assetClassID)
+	}
+	return nil
+}
+
 // SetRegistryClass stores a registry class in state.
 func (k Keeper) SetRegistryClass(ctx context.Context, class types.RegistryClass) error {
 	return k.RegistryClasses.Set(ctx, class.RegistryClassId, class)
@@ -120,6 +141,12 @@ func (k Keeper) roleAuthorizationsForEntry(ctx context.Context, entry *types.Reg
 			panic(fmt.Errorf("could not resolve registry class %q for authorization: %w", entry.RegistryClassId, err))
 		}
 		if class != nil {
+			// Defense in depth: enforcement at write time (register, bulk update, genesis) keeps the
+			// referenced class scoped to the entry's asset class. If a mismatched class is ever found
+			// in state, fail fast rather than resolve authorization against the wrong policy tier.
+			if entry.Key != nil && class.AssetClassId != entry.Key.AssetClassId {
+				panic(types.NewErrCodeRegistryClassAssetMismatch(entry.RegistryClassId, class.AssetClassId, entry.Key.AssetClassId))
+			}
 			return types.RoleAuthorizationMapFrom(class.RoleAuthorizations)
 		}
 	}
