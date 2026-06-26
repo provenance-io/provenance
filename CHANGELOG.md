@@ -52,23 +52,15 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
-## [v1.29.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.29.0-rc2) 2026-05-27
+## [v1.29.0](https://github.com/provenance-io/provenance/releases/tag/v1.29.0) 2026-06-08
 
-### Bug Fixes
+### Features
 
-* Revert PR 2728 and make the wasm grpc querier return a ResponseQuery again [PR 2741](https://github.com/provenance-io/provenance/pull/2741).
-
-### Full Commit History
-
-* https://github.com/provenance-io/provenance/compare/v1.29.0-rc1...v1.29.0-rc2
-* https://github.com/provenance-io/provenance/compare/v1.28.0...v1.29.0-rc2
-
----
-
-## [v1.29.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.29.0-rc1) 2026-05-21
+* Wire the vault module params and initialize them (`tech_fee_address`, `default_aum_fee_bips`) during the `edelweiss-rc3` and `edelweiss` upgrades [PR 2749](https://github.com/provenance-io/provenance/pull/2749).
 
 ### Improvements
 
+* Limit a trigger's total gas to the same 4,000,000 gas that a tx gets [PR 2572](https://github.com/provenance-io/provenance/pull/2572).
 * Add duplication checks to CreateSecuritization [#2682](https://github.com/provenance-io/provenance/issues/2682).
 * Use private struct types for bypass context keys to avoid cross-package collisions [#2694](https://github.com/provenance-io/provenance/issues/2694).
 * Refactor MustExtractDenomFromPacketOnRecv to return an error instead of panicking [#2699](https://github.com/provenance-io/provenance/issues/2699).
@@ -91,9 +83,11 @@ See: [.changelog/unreleased](.changelog/unreleased)
 * Properly handle an IBC v2 error acknowledgment [PR 2726](https://github.com/provenance-io/provenance/pull/2726).
 * Store a backup flatfees gas meter in the context [PR 2727](https://github.com/provenance-io/provenance/pull/2727).
 * ~~Make the Wasm GRPC Querier return the correct response types [PR 2728](https://github.com/provenance-io/provenance/pull/2728).~~
+* Revert PR 2728 and make the wasm grpc querier return a ResponseQuery again [PR 2741](https://github.com/provenance-io/provenance/pull/2741).
 * Attributes: Truncate the expiration date to the second [PR 2729](https://github.com/provenance-io/provenance/pull/2729).
 * Attributes: Include the current block second when finding expired attributes to delete [PR 2729](https://github.com/provenance-io/provenance/pull/2729).
 * Fix event trigger processing by correcting event scanning and ensuring proper queuing of matching events for trigger execution [PR 2733](https://github.com/provenance-io/provenance/pull/2733).
+* Prevent markers from using the some denoms [PR 2747](https://github.com/provenance-io/provenance/pull/2747).
 
 ### Dependencies
 
@@ -108,6 +102,7 @@ See: [.changelog/unreleased](.changelog/unreleased)
 * `github.com/lib/pq` bumped to v1.12.0 (from v1.10.9) [PR 2718](https://github.com/provenance-io/provenance/pull/2718).
 * `github.com/minio/highwayhash` bumped to v1.0.4 (from v1.0.3) [PR 2718](https://github.com/provenance-io/provenance/pull/2718).
 * `github.com/petermattis/goid` bumped to v0.0.0-20250813065127-a731cc31b4fe (from v0.0.0-20240813172612-4fcff4a6cae7) [PR 2718](https://github.com/provenance-io/provenance/pull/2718).
+* `github.com/provlabs/vault` bumped to v1.1.0 (from v1.0.15) [PR 2749](https://github.com/provenance-io/provenance/pull/2749).
 * `github.com/rs/zerolog` bumped to v1.35.1 (from v1.35.0) [PR 2681](https://github.com/provenance-io/provenance/pull/2681).
 * `github.com/sasha-s/go-deadlock` bumped to v0.3.9 (from v0.3.5) [PR 2718](https://github.com/provenance-io/provenance/pull/2718).
 * `golang.org/x/crypto` bumped to v0.50.0 (from v0.49.0) [PR 2719](https://github.com/provenance-io/provenance/pull/2719).
@@ -128,7 +123,7 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.28.0...v1.29.0-rc1
+* https://github.com/provenance-io/provenance/compare/v1.28.0...v1.29.0
 
 ---
 

@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
-// assertEverythingSet asserts that the provided proto.Message can be converted to
+// assertEventContent asserts that the provided proto.Message can be converted to
 // an untyped event with the expected type string. Then, if assertAllSet = true,
 // this asserts that none of the event attributes are empty.
 // Returns true on success, false if one or more things aren't right.

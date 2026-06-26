@@ -23,7 +23,7 @@ jobs:
   setup-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
@@ -31,6 +31,10 @@ jobs:
             go.mod
             go.sum
             .github/workflows/test.yml
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+          cache: true
       - name: Define Variables
         id: def-vars
         run: |
@@ -96,7 +100,7 @@ jobs:
     env:
       LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # CodeCov requires fetch-depth > 1
           fetch-depth: 2
@@ -104,6 +108,7 @@ jobs:
         if: needs.setup-tests.outputs.should-run
         with:
           go-version-file: 'go.mod'
+          cache: true
       - uses: actions/download-artifact@v8
         if: needs.setup-tests.outputs.should-run
         with:
@@ -127,7 +132,7 @@ jobs:
     #       it's in the steps below (except the checkout step).
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # CodeCov requires fetch-depth > 1
           fetch-depth: 2
@@ -167,7 +172,7 @@ jobs:
             echo "Excluding ${filename} from coverage report..."
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
-      - uses: codecov/codecov-action@v6
+      - uses: codecov/codecov-action@v7
         if: needs.setup-tests.outputs.should-run
         with:
           file: ./coverage.txt
@@ -186,11 +191,12 @@ jobs:
     env:
       LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-go@v6
         if: needs.setup-tests.outputs.should-run
         with:
           go-version-file: 'go.mod'
+          cache: true
       - uses: actions/download-artifact@v8
         if: needs.setup-tests.outputs.should-run
         with:
