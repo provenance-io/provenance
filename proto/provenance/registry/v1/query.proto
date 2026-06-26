@@ -9,6 +9,8 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "provenance/registry/v1/registry.proto";
+import "provenance/registry/v1/authorization.proto";
+import "provenance/registry/v1/params.proto";
 
 // Query defines the gRPC querier service for the registry module.
 // This service provides read-only access to registry data and role verification.
@@ -39,6 +41,34 @@ service Query {
   // PendingRoleChanges returns the pending role changes, optionally filtered by registry key.
   rpc PendingRoleChanges(QueryPendingRoleChangesRequest) returns (QueryPendingRoleChangesResponse) {
     option (google.api.http).get = "/provenance/registry/v1/pending_role_changes";
+  }
+
+  // RegistryClass returns a single registry class (including its authorization policy) by id.
+  rpc RegistryClass(QueryRegistryClassRequest) returns (QueryRegistryClassResponse) {
+    option (google.api.http).get = "/provenance/registry/v1/registry_class/{registry_class_id}";
+  }
+
+  // RegistryClasses returns all registry classes.
+  rpc RegistryClasses(QueryRegistryClassesRequest) returns (QueryRegistryClassesResponse) {
+    option (google.api.http).get = "/provenance/registry/v1/registry_classes";
+  }
+
+  // Params returns the registry module parameters, including the default role authorization
+  // policies.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/provenance/registry/v1/params";
+  }
+
+  // ValidateRoleChange performs a read-only dry-run of a role-change batch, reporting whether the
+  // supplied approvers would satisfy every affected role's authorization policy without writing
+  // any state.
+  rpc ValidateRoleChange(QueryValidateRoleChangeRequest) returns (QueryValidateRoleChangeResponse) {
+    // This is a read-only query, but it is exposed over POST because the request carries the full
+    // role_updates and approvers lists, which cannot be supplied via a GET query string.
+    option (google.api.http) = {
+      post: "/provenance/registry/v1/validate_role_change"
+      body: "*"
+    };
   }
 }
 
@@ -134,4 +164,63 @@ message QueryPendingRoleChangesResponse {
 
   // pagination is the pagination details for this response.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryRegistryClassRequest is the request type for the Query/RegistryClass RPC method.
+message QueryRegistryClassRequest {
+  // registry_class_id is the unique identifier of the registry class to retrieve.
+  string registry_class_id = 1;
+}
+
+// QueryRegistryClassResponse is the response type for the Query/RegistryClass RPC method.
+message QueryRegistryClassResponse {
+  // registry_class is the registry class for the requested id, including its authorization policy.
+  RegistryClass registry_class = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryRegistryClassesRequest is the paginated request type for the Query/RegistryClasses RPC method.
+message QueryRegistryClassesRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryRegistryClassesResponse is the paginated response type for the Query/RegistryClasses RPC method.
+message QueryRegistryClassesResponse {
+  // registry_classes is the collection of registry classes.
+  repeated RegistryClass registry_classes = 1 [(gogoproto.nullable) = false];
+
+  // pagination is the pagination details for this response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params are the current registry module parameters.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryValidateRoleChangeRequest is the request type for the Query/ValidateRoleChange RPC method.
+// It describes a candidate role-change batch and the set of approvers to test against each affected
+// role's authorization policy.
+message QueryValidateRoleChangeRequest {
+  // key identifies the registry entry the role change targets.
+  RegistryKey key = 1;
+
+  // role_updates is the desired-state batch to evaluate (same shape as MsgSetRoles).
+  repeated RoleUpdate role_updates = 2 [(gogoproto.nullable) = false];
+
+  // approvers is the accumulated/candidate set of approver addresses to test.
+  repeated string approvers = 3;
+}
+
+// QueryValidateRoleChangeResponse is the response type for the Query/ValidateRoleChange RPC method.
+message QueryValidateRoleChangeResponse {
+  // error contains the authorization failure explanation. It is empty when the change is authorized.
+  string error = 1;
+
+  // authorized is true if the supplied approvers satisfy every affected role's policy.
+  bool authorized = 2;
 }

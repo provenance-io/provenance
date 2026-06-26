@@ -1,0 +1,18 @@
+syntax = "proto3";
+package provenance.registry.v1;
+
+option go_package          = "github.com/provenance-io/provenance/x/registry/types";
+option java_package        = "io.provenance.registry.v1";
+option java_multiple_files = true;
+
+import "gogoproto/gogo.proto";
+import "provenance/registry/v1/authorization.proto";
+
+// Params defines the registry module's parameters.
+message Params {
+  // role_authorizations are the default authorization policies that govern role updates for
+  // registry entries that are not associated with a registry class. They form the middle tier of
+  // the two-tier resolution: a registry class policy takes precedence, then these module defaults,
+  // and finally roles without any policy fall back to legacy NFT-owner authorization.
+  repeated RoleAuthorization role_authorizations = 1 [(gogoproto.nullable) = false];
+}

@@ -490,7 +490,7 @@ func (s *MsgServerTestSuite) TestCreate() {
 
 				// Create a registry if there are roles to grant
 				if len(tc.registryEntries) > 0 {
-					err := s.app.RegistryKeeper.CreateRegistry(s.ctx, &registryKey, tc.registryEntries)
+					err := s.app.RegistryKeeper.CreateRegistry(s.ctx, &registryKey, tc.registryEntries, "")
 					s.Require().NoError(err, "CreateRegistry error")
 				}
 			}

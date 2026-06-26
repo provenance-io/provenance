@@ -132,3 +132,73 @@ func (qs QueryServer) PendingRoleChanges(ctx context.Context, req *types.QueryPe
 
 	return &types.QueryPendingRoleChangesResponse{PendingRoleChanges: changes, Pagination: pageRes}, nil
 }
+
+// RegistryClass returns a single registry class (including its authorization policy) by id.
+func (qs QueryServer) RegistryClass(ctx context.Context, req *types.QueryRegistryClassRequest) (*types.QueryRegistryClassResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	class, err := qs.keeper.GetRegistryClass(sdkCtx, req.RegistryClassId)
+	if err != nil {
+		return nil, err
+	}
+	if class == nil {
+		return nil, types.NewErrCodeRegistryClassNotFound(req.RegistryClassId)
+	}
+
+	return &types.QueryRegistryClassResponse{RegistryClass: *class}, nil
+}
+
+// RegistryClasses returns all registry classes, paginated.
+func (qs QueryServer) RegistryClasses(ctx context.Context, req *types.QueryRegistryClassesRequest) (*types.QueryRegistryClassesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	classes, pageRes, err := qs.keeper.GetRegistryClasses(sdkCtx, req.Pagination)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryRegistryClassesResponse{RegistryClasses: classes, Pagination: pageRes}, nil
+}
+
+// Params returns the registry module parameters.
+func (qs QueryServer) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	return &types.QueryParamsResponse{Params: qs.keeper.GetParams(sdkCtx)}, nil
+}
+
+// ValidateRoleChange performs a read-only dry-run of a role-change batch, reporting whether the
+// supplied approvers would satisfy every affected role's authorization policy. It writes no state.
+func (qs QueryServer) ValidateRoleChange(ctx context.Context, req *types.QueryValidateRoleChangeRequest) (*types.QueryValidateRoleChangeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if err := req.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if err := qs.keeper.EvaluateRoleChange(sdkCtx, req.Key, req.RoleUpdates, req.Approvers); err != nil {
+		return &types.QueryValidateRoleChangeResponse{Error: err.Error(), Authorized: false}, nil
+	}
+	return &types.QueryValidateRoleChangeResponse{Error: "", Authorized: true}, nil
+}

@@ -23,7 +23,7 @@ func (s *TestSuite) TestRequireAuthorization_NoRegistry_NonOwner() {
 func (s *TestSuite) TestRequireAuthorization_WithServicer() {
 	rk := &registrytypes.RegistryKey{AssetClassId: s.validNFTClass.Id, NftId: s.validNFT.Id}
 	roles := []registrytypes.RolesEntry{{Role: registrytypes.RegistryRole_REGISTRY_ROLE_SERVICER, Addresses: []string{s.addr2.String()}}}
-	s.Require().NoError(s.registryKeeper.CreateRegistry(s.ctx, rk, roles))
+	s.Require().NoError(s.registryKeeper.CreateRegistry(s.ctx, rk, roles, ""))
 
 	// Servicer allowed
 	err := s.keeper.RequireAuthorization(s.ctx, s.addr2.String(), rk)
@@ -38,7 +38,7 @@ func (s *TestSuite) TestRequireAuthorization_WithServicer() {
 func (s *TestSuite) TestRequireAuthorization_EmptyServicerAddresses() {
 	rk := &registrytypes.RegistryKey{AssetClassId: s.validNFTClass.Id, NftId: s.validNFT.Id}
 	roles := []registrytypes.RolesEntry{{Role: registrytypes.RegistryRole_REGISTRY_ROLE_SERVICER, Addresses: []string{}}}
-	s.Require().NoError(s.registryKeeper.CreateRegistry(s.ctx, rk, roles))
+	s.Require().NoError(s.registryKeeper.CreateRegistry(s.ctx, rk, roles, ""))
 
 	// Owner allowed
 	err := s.keeper.RequireAuthorization(s.ctx, s.addr1.String(), rk)

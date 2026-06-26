@@ -116,7 +116,7 @@ func (s *KeeperTestSuite) TestCreateRegistry() {
 		},
 	}
 
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles, "")
 	s.Require().NoError(err)
 
 	// Verify registry was created
@@ -128,8 +128,57 @@ func (s *KeeperTestSuite) TestCreateRegistry() {
 
 	// Test duplicate creation not allowed.
 	expDupErr := "registry already exists for key: \"" + key.String() + "\": registry already exists"
-	err = s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles)
+	err = s.app.RegistryKeeper.CreateRegistry(s.ctx, key, roles, "")
 	s.Require().EqualError(err, expDupErr)
+}
+
+// TestCreateRegistry_RejectsInvalidClassReference verifies the keeper-layer invariant that an entry
+// may only be created with a registry class id that exists and is scoped to the entry's asset class.
+// This guards against invalid state introduced via direct keeper calls that bypass msg/genesis.
+func (s *KeeperTestSuite) TestCreateRegistry_RejectsInvalidClassReference() {
+	key := &types.RegistryKey{
+		AssetClassId: s.validNFTClass.Id,
+		NftId:        "create-registry-bad-class-nft",
+	}
+
+	// A nil key must be rejected rather than panic.
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, nil, nil, "")
+	s.Require().EqualError(err, "registry key must not be nil")
+
+	// Referencing a class that does not exist must fail closed.
+	err = s.app.RegistryKeeper.CreateRegistry(s.ctx, key, nil, "missing-class")
+	s.Require().ErrorIs(err, types.NewErrCodeRegistryClassNotFound("missing-class"))
+
+	// The entry must not have been written.
+	entry, err := s.app.RegistryKeeper.GetRegistry(s.ctx, key)
+	s.Require().NoError(err)
+	s.Require().Nil(entry)
+}
+
+// TestRoleAuthorizationsForEntry_FailsClosedOnMissingClass verifies that resolving authorization for
+// an entry whose registry class id is absent from state fails closed: the role-change message
+// returns a deterministic error (rather than panicking or silently downgrading to the params/legacy
+// authorization tier), so an inconsistent store cannot halt block processing.
+func (s *KeeperTestSuite) TestRoleAuthorizationsForEntry_FailsClosedOnMissingClass() {
+	key := &types.RegistryKey{
+		AssetClassId: s.validNFTClass.Id,
+		NftId:        "fail-closed-missing-class-nft",
+	}
+	// Seed the entry directly to bypass CreateRegistry's validation, simulating corrupt state or a
+	// class that was removed after the entry referenced it.
+	s.Require().NoError(s.app.RegistryKeeper.SetRegistry(s.ctx, types.RegistryEntry{
+		Key:             key,
+		RegistryClassId: "missing-class",
+	}))
+
+	msgServer := keeper.NewMsgServer(s.app.RegistryKeeper)
+	_, err := msgServer.GrantRole(s.ctx, &types.MsgGrantRole{
+		Signer:    s.user1,
+		Key:       key,
+		Role:      types.RegistryRole_REGISTRY_ROLE_SERVICER,
+		Addresses: []string{s.user1},
+	})
+	s.Require().ErrorIs(err, types.NewErrCodeRegistryClassNotFound("missing-class"))
 }
 
 func (s *KeeperTestSuite) TestGrantRole() {
@@ -144,7 +193,7 @@ func (s *KeeperTestSuite) TestGrantRole() {
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, baseKey, baseRoles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, baseKey, baseRoles, "")
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -239,7 +288,7 @@ func (s *KeeperTestSuite) TestRevokeRole() {
 			Addresses: []string{s.user1Addr.String(), s.user2Addr.String()},
 		},
 	}
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, baseKey, baseRoles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, baseKey, baseRoles, "")
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -322,7 +371,7 @@ func (s *KeeperTestSuite) TestHasRole() {
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, baseKey, baseRoles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, baseKey, baseRoles, "")
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -387,7 +436,7 @@ func (s *KeeperTestSuite) TestGetRegistry() {
 			Addresses: []string{s.user1Addr.String()},
 		},
 	}
-	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, baseKey, baseRoles)
+	err := s.app.RegistryKeeper.CreateRegistry(s.ctx, baseKey, baseRoles, "")
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -456,7 +505,7 @@ func (s *KeeperTestSuite) TestGetRegistries() {
 		{AssetClassId: "eclass", NftId: "nft1"},
 	}
 	for _, k := range keys {
-		s.Require().NoError(s.app.RegistryKeeper.CreateRegistry(s.ctx, k, roles))
+		s.Require().NoError(s.app.RegistryKeeper.CreateRegistry(s.ctx, k, roles, ""))
 	}
 
 	// Helper to get key strings in order

@@ -11,7 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
+	"github.com/provenance-io/provenance/internal/provcli"
 	"github.com/provenance-io/provenance/x/registry/types"
 )
 
@@ -33,6 +35,9 @@ func CmdTx() *cobra.Command {
 		CmdRegistryBulkUpdate(),
 		CmdProposeRoleChange(),
 		CmdApproveRoleChange(),
+		CmdCreateRegistryClass(),
+		CmdUpdateRegistryClassRoleAuthorization(),
+		CmdUpdateParams(),
 	)
 
 	return cmd
@@ -291,7 +296,151 @@ func CmdApproveRoleChange() *cobra.Command {
 	return cmd
 }
 
-// parseRoleUpdates converts "role=address[,address...]" arguments into RoleUpdate values.
+// CmdCreateRegistryClass returns the command to create a registry class.
+// The class definition (including role_authorizations) is read from a JSON file in proto-JSON
+// format so that oneof fields in the authorization policy are decoded correctly.
+func CmdCreateRegistryClass() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-registry-class <class_json_file>",
+		Short: "Create a registry class from a JSON file",
+		Long: `Create a registry class defining asset class-level authorization rules.
+
+The file is a proto-JSON RegistryClass, e.g.:
+{
+  "registry_class_id": "loan-registry-v1",
+  "asset_class_id": "loan.asset",
+  "maintainer": "pb1...",
+  "role_authorizations": [ { "role": "REGISTRY_ROLE_CONTROLLER", "authorizations": [ ... ] } ]
+}
+
+If "maintainer" is omitted it defaults to the --from signer. The signer must equal the maintainer.`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			jsonData, err := os.ReadFile(args[0])
+			if err != nil {
+				return fmt.Errorf("failed to read file: %w", err)
+			}
+
+			var class types.RegistryClass
+			if err := clientCtx.Codec.UnmarshalJSON(jsonData, &class); err != nil {
+				return fmt.Errorf("failed to unmarshal registry class JSON: %w", err)
+			}
+
+			signer := clientCtx.GetFromAddress().String()
+			maintainer := class.Maintainer
+			if maintainer == "" {
+				maintainer = signer
+			}
+
+			msg := types.MsgCreateRegistryClass{
+				Signer:             signer,
+				RegistryClassId:    class.RegistryClassId,
+				AssetClassId:       class.AssetClassId,
+				Maintainer:         maintainer,
+				RoleAuthorizations: class.RoleAuthorizations,
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// CmdUpdateRegistryClassRoleAuthorization returns the command to replace a registry class's
+// authorization rules. The new rules are read from a proto-JSON RegistryClass file (only its
+// role_authorizations are used).
+func CmdUpdateRegistryClassRoleAuthorization() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update-registry-class <registry_class_id> <class_json_file>",
+		Short: "Replace a registry class's authorization rules from a JSON file",
+		Long: `Replace the authorization rules for an existing registry class. Only the current
+maintainer may update the rules. The file is a proto-JSON RegistryClass; only its
+role_authorizations field is used.`,
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			jsonData, err := os.ReadFile(args[1])
+			if err != nil {
+				return fmt.Errorf("failed to read file: %w", err)
+			}
+
+			var class types.RegistryClass
+			if err := clientCtx.Codec.UnmarshalJSON(jsonData, &class); err != nil {
+				return fmt.Errorf("failed to unmarshal registry class JSON: %w", err)
+			}
+
+			msg := types.MsgUpdateRegistryClassRoleAuthorization{
+				Signer:             clientCtx.GetFromAddress().String(),
+				RegistryClassId:    args[0],
+				RoleAuthorizations: class.RoleAuthorizations,
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// CmdUpdateParams returns the command to update the registry module params via a governance
+// proposal. The params are read from a proto-JSON Params file and wrapped in a gov proposal, since
+// MsgUpdateParams is authorized by the governance module account.
+func CmdUpdateParams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update-params <params_json_file>",
+		Short: "Submit a governance proposal to update the registry module params from a JSON file",
+		Long: `Submit a governance proposal to update the registry module params from a proto-JSON Params file, e.g.:
+{
+  "role_authorizations": [ { "role": "REGISTRY_ROLE_CONTROLLER", "authorizations": [ ... ] } ]
+}
+
+The message is wrapped in a governance proposal and must be passed by governance. The authority
+defaults to the governance module account address; use --authority to override.`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			jsonData, err := os.ReadFile(args[0])
+			if err != nil {
+				return fmt.Errorf("failed to read file: %w", err)
+			}
+
+			var params types.Params
+			if err := clientCtx.Codec.UnmarshalJSON(jsonData, &params); err != nil {
+				return fmt.Errorf("failed to unmarshal params JSON: %w", err)
+			}
+
+			flagSet := cmd.Flags()
+			msg := types.MsgUpdateParams{
+				Authority: provcli.GetAuthority(flagSet),
+				Params:    params,
+			}
+
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, &msg)
+		},
+	}
+
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
 // An empty address list (e.g. "role=") clears the role.
 func parseRoleUpdates(args []string) ([]types.RoleUpdate, error) {
 	updates := make([]types.RoleUpdate, 0, len(args))

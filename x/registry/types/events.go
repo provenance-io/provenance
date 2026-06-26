@@ -76,6 +76,52 @@ func NewEventRoleChangeApplied(change *PendingRoleChange) *EventRoleChangeApplie
 	}
 }
 
+// NewEventRegistryClassCreated returns a new EventRegistryClassCreated.
+func NewEventRegistryClassCreated(class *RegistryClass) *EventRegistryClassCreated {
+	return &EventRegistryClassCreated{
+		RegistryClassId: class.RegistryClassId,
+		AssetClassId:    class.AssetClassId,
+		Maintainer:      class.Maintainer,
+	}
+}
+
+// NewEventRegistryClassUpdated returns a new EventRegistryClassUpdated.
+func NewEventRegistryClassUpdated(class *RegistryClass) *EventRegistryClassUpdated {
+	return &EventRegistryClassUpdated{
+		RegistryClassId: class.RegistryClassId,
+		Maintainer:      class.Maintainer,
+	}
+}
+
+// NewEventParamsUpdated returns a new EventParamsUpdated.
+func NewEventParamsUpdated() *EventParamsUpdated {
+	return &EventParamsUpdated{}
+}
+
+// NewEventRoleUpdated returns a new EventRoleUpdated describing the full state transition for a
+// single role, including the addresses before and after and the signers that authorized it.
+func NewEventRoleUpdated(key *RegistryKey, registryClassID string, role RegistryRole, previousAddrs, currentAddrs []string, signers []RoleSigner) *EventRoleUpdated {
+	return &EventRoleUpdated{
+		NftId:             key.NftId,
+		AssetClassId:      key.AssetClassId,
+		RegistryClassId:   registryClassID,
+		Role:              role.ShortString(),
+		Addresses:         currentAddrs,
+		PreviousAddresses: previousAddrs,
+		Signers:           signers,
+	}
+}
+
+// NewNFTOwnerSigner returns the RoleSigner describing the legacy NFT-owner authorization path, where
+// the NFT owner's signature alone authorizes a role change for a role with no configured policy.
+func NewNFTOwnerSigner(owner string) RoleSigner {
+	return RoleSigner{
+		Role:       NftRole_NFT_ROLE_NFT_OWNER.String(),
+		Assignment: Assignment_ASSIGNMENT_CURRENT.String(),
+		Addresses:  []string{owner},
+	}
+}
+
 // GetChangeEvents gets all the events that represent the changes from oldReg to newReg.
 // Panics if they have different keys (unless oldReg or newReg is nil).
 func GetChangeEvents(oldReg, newReg *RegistryEntry) ([]*EventRoleGranted, []*EventRoleRevoked) {

@@ -9,6 +9,8 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "provenance/registry/v1/registry.proto";
+import "provenance/registry/v1/authorization.proto";
+import "provenance/registry/v1/params.proto";
 
 // Msg defines the registry Msg service.
 // This service provides transaction functionality for managing registry entries and roles.
@@ -52,6 +54,20 @@ service Msg {
   // ApproveRoleChange records a single-signer approval for an open pending role change.
   // When the accumulated approvals satisfy the role's policy, the change is applied automatically.
   rpc ApproveRoleChange(MsgApproveRoleChange) returns (MsgApproveRoleChangeResponse);
+
+  // CreateRegistryClass creates a new registry class that defines asset class-level authorization
+  // rules for role updates. The signer must match the maintainer address.
+  rpc CreateRegistryClass(MsgCreateRegistryClass) returns (MsgCreateRegistryClassResponse);
+
+  // UpdateRegistryClassRoleAuthorization replaces the authorization rules for an existing registry
+  // class. Only the current maintainer may update the rules.
+  rpc UpdateRegistryClassRoleAuthorization(MsgUpdateRegistryClassRoleAuthorization)
+      returns (MsgUpdateRegistryClassRoleAuthorizationResponse);
+
+  // UpdateParams is a governance proposal endpoint for updating the registry module's params,
+  // including the default role authorization policies. The authority must be the governance module
+  // account address.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
 // MsgRegisterNFT represents a message to register a new NFT in the registry.
@@ -70,6 +86,10 @@ message MsgRegisterNFT {
   // roles is a list of roles and addresses that can perform that role.
   // Each role entry defines a role type and the addresses authorized for that role.
   repeated RolesEntry roles = 3 [(gogoproto.nullable) = false];
+
+  // registry_class_id optionally associates the new registry entry with a registry class whose
+  // authorization rules govern subsequent role updates. If set, the referenced class must exist.
+  string registry_class_id = 4 [(gogoproto.jsontag) = "registryClassId,omitempty"];
 }
 
 // MsgRegisterNFTResponse defines the response for RegisterNFT.
@@ -234,3 +254,62 @@ message MsgApproveRoleChangeResponse {
   // applied is true if this approval satisfied the policy and the change was applied.
   bool applied = 1;
 }
+
+// MsgCreateRegistryClass creates a new registry class defining asset class-level authorization
+// rules for role updates within an NFT collection.
+message MsgCreateRegistryClass {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // signer must match the maintainer address.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // registry_class_id is the unique identifier for the registry class. Must be unique across all
+  // registry classes.
+  string registry_class_id = 2;
+
+  // asset_class_id is the Scope Specification ID or NFT Class ID this registry class governs.
+  string asset_class_id = 3;
+
+  // maintainer is the address authorized to manage this registry class. It is permanent and
+  // cannot be changed after creation.
+  string maintainer = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // role_authorizations are the initial authorization rules for this asset class.
+  repeated RoleAuthorization role_authorizations = 5 [(gogoproto.nullable) = false];
+}
+
+// MsgCreateRegistryClassResponse defines the response for CreateRegistryClass.
+message MsgCreateRegistryClassResponse {}
+
+// MsgUpdateRegistryClassRoleAuthorization replaces the authorization rules for an existing
+// registry class. The new rules completely replace the existing rules (not a merge).
+message MsgUpdateRegistryClassRoleAuthorization {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // signer must be the current maintainer address.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // registry_class_id identifies the registry class to update.
+  string registry_class_id = 2;
+
+  // role_authorizations are the updated authorization rules (replaces existing rules).
+  repeated RoleAuthorization role_authorizations = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgUpdateRegistryClassRoleAuthorizationResponse defines the response for
+// UpdateRegistryClassRoleAuthorization.
+message MsgUpdateRegistryClassRoleAuthorizationResponse {}
+
+// MsgUpdateParams is a request to update the registry module's params.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority should be the governance module account address.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params are the new registry module params to set.
+  Params params = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgUpdateParamsResponse defines the response for UpdateParams.
+message MsgUpdateParamsResponse {}

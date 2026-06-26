@@ -17,6 +17,9 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgSetRoles)(nil),
 	(*MsgProposeRoleChange)(nil),
 	(*MsgApproveRoleChange)(nil),
+	(*MsgCreateRegistryClass)(nil),
+	(*MsgUpdateRegistryClassRoleAuthorization)(nil),
+	(*MsgUpdateParams)(nil),
 }
 
 // ValidateBasic validates the MsgRegisterNFT message
@@ -35,6 +38,13 @@ func (m MsgRegisterNFT) ValidateBasic() error {
 	for _, role := range m.Roles {
 		if err := role.Validate(); err != nil {
 			errs = append(errs, NewErrCodeInvalidField("role", "%s", err))
+		}
+	}
+
+	// registry_class_id is optional; validate format only when set.
+	if m.RegistryClassId != "" {
+		if err := ValidateRegistryClassID(m.RegistryClassId); err != nil {
+			errs = append(errs, NewErrCodeInvalidField("registry_class_id", "%s", err))
 		}
 	}
 
@@ -167,6 +177,65 @@ func (m MsgApproveRoleChange) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
+// ValidateBasic validates the MsgCreateRegistryClass message
+func (m MsgCreateRegistryClass) ValidateBasic() error {
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("signer", "%s", err))
+	}
+
+	if _, err := sdk.AccAddressFromBech32(m.Maintainer); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("maintainer", "%s", err))
+	}
+
+	// The signer must be the maintainer being set.
+	if m.Signer != m.Maintainer {
+		errs = append(errs, NewErrCodeInvalidField("signer", "signer %q must match maintainer %q", m.Signer, m.Maintainer))
+	}
+
+	if err := ValidateRegistryClassID(m.RegistryClassId); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("registry_class_id", "%s", err))
+	}
+
+	if err := ValidateClassID(m.AssetClassId); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("asset_class_id", "%s", err))
+	}
+
+	errs = append(errs, validateRoleAuthorizations(m.RoleAuthorizations)...)
+
+	return errors.Join(errs...)
+}
+
+// ValidateBasic validates the MsgUpdateRegistryClassRoleAuthorization message
+func (m MsgUpdateRegistryClassRoleAuthorization) ValidateBasic() error {
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("signer", "%s", err))
+	}
+
+	if err := ValidateRegistryClassID(m.RegistryClassId); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("registry_class_id", "%s", err))
+	}
+
+	errs = append(errs, validateRoleAuthorizations(m.RoleAuthorizations)...)
+
+	return errors.Join(errs...)
+}
+
+// ValidateBasic validates the MsgUpdateParams message
+func (m MsgUpdateParams) ValidateBasic() error {
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("authority", "%s", err))
+	}
+
+	if err := m.Params.Validate(); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("params", "%s", err))
+	}
+
+	return errors.Join(errs...)
+}
+
 // ValidateBasic validates the MsgUnregisterNFT message
 func (m MsgUnregisterNFT) ValidateBasic() error {
 	var errs []error
@@ -266,6 +335,54 @@ func (m QueryPendingRoleChangesRequest) Validate() error {
 		return m.Key.Validate()
 	}
 	return nil
+}
+
+// Validate validates the QueryRegistryClassRequest
+func (m QueryRegistryClassRequest) Validate() error {
+	if len(m.RegistryClassId) == 0 {
+		return NewErrCodeInvalidField("registry_class_id", "registry_class_id cannot be empty")
+	}
+	if err := ValidateRegistryClassID(m.RegistryClassId); err != nil {
+		return NewErrCodeInvalidField("registry_class_id", "%v", err)
+	}
+	return nil
+}
+
+// Validate validates the QueryRegistryClassesRequest
+func (m QueryRegistryClassesRequest) Validate() error {
+	// There's nothing to validate; pagination is optional.
+	return nil
+}
+
+// Validate validates the QueryValidateRoleChangeRequest. Beyond requiring a key and at least one
+// role update, it applies the same role-update invariants as MsgSetRoles/MsgProposeRoleChange
+// (known/specified roles, no duplicate roles, valid and non-duplicate addresses) and verifies that
+// each approver is a valid bech32 address, so malformed requests fail fast with a precise error
+// rather than surfacing as a confusing authorization or policy-evaluation failure later.
+func (m QueryValidateRoleChangeRequest) Validate() error {
+	var errs []error
+	if m.Key == nil {
+		errs = append(errs, NewErrCodeInvalidField("key", "key is required"))
+	} else if err := m.Key.Validate(); err != nil {
+		errs = append(errs, NewErrCodeInvalidField("key", "%s", err))
+	}
+
+	errs = append(errs, validateRoleUpdates(m.RoleUpdates)...)
+
+	seenApprovers := make(map[string]bool, len(m.Approvers))
+	for _, approver := range m.Approvers {
+		if _, err := sdk.AccAddressFromBech32(approver); err != nil {
+			errs = append(errs, NewErrCodeInvalidField("approvers", "invalid address: %s", err))
+			continue
+		}
+		if seenApprovers[approver] {
+			errs = append(errs, NewErrCodeInvalidField("approvers", "duplicate address: %s", approver))
+			continue
+		}
+		seenApprovers[approver] = true
+	}
+
+	return errors.Join(errs...)
 }
 
 // ValidateStringLength checks several conditions in order:

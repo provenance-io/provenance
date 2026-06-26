@@ -560,6 +560,403 @@ func (m *QueryPendingRoleChangesResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
+// QueryRegistryClassRequest is the request type for the Query/RegistryClass RPC method.
+type QueryRegistryClassRequest struct {
+	// registry_class_id is the unique identifier of the registry class to retrieve.
+	RegistryClassId string `protobuf:"bytes,1,opt,name=registry_class_id,json=registryClassId,proto3" json:"registry_class_id,omitempty"`
+}
+
+func (m *QueryRegistryClassRequest) Reset()         { *m = QueryRegistryClassRequest{} }
+func (m *QueryRegistryClassRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryRegistryClassRequest) ProtoMessage()    {}
+func (*QueryRegistryClassRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{10}
+}
+func (m *QueryRegistryClassRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryRegistryClassRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryRegistryClassRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryRegistryClassRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRegistryClassRequest.Merge(m, src)
+}
+func (m *QueryRegistryClassRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryRegistryClassRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRegistryClassRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryRegistryClassRequest proto.InternalMessageInfo
+
+func (m *QueryRegistryClassRequest) GetRegistryClassId() string {
+	if m != nil {
+		return m.RegistryClassId
+	}
+	return ""
+}
+
+// QueryRegistryClassResponse is the response type for the Query/RegistryClass RPC method.
+type QueryRegistryClassResponse struct {
+	// registry_class is the registry class for the requested id, including its authorization policy.
+	RegistryClass RegistryClass `protobuf:"bytes,1,opt,name=registry_class,json=registryClass,proto3" json:"registry_class"`
+}
+
+func (m *QueryRegistryClassResponse) Reset()         { *m = QueryRegistryClassResponse{} }
+func (m *QueryRegistryClassResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryRegistryClassResponse) ProtoMessage()    {}
+func (*QueryRegistryClassResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{11}
+}
+func (m *QueryRegistryClassResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryRegistryClassResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryRegistryClassResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryRegistryClassResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRegistryClassResponse.Merge(m, src)
+}
+func (m *QueryRegistryClassResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryRegistryClassResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRegistryClassResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryRegistryClassResponse proto.InternalMessageInfo
+
+func (m *QueryRegistryClassResponse) GetRegistryClass() RegistryClass {
+	if m != nil {
+		return m.RegistryClass
+	}
+	return RegistryClass{}
+}
+
+// QueryRegistryClassesRequest is the paginated request type for the Query/RegistryClasses RPC method.
+type QueryRegistryClassesRequest struct {
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryRegistryClassesRequest) Reset()         { *m = QueryRegistryClassesRequest{} }
+func (m *QueryRegistryClassesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryRegistryClassesRequest) ProtoMessage()    {}
+func (*QueryRegistryClassesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{12}
+}
+func (m *QueryRegistryClassesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryRegistryClassesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryRegistryClassesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryRegistryClassesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRegistryClassesRequest.Merge(m, src)
+}
+func (m *QueryRegistryClassesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryRegistryClassesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRegistryClassesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryRegistryClassesRequest proto.InternalMessageInfo
+
+func (m *QueryRegistryClassesRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryRegistryClassesResponse is the paginated response type for the Query/RegistryClasses RPC method.
+type QueryRegistryClassesResponse struct {
+	// registry_classes is the collection of registry classes.
+	RegistryClasses []RegistryClass `protobuf:"bytes,1,rep,name=registry_classes,json=registryClasses,proto3" json:"registry_classes"`
+	// pagination is the pagination details for this response.
+	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryRegistryClassesResponse) Reset()         { *m = QueryRegistryClassesResponse{} }
+func (m *QueryRegistryClassesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryRegistryClassesResponse) ProtoMessage()    {}
+func (*QueryRegistryClassesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{13}
+}
+func (m *QueryRegistryClassesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryRegistryClassesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryRegistryClassesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryRegistryClassesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRegistryClassesResponse.Merge(m, src)
+}
+func (m *QueryRegistryClassesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryRegistryClassesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRegistryClassesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryRegistryClassesResponse proto.InternalMessageInfo
+
+func (m *QueryRegistryClassesResponse) GetRegistryClasses() []RegistryClass {
+	if m != nil {
+		return m.RegistryClasses
+	}
+	return nil
+}
+
+func (m *QueryRegistryClassesResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+type QueryParamsRequest struct {
+}
+
+func (m *QueryParamsRequest) Reset()         { *m = QueryParamsRequest{} }
+func (m *QueryParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryParamsRequest) ProtoMessage()    {}
+func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{14}
+}
+func (m *QueryParamsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryParamsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryParamsRequest.Merge(m, src)
+}
+func (m *QueryParamsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryParamsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+type QueryParamsResponse struct {
+	// params are the current registry module parameters.
+	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+}
+
+func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
+func (m *QueryParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryParamsResponse) ProtoMessage()    {}
+func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{15}
+}
+func (m *QueryParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryParamsResponse.Merge(m, src)
+}
+func (m *QueryParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryParamsResponse proto.InternalMessageInfo
+
+func (m *QueryParamsResponse) GetParams() Params {
+	if m != nil {
+		return m.Params
+	}
+	return Params{}
+}
+
+// QueryValidateRoleChangeRequest is the request type for the Query/ValidateRoleChange RPC method.
+// It describes a candidate role-change batch and the set of approvers to test against each affected
+// role's authorization policy.
+type QueryValidateRoleChangeRequest struct {
+	// key identifies the registry entry the role change targets.
+	Key *RegistryKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// role_updates is the desired-state batch to evaluate (same shape as MsgSetRoles).
+	RoleUpdates []RoleUpdate `protobuf:"bytes,2,rep,name=role_updates,json=roleUpdates,proto3" json:"role_updates"`
+	// approvers is the accumulated/candidate set of approver addresses to test.
+	Approvers []string `protobuf:"bytes,3,rep,name=approvers,proto3" json:"approvers,omitempty"`
+}
+
+func (m *QueryValidateRoleChangeRequest) Reset()         { *m = QueryValidateRoleChangeRequest{} }
+func (m *QueryValidateRoleChangeRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryValidateRoleChangeRequest) ProtoMessage()    {}
+func (*QueryValidateRoleChangeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{16}
+}
+func (m *QueryValidateRoleChangeRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryValidateRoleChangeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryValidateRoleChangeRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryValidateRoleChangeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryValidateRoleChangeRequest.Merge(m, src)
+}
+func (m *QueryValidateRoleChangeRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryValidateRoleChangeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryValidateRoleChangeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryValidateRoleChangeRequest proto.InternalMessageInfo
+
+func (m *QueryValidateRoleChangeRequest) GetKey() *RegistryKey {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+func (m *QueryValidateRoleChangeRequest) GetRoleUpdates() []RoleUpdate {
+	if m != nil {
+		return m.RoleUpdates
+	}
+	return nil
+}
+
+func (m *QueryValidateRoleChangeRequest) GetApprovers() []string {
+	if m != nil {
+		return m.Approvers
+	}
+	return nil
+}
+
+// QueryValidateRoleChangeResponse is the response type for the Query/ValidateRoleChange RPC method.
+type QueryValidateRoleChangeResponse struct {
+	// error contains the authorization failure explanation. It is empty when the change is authorized.
+	Error string `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+	// authorized is true if the supplied approvers satisfy every affected role's policy.
+	Authorized bool `protobuf:"varint,2,opt,name=authorized,proto3" json:"authorized,omitempty"`
+}
+
+func (m *QueryValidateRoleChangeResponse) Reset()         { *m = QueryValidateRoleChangeResponse{} }
+func (m *QueryValidateRoleChangeResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryValidateRoleChangeResponse) ProtoMessage()    {}
+func (*QueryValidateRoleChangeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c166c561e401a2eb, []int{17}
+}
+func (m *QueryValidateRoleChangeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryValidateRoleChangeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryValidateRoleChangeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryValidateRoleChangeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryValidateRoleChangeResponse.Merge(m, src)
+}
+func (m *QueryValidateRoleChangeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryValidateRoleChangeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryValidateRoleChangeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryValidateRoleChangeResponse proto.InternalMessageInfo
+
+func (m *QueryValidateRoleChangeResponse) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
+
+func (m *QueryValidateRoleChangeResponse) GetAuthorized() bool {
+	if m != nil {
+		return m.Authorized
+	}
+	return false
+}
+
 func init() {
 	proto.RegisterType((*QueryGetRegistryRequest)(nil), "provenance.registry.v1.QueryGetRegistryRequest")
 	proto.RegisterType((*QueryGetRegistryResponse)(nil), "provenance.registry.v1.QueryGetRegistryResponse")
@@ -571,6 +968,14 @@ func init() {
 	proto.RegisterType((*QueryPendingRoleChangeResponse)(nil), "provenance.registry.v1.QueryPendingRoleChangeResponse")
 	proto.RegisterType((*QueryPendingRoleChangesRequest)(nil), "provenance.registry.v1.QueryPendingRoleChangesRequest")
 	proto.RegisterType((*QueryPendingRoleChangesResponse)(nil), "provenance.registry.v1.QueryPendingRoleChangesResponse")
+	proto.RegisterType((*QueryRegistryClassRequest)(nil), "provenance.registry.v1.QueryRegistryClassRequest")
+	proto.RegisterType((*QueryRegistryClassResponse)(nil), "provenance.registry.v1.QueryRegistryClassResponse")
+	proto.RegisterType((*QueryRegistryClassesRequest)(nil), "provenance.registry.v1.QueryRegistryClassesRequest")
+	proto.RegisterType((*QueryRegistryClassesResponse)(nil), "provenance.registry.v1.QueryRegistryClassesResponse")
+	proto.RegisterType((*QueryParamsRequest)(nil), "provenance.registry.v1.QueryParamsRequest")
+	proto.RegisterType((*QueryParamsResponse)(nil), "provenance.registry.v1.QueryParamsResponse")
+	proto.RegisterType((*QueryValidateRoleChangeRequest)(nil), "provenance.registry.v1.QueryValidateRoleChangeRequest")
+	proto.RegisterType((*QueryValidateRoleChangeResponse)(nil), "provenance.registry.v1.QueryValidateRoleChangeResponse")
 }
 
 func init() {
@@ -578,55 +983,77 @@ func init() {
 }
 
 var fileDescriptor_c166c561e401a2eb = []byte{
-	// 760 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x96, 0xcf, 0x4f, 0x13, 0x41,
-	0x14, 0xc7, 0x3b, 0x05, 0x2d, 0x3e, 0x94, 0x84, 0x81, 0x68, 0x69, 0xb4, 0x34, 0x2b, 0x28, 0x2a,
-	0xee, 0xd0, 0x0a, 0xca, 0x19, 0x54, 0x54, 0x2e, 0x75, 0x8d, 0x17, 0x3d, 0x34, 0xd3, 0x76, 0xdc,
-	0x6e, 0x28, 0x3b, 0xcb, 0xce, 0xd2, 0xd8, 0x34, 0x1c, 0xf4, 0xe6, 0xcd, 0xc4, 0x3f, 0x40, 0xce,
-	0x1e, 0xbd, 0xea, 0xc5, 0x1b, 0x17, 0x13, 0x12, 0x2f, 0x9e, 0x8c, 0x01, 0xff, 0x10, 0xb3, 0xb3,
-	0xd3, 0x5f, 0xb4, 0x4b, 0xd9, 0xc0, 0xad, 0x3b, 0x33, 0xdf, 0x79, 0x9f, 0xef, 0x7b, 0x6f, 0x5e,
-	0x0a, 0x9a, 0xe3, 0xf2, 0x1a, 0xb3, 0xa9, 0x5d, 0x62, 0xc4, 0x65, 0xa6, 0x25, 0x3c, 0xb7, 0x4e,
-	0x6a, 0x59, 0xb2, 0xb5, 0xcd, 0xdc, 0xba, 0xee, 0xb8, 0xdc, 0xe3, 0xf8, 0x72, 0xfb, 0x8c, 0xde,
-	0x3c, 0xa3, 0xd7, 0xb2, 0xa9, 0xdb, 0x25, 0x2e, 0x36, 0xb9, 0x20, 0x45, 0x2a, 0x58, 0x20, 0x20,
-	0xb5, 0x6c, 0x91, 0x79, 0x34, 0x4b, 0x1c, 0x6a, 0x5a, 0x36, 0xf5, 0x2c, 0x6e, 0x07, 0x77, 0xa4,
-	0x26, 0x4d, 0x6e, 0x72, 0xf9, 0x93, 0xf8, 0xbf, 0xd4, 0xea, 0x55, 0x93, 0x73, 0xb3, 0xca, 0x08,
-	0x75, 0x2c, 0x42, 0x6d, 0x9b, 0x7b, 0x52, 0x22, 0xd4, 0xee, 0x6c, 0x08, 0x5b, 0x8b, 0x41, 0x1e,
-	0xd3, 0xf2, 0x70, 0xe5, 0xb9, 0x1f, 0x7c, 0x8d, 0x79, 0x86, 0xda, 0x31, 0xd8, 0xd6, 0x36, 0x13,
-	0x1e, 0x5e, 0x82, 0xa1, 0x0d, 0x56, 0x4f, 0xa2, 0x0c, 0x9a, 0x1b, 0xcd, 0x5d, 0xd7, 0xfb, 0xfb,
-	0xd0, 0x9b, 0xaa, 0x75, 0x56, 0x37, 0xfc, 0xf3, 0x5a, 0x09, 0x92, 0xbd, 0x37, 0x0a, 0x87, 0xdb,
-	0x82, 0xe1, 0x35, 0x18, 0x69, 0x6a, 0xd5, 0xbd, 0xb3, 0x83, 0xee, 0x7d, 0x64, 0x7b, 0x6e, 0x7d,
-	0x65, 0x78, 0xef, 0xcf, 0x74, 0xcc, 0x68, 0x89, 0xb5, 0x0f, 0x08, 0xa6, 0x8e, 0x44, 0xb1, 0x98,
-	0x68, 0x92, 0xcf, 0xc0, 0x18, 0x15, 0x82, 0x79, 0x85, 0x52, 0x95, 0x0a, 0x51, 0xb0, 0xca, 0x32,
-	0xd8, 0x05, 0xe3, 0xa2, 0x5c, 0x5d, 0xf5, 0x17, 0x9f, 0x96, 0xf1, 0x63, 0x80, 0x76, 0xa6, 0x93,
-	0x25, 0x89, 0x73, 0x43, 0x0f, 0xca, 0xa2, 0xfb, 0x65, 0xd1, 0x83, 0x3a, 0xaa, 0xb2, 0xe8, 0x79,
-	0x6a, 0x32, 0x15, 0xc1, 0xe8, 0x50, 0x6a, 0x5f, 0x11, 0xa4, 0xfa, 0xb1, 0x28, 0xcf, 0xeb, 0x00,
-	0x6e, 0x6b, 0x35, 0x89, 0x32, 0x43, 0x51, 0x5d, 0x77, 0xc8, 0xf1, 0x5a, 0x1f, 0xe6, 0x9b, 0x03,
-	0x99, 0x03, 0x92, 0x2e, 0xe8, 0x5d, 0x04, 0x13, 0x12, 0xfa, 0x09, 0x15, 0x06, 0xaf, 0xb2, 0xd3,
-	0x15, 0x1d, 0x27, 0x21, 0x41, 0xcb, 0x65, 0x97, 0x09, 0x91, 0x8c, 0xcb, 0x54, 0x37, 0x3f, 0xf1,
-	0x32, 0x0c, 0xbb, 0xbc, 0xca, 0x92, 0x43, 0x19, 0x34, 0x37, 0x96, 0x9b, 0x19, 0x74, 0xa3, 0x64,
-	0x91, 0x0a, 0x2d, 0x0b, 0x93, 0xdd, 0x84, 0x2a, 0xa1, 0x53, 0x30, 0x52, 0xa1, 0xa2, 0x20, 0x6f,
-	0xf5, 0x39, 0x47, 0x8c, 0x44, 0x25, 0x38, 0xa2, 0x11, 0xb8, 0x26, 0x25, 0x79, 0x66, 0x97, 0x2d,
-	0xdb, 0xf4, 0xd7, 0x56, 0x2b, 0xd4, 0x6e, 0xd5, 0x0d, 0x8f, 0x41, 0xbc, 0xd5, 0x0d, 0x71, 0xab,
-	0xac, 0xbd, 0x43, 0x90, 0x0e, 0x53, 0xa8, 0x70, 0x05, 0x98, 0x70, 0x82, 0x4d, 0x19, 0xb2, 0x50,
-	0x92, 0xdb, 0x2a, 0x43, 0xb7, 0xc2, 0xfc, 0xf4, 0xdc, 0xa7, 0x8a, 0x39, 0xee, 0x1c, 0xdd, 0xd0,
-	0x3e, 0x87, 0x32, 0x88, 0x53, 0x56, 0xe5, 0xac, 0x3a, 0xfc, 0x27, 0x82, 0xe9, 0x50, 0x42, 0x95,
-	0x26, 0x0a, 0x93, 0x7d, 0xd2, 0xd4, 0x6c, 0xf8, 0xc8, 0x79, 0xc2, 0x3d, 0x79, 0x3a, 0xbb, 0xe6,
-	0xcf, 0x7d, 0x49, 0xc0, 0x39, 0xe9, 0x07, 0x7f, 0x47, 0x30, 0xda, 0x31, 0xa8, 0x30, 0x09, 0xe3,
-	0x0c, 0x19, 0x92, 0xa9, 0x85, 0x93, 0x0b, 0x02, 0x10, 0xed, 0xd9, 0xfb, 0x5f, 0xff, 0x3e, 0xc5,
-	0x1f, 0xe2, 0x15, 0x32, 0x60, 0x42, 0x93, 0xc6, 0x06, 0xab, 0xeb, 0xdd, 0x83, 0x6c, 0x27, 0x58,
-	0xb4, 0xdf, 0x78, 0xfe, 0x07, 0xde, 0x45, 0x70, 0xa9, 0x6b, 0xea, 0xe0, 0xec, 0x09, 0x79, 0xda,
-	0xd3, 0x32, 0x95, 0x8b, 0x22, 0x51, 0x26, 0xe6, 0xa4, 0x09, 0x0d, 0x67, 0x06, 0x99, 0xc0, 0x3f,
-	0x10, 0x24, 0xd4, 0x0b, 0xc6, 0x77, 0x8e, 0x8d, 0xd4, 0x3d, 0x89, 0x52, 0xf3, 0x27, 0x3b, 0xac,
-	0x80, 0x5e, 0x4b, 0xa0, 0x97, 0xf8, 0x45, 0x18, 0x50, 0x73, 0x64, 0x0c, 0xce, 0x2a, 0x69, 0xa8,
-	0xd9, 0xb5, 0x43, 0x1a, 0xbe, 0x62, 0xc7, 0xef, 0x92, 0xf1, 0x9e, 0x46, 0xc5, 0x4b, 0xc7, 0x02,
-	0x86, 0x8d, 0xa0, 0xd4, 0xfd, 0xa8, 0x32, 0xe5, 0x70, 0x59, 0x3a, 0xcc, 0xe1, 0x85, 0x30, 0x87,
-	0x7d, 0x9e, 0x1f, 0x69, 0xf8, 0x5d, 0xf2, 0x0d, 0x01, 0xee, 0x7d, 0xb9, 0x38, 0x22, 0x48, 0xab,
-	0x5f, 0x1e, 0x44, 0xd6, 0x29, 0x07, 0x8b, 0xd2, 0x81, 0x8e, 0xe7, 0x23, 0x38, 0x10, 0x2b, 0x1b,
-	0x7b, 0x07, 0x69, 0xb4, 0x7f, 0x90, 0x46, 0x7f, 0x0f, 0xd2, 0xe8, 0xe3, 0x61, 0x3a, 0xb6, 0x7f,
-	0x98, 0x8e, 0xfd, 0x3e, 0x4c, 0xc7, 0x60, 0xca, 0xe2, 0x21, 0x28, 0x79, 0xf4, 0x6a, 0xd1, 0xb4,
-	0xbc, 0xca, 0x76, 0x51, 0x2f, 0xf1, 0xcd, 0x8e, 0x70, 0x77, 0x2d, 0xde, 0x19, 0xfc, 0x6d, 0x3b,
-	0xbc, 0x57, 0x77, 0x98, 0x28, 0x9e, 0x97, 0xff, 0x8a, 0xee, 0xfd, 0x0f, 0x00, 0x00, 0xff, 0xff,
-	0xdb, 0x88, 0x32, 0x7c, 0xda, 0x09, 0x00, 0x00,
+	// 1117 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0x4f, 0x6f, 0x1b, 0x45,
+	0x14, 0xcf, 0xc4, 0x6d, 0xfe, 0xbc, 0xfc, 0x29, 0x99, 0x5a, 0xe0, 0x98, 0xb0, 0xb5, 0xa6, 0x7f,
+	0x30, 0x6e, 0xd9, 0x8d, 0xdd, 0x94, 0x56, 0x55, 0x4f, 0x29, 0x10, 0x4a, 0x2e, 0x61, 0xab, 0x16,
+	0x09, 0x0e, 0xd6, 0xc4, 0x1e, 0xec, 0x55, 0x9c, 0x9d, 0xed, 0xce, 0xda, 0xc2, 0x58, 0x39, 0xc0,
+	0xad, 0x37, 0x24, 0x3e, 0x00, 0xfd, 0x04, 0x1c, 0x38, 0x02, 0x02, 0xc1, 0xa9, 0x17, 0xa4, 0x4a,
+	0x5c, 0x38, 0x21, 0x94, 0xc0, 0xf7, 0x40, 0x3b, 0x3b, 0x6b, 0xef, 0xda, 0xde, 0xac, 0x4d, 0x73,
+	0xf3, 0xce, 0xbe, 0xdf, 0x7b, 0xbf, 0xdf, 0x7b, 0x6f, 0xdf, 0x1b, 0x03, 0x71, 0x5c, 0xde, 0x61,
+	0x36, 0xb5, 0x6b, 0xcc, 0x70, 0x59, 0xc3, 0x12, 0x9e, 0xdb, 0x35, 0x3a, 0x65, 0xe3, 0x49, 0x9b,
+	0xb9, 0x5d, 0xdd, 0x71, 0xb9, 0xc7, 0xf1, 0xab, 0x03, 0x1b, 0x3d, 0xb4, 0xd1, 0x3b, 0xe5, 0x7c,
+	0xa9, 0xc6, 0xc5, 0x21, 0x17, 0xc6, 0x3e, 0x15, 0x2c, 0x00, 0x18, 0x9d, 0xf2, 0x3e, 0xf3, 0x68,
+	0xd9, 0x70, 0x68, 0xc3, 0xb2, 0xa9, 0x67, 0x71, 0x3b, 0xf0, 0x91, 0xcf, 0x36, 0x78, 0x83, 0xcb,
+	0x9f, 0x86, 0xff, 0x4b, 0x9d, 0x6e, 0x34, 0x38, 0x6f, 0xb4, 0x98, 0x41, 0x1d, 0xcb, 0xa0, 0xb6,
+	0xcd, 0x3d, 0x09, 0x11, 0xea, 0xed, 0xd5, 0x04, 0x6e, 0x7d, 0x0e, 0x81, 0x59, 0x29, 0xc1, 0x8c,
+	0xb6, 0xbd, 0x26, 0x77, 0xad, 0x2f, 0xa2, 0x34, 0x2e, 0x27, 0xd8, 0x3a, 0xd4, 0xa5, 0x87, 0x2a,
+	0x2e, 0xd9, 0x83, 0xd7, 0x3e, 0xf2, 0xd5, 0xec, 0x30, 0xcf, 0x54, 0x36, 0x26, 0x7b, 0xd2, 0x66,
+	0xc2, 0xc3, 0xb7, 0x20, 0x73, 0xc0, 0xba, 0x39, 0x54, 0x40, 0xc5, 0xa5, 0xca, 0x65, 0x7d, 0x7c,
+	0x62, 0xf4, 0x10, 0xb5, 0xcb, 0xba, 0xa6, 0x6f, 0x4f, 0x6a, 0x90, 0x1b, 0xf5, 0x28, 0x1c, 0x6e,
+	0x0b, 0x86, 0x77, 0x60, 0x21, 0xc4, 0x2a, 0xbf, 0x57, 0xd3, 0xfc, 0xbe, 0x67, 0x7b, 0x6e, 0x77,
+	0xfb, 0xdc, 0xf3, 0xbf, 0x2e, 0xcd, 0x98, 0x7d, 0x30, 0x79, 0x8a, 0x60, 0x7d, 0x28, 0x8a, 0xc5,
+	0x44, 0xc8, 0xfc, 0x0a, 0xac, 0x52, 0x21, 0x98, 0x57, 0xad, 0xb5, 0xa8, 0x10, 0x55, 0xab, 0x2e,
+	0x83, 0x2d, 0x9a, 0xcb, 0xf2, 0xf4, 0xbe, 0x7f, 0xf8, 0xa0, 0x8e, 0xdf, 0x07, 0x18, 0x94, 0x2e,
+	0x57, 0x93, 0x74, 0xae, 0xe9, 0x41, 0x9d, 0x75, 0xbf, 0xce, 0x7a, 0xd0, 0x18, 0xaa, 0xce, 0xfa,
+	0x1e, 0x6d, 0x30, 0x15, 0xc1, 0x8c, 0x20, 0xc9, 0xf7, 0x08, 0xf2, 0xe3, 0xb8, 0x28, 0xcd, 0xbb,
+	0x00, 0x6e, 0xff, 0x34, 0x87, 0x0a, 0x99, 0x69, 0x55, 0x47, 0xe0, 0x78, 0x67, 0x0c, 0xe7, 0x37,
+	0x53, 0x39, 0x07, 0x4c, 0x62, 0xa4, 0x9f, 0x21, 0xb8, 0x28, 0x49, 0x7f, 0x40, 0x85, 0xc9, 0x5b,
+	0xec, 0xe5, 0x8a, 0x8e, 0x73, 0x30, 0x4f, 0xeb, 0x75, 0x97, 0x09, 0x91, 0x9b, 0x95, 0xa9, 0x0e,
+	0x1f, 0xf1, 0x1d, 0x38, 0xe7, 0xf2, 0x16, 0xcb, 0x65, 0x0a, 0xa8, 0xb8, 0x5a, 0xb9, 0x92, 0xe6,
+	0x51, 0x72, 0x91, 0x08, 0x52, 0x86, 0x6c, 0x9c, 0xa1, 0x4a, 0xe8, 0x3a, 0x2c, 0x34, 0xa9, 0xa8,
+	0x4a, 0xaf, 0x3e, 0xcf, 0x05, 0x73, 0xbe, 0x19, 0x98, 0x10, 0x03, 0xde, 0x90, 0x90, 0x3d, 0x66,
+	0xd7, 0x2d, 0xbb, 0xe1, 0x9f, 0xdd, 0x6f, 0x52, 0xbb, 0x5f, 0x37, 0xbc, 0x0a, 0xb3, 0xfd, 0x6e,
+	0x98, 0xb5, 0xea, 0xe4, 0x4b, 0x04, 0x5a, 0x12, 0x42, 0x85, 0xab, 0xc2, 0x45, 0x27, 0x78, 0x29,
+	0x43, 0x56, 0x6b, 0xf2, 0xb5, 0xca, 0xd0, 0x5b, 0x49, 0x7a, 0x46, 0xfc, 0xa9, 0x62, 0xae, 0x39,
+	0xc3, 0x2f, 0xc8, 0xb7, 0x89, 0x1c, 0xc4, 0x4b, 0x56, 0xe5, 0xac, 0x3a, 0xfc, 0x77, 0x04, 0x97,
+	0x12, 0x19, 0xaa, 0x34, 0x51, 0xc8, 0x8e, 0x49, 0x53, 0xd8, 0xf0, 0x53, 0xe7, 0x09, 0x8f, 0xe4,
+	0xe9, 0x0c, 0x9b, 0x7f, 0x47, 0x0d, 0x8f, 0x30, 0x61, 0x72, 0x22, 0x84, 0xb9, 0x2e, 0xc1, 0x5a,
+	0x48, 0x70, 0x78, 0x7e, 0x5c, 0x70, 0xa3, 0x80, 0x07, 0x75, 0xe2, 0xa8, 0x2f, 0x7f, 0xc8, 0x91,
+	0x4a, 0x89, 0x09, 0xab, 0x71, 0x4f, 0x93, 0xce, 0x3c, 0xe9, 0x46, 0x25, 0x62, 0x25, 0x16, 0x93,
+	0x30, 0x78, 0x7d, 0x34, 0xe2, 0xa0, 0x51, 0xce, 0xaa, 0xe2, 0xbf, 0x20, 0xd8, 0x18, 0x1f, 0x47,
+	0x69, 0x7b, 0x0c, 0xaf, 0xc4, 0xb5, 0x4d, 0x3e, 0xdb, 0xa2, 0xea, 0xe2, 0x19, 0x3d, 0xcb, 0x1a,
+	0x67, 0x01, 0x07, 0x2d, 0x2b, 0xb7, 0x9d, 0xd2, 0x48, 0x1e, 0xaa, 0xa9, 0x17, 0x9e, 0x2a, 0x35,
+	0xf7, 0x60, 0x2e, 0xd8, 0x8a, 0xaa, 0x42, 0x5a, 0x62, 0xbb, 0x4a, 0x2b, 0x45, 0x5e, 0x61, 0xc8,
+	0x6f, 0xe1, 0x07, 0xfc, 0x98, 0xb6, 0xac, 0x3a, 0xf5, 0xd8, 0xe8, 0xdc, 0xf9, 0x9f, 0x1f, 0xf0,
+	0x2e, 0x2c, 0xcb, 0x8f, 0xa9, 0xed, 0xf8, 0x6e, 0xfd, 0xd9, 0xea, 0x67, 0x98, 0x24, 0xe2, 0x79,
+	0x8b, 0x3d, 0x92, 0xa6, 0x8a, 0xe1, 0x92, 0xdb, 0x3f, 0x11, 0x78, 0x03, 0x16, 0xa9, 0x23, 0x91,
+	0xae, 0xc8, 0x65, 0x0a, 0x99, 0xe2, 0xa2, 0x39, 0x38, 0x20, 0x1f, 0xab, 0x4f, 0x7c, 0x9c, 0x06,
+	0x95, 0xa5, 0x2c, 0x9c, 0x67, 0xae, 0xcb, 0x5d, 0xf5, 0x35, 0x04, 0x0f, 0x58, 0x03, 0x08, 0x6f,
+	0x1f, 0xac, 0x2e, 0xa7, 0xff, 0x82, 0x19, 0x39, 0xa9, 0xfc, 0xbb, 0x0c, 0xe7, 0xa5, 0x67, 0xfc,
+	0x13, 0x82, 0xa5, 0xc8, 0xad, 0x00, 0x1b, 0x49, 0x3a, 0x12, 0x6e, 0x24, 0xf9, 0xcd, 0xc9, 0x01,
+	0x01, 0x65, 0xf2, 0xe1, 0x57, 0x7f, 0xfc, 0xf3, 0xcd, 0xec, 0xbb, 0x78, 0xdb, 0x48, 0xb9, 0x5f,
+	0x19, 0xbd, 0x03, 0xd6, 0xd5, 0xe3, 0xb7, 0x86, 0xa3, 0xe0, 0xd0, 0xfe, 0xcc, 0xf3, 0x1f, 0xf0,
+	0x33, 0x04, 0x2b, 0xb1, 0x15, 0x8f, 0xcb, 0x13, 0xf2, 0x19, 0x5c, 0x4d, 0xf2, 0x95, 0x69, 0x20,
+	0x4a, 0x44, 0x51, 0x8a, 0x20, 0xb8, 0x90, 0x26, 0x02, 0xff, 0x8a, 0x60, 0x5e, 0xad, 0x4b, 0x7c,
+	0xfd, 0xd4, 0x48, 0xf1, 0xb5, 0x9f, 0xbf, 0x31, 0x99, 0xb1, 0x22, 0xf4, 0xa9, 0x24, 0xf4, 0x08,
+	0x3f, 0x4c, 0x22, 0x14, 0xee, 0xe7, 0xf4, 0xac, 0x1a, 0x3d, 0x75, 0x51, 0x38, 0x32, 0x7a, 0x3e,
+	0xe2, 0xc8, 0xef, 0x92, 0xb5, 0x91, 0xad, 0x80, 0x6f, 0x9d, 0x4a, 0x30, 0x69, 0xdf, 0xe7, 0xdf,
+	0x99, 0x16, 0xa6, 0x14, 0xde, 0x91, 0x0a, 0x2b, 0x78, 0x33, 0x49, 0xe1, 0x98, 0x5d, 0x67, 0xf4,
+	0xfc, 0x2e, 0xf9, 0x11, 0x01, 0x1e, 0x5d, 0x93, 0x78, 0x4a, 0x22, 0xfd, 0x7e, 0xb9, 0x3d, 0x35,
+	0x4e, 0x29, 0xd8, 0x92, 0x0a, 0x74, 0x7c, 0x63, 0x0a, 0x05, 0x02, 0xff, 0x80, 0x60, 0x25, 0x36,
+	0xa7, 0x53, 0x7a, 0x7c, 0xdc, 0x06, 0x4d, 0xe9, 0xf1, 0xb1, 0xbb, 0x92, 0x6c, 0x4b, 0xba, 0xf7,
+	0xf0, 0xdd, 0xb4, 0x1e, 0x0f, 0xfa, 0xc8, 0xe8, 0x8d, 0xec, 0xe8, 0x23, 0xfc, 0x1d, 0x82, 0x0b,
+	0x43, 0xfb, 0x0a, 0xdf, 0x9c, 0x9c, 0xcb, 0x20, 0xe9, 0x5b, 0xd3, 0x81, 0x94, 0x84, 0x4d, 0x29,
+	0xa1, 0x84, 0x8b, 0x93, 0x49, 0x60, 0x02, 0x3f, 0x45, 0x30, 0x17, 0x6c, 0x14, 0x5c, 0x3a, 0xbd,
+	0xce, 0xd1, 0x25, 0x96, 0xbf, 0x3e, 0x91, 0xad, 0x62, 0x75, 0x4d, 0xb2, 0x2a, 0x60, 0xcd, 0x38,
+	0xf5, 0xef, 0x20, 0xfe, 0x19, 0x01, 0x1e, 0x9d, 0xfd, 0x29, 0x7d, 0x9b, 0xb8, 0xf0, 0x52, 0xfa,
+	0x36, 0x79, 0xc9, 0x90, 0xdb, 0x92, 0x6f, 0xf9, 0x2e, 0x2a, 0x91, 0xc4, 0xd6, 0xed, 0x28, 0x78,
+	0xb4, 0x77, 0xb7, 0x0f, 0x9e, 0x1f, 0x6b, 0xe8, 0xc5, 0xb1, 0x86, 0xfe, 0x3e, 0xd6, 0xd0, 0xd7,
+	0x27, 0xda, 0xcc, 0x8b, 0x13, 0x6d, 0xe6, 0xcf, 0x13, 0x6d, 0x06, 0xd6, 0x2d, 0x9e, 0xc0, 0x66,
+	0x0f, 0x7d, 0xb2, 0xd5, 0xb0, 0xbc, 0x66, 0x7b, 0x5f, 0xaf, 0xf1, 0xc3, 0x48, 0xb8, 0xb7, 0x2d,
+	0x1e, 0x0d, 0xfe, 0xf9, 0x20, 0xbc, 0xd7, 0x75, 0x98, 0xd8, 0x9f, 0x93, 0xff, 0x9e, 0x6f, 0xfe,
+	0x17, 0x00, 0x00, 0xff, 0xff, 0xb8, 0x46, 0x55, 0xb3, 0x53, 0x10, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -653,6 +1080,17 @@ type QueryClient interface {
 	PendingRoleChange(ctx context.Context, in *QueryPendingRoleChangeRequest, opts ...grpc.CallOption) (*QueryPendingRoleChangeResponse, error)
 	// PendingRoleChanges returns the pending role changes, optionally filtered by registry key.
 	PendingRoleChanges(ctx context.Context, in *QueryPendingRoleChangesRequest, opts ...grpc.CallOption) (*QueryPendingRoleChangesResponse, error)
+	// RegistryClass returns a single registry class (including its authorization policy) by id.
+	RegistryClass(ctx context.Context, in *QueryRegistryClassRequest, opts ...grpc.CallOption) (*QueryRegistryClassResponse, error)
+	// RegistryClasses returns all registry classes.
+	RegistryClasses(ctx context.Context, in *QueryRegistryClassesRequest, opts ...grpc.CallOption) (*QueryRegistryClassesResponse, error)
+	// Params returns the registry module parameters, including the default role authorization
+	// policies.
+	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// ValidateRoleChange performs a read-only dry-run of a role-change batch, reporting whether the
+	// supplied approvers would satisfy every affected role's authorization policy without writing
+	// any state.
+	ValidateRoleChange(ctx context.Context, in *QueryValidateRoleChangeRequest, opts ...grpc.CallOption) (*QueryValidateRoleChangeResponse, error)
 }
 
 type queryClient struct {
@@ -708,6 +1146,42 @@ func (c *queryClient) PendingRoleChanges(ctx context.Context, in *QueryPendingRo
 	return out, nil
 }
 
+func (c *queryClient) RegistryClass(ctx context.Context, in *QueryRegistryClassRequest, opts ...grpc.CallOption) (*QueryRegistryClassResponse, error) {
+	out := new(QueryRegistryClassResponse)
+	err := c.cc.Invoke(ctx, "/provenance.registry.v1.Query/RegistryClass", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) RegistryClasses(ctx context.Context, in *QueryRegistryClassesRequest, opts ...grpc.CallOption) (*QueryRegistryClassesResponse, error) {
+	out := new(QueryRegistryClassesResponse)
+	err := c.cc.Invoke(ctx, "/provenance.registry.v1.Query/RegistryClasses", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
+	out := new(QueryParamsResponse)
+	err := c.cc.Invoke(ctx, "/provenance.registry.v1.Query/Params", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ValidateRoleChange(ctx context.Context, in *QueryValidateRoleChangeRequest, opts ...grpc.CallOption) (*QueryValidateRoleChangeResponse, error) {
+	out := new(QueryValidateRoleChangeResponse)
+	err := c.cc.Invoke(ctx, "/provenance.registry.v1.Query/ValidateRoleChange", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// GetRegistry returns the registry entry for a given key.
@@ -722,6 +1196,17 @@ type QueryServer interface {
 	PendingRoleChange(context.Context, *QueryPendingRoleChangeRequest) (*QueryPendingRoleChangeResponse, error)
 	// PendingRoleChanges returns the pending role changes, optionally filtered by registry key.
 	PendingRoleChanges(context.Context, *QueryPendingRoleChangesRequest) (*QueryPendingRoleChangesResponse, error)
+	// RegistryClass returns a single registry class (including its authorization policy) by id.
+	RegistryClass(context.Context, *QueryRegistryClassRequest) (*QueryRegistryClassResponse, error)
+	// RegistryClasses returns all registry classes.
+	RegistryClasses(context.Context, *QueryRegistryClassesRequest) (*QueryRegistryClassesResponse, error)
+	// Params returns the registry module parameters, including the default role authorization
+	// policies.
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// ValidateRoleChange performs a read-only dry-run of a role-change batch, reporting whether the
+	// supplied approvers would satisfy every affected role's authorization policy without writing
+	// any state.
+	ValidateRoleChange(context.Context, *QueryValidateRoleChangeRequest) (*QueryValidateRoleChangeResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -742,6 +1227,18 @@ func (*UnimplementedQueryServer) PendingRoleChange(ctx context.Context, req *Que
 }
 func (*UnimplementedQueryServer) PendingRoleChanges(ctx context.Context, req *QueryPendingRoleChangesRequest) (*QueryPendingRoleChangesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PendingRoleChanges not implemented")
+}
+func (*UnimplementedQueryServer) RegistryClass(ctx context.Context, req *QueryRegistryClassRequest) (*QueryRegistryClassResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegistryClass not implemented")
+}
+func (*UnimplementedQueryServer) RegistryClasses(ctx context.Context, req *QueryRegistryClassesRequest) (*QueryRegistryClassesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegistryClasses not implemented")
+}
+func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (*UnimplementedQueryServer) ValidateRoleChange(ctx context.Context, req *QueryValidateRoleChangeRequest) (*QueryValidateRoleChangeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidateRoleChange not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -838,6 +1335,78 @@ func _Query_PendingRoleChanges_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_RegistryClass_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRegistryClassRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RegistryClass(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.registry.v1.Query/RegistryClass",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RegistryClass(ctx, req.(*QueryRegistryClassRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_RegistryClasses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRegistryClassesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RegistryClasses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.registry.v1.Query/RegistryClasses",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RegistryClasses(ctx, req.(*QueryRegistryClassesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryParamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Params(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.registry.v1.Query/Params",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ValidateRoleChange_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryValidateRoleChangeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ValidateRoleChange(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.registry.v1.Query/ValidateRoleChange",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ValidateRoleChange(ctx, req.(*QueryValidateRoleChangeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provenance.registry.v1.Query",
@@ -862,6 +1431,22 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PendingRoleChanges",
 			Handler:    _Query_PendingRoleChanges_Handler,
+		},
+		{
+			MethodName: "RegistryClass",
+			Handler:    _Query_RegistryClass_Handler,
+		},
+		{
+			MethodName: "RegistryClasses",
+			Handler:    _Query_RegistryClasses_Handler,
+		},
+		{
+			MethodName: "Params",
+			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "ValidateRoleChange",
+			Handler:    _Query_ValidateRoleChange_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1274,6 +1859,311 @@ func (m *QueryPendingRoleChangesResponse) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryRegistryClassRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryRegistryClassRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryRegistryClassRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.RegistryClassId) > 0 {
+		i -= len(m.RegistryClassId)
+		copy(dAtA[i:], m.RegistryClassId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.RegistryClassId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryRegistryClassResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryRegistryClassResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryRegistryClassResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.RegistryClass.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryRegistryClassesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryRegistryClassesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryRegistryClassesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryRegistryClassesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryRegistryClassesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryRegistryClassesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	if len(m.RegistryClasses) > 0 {
+		for iNdEx := len(m.RegistryClasses) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.RegistryClasses[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryParamsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryParamsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryValidateRoleChangeRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryValidateRoleChangeRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryValidateRoleChangeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Approvers) > 0 {
+		for iNdEx := len(m.Approvers) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Approvers[iNdEx])
+			copy(dAtA[i:], m.Approvers[iNdEx])
+			i = encodeVarintQuery(dAtA, i, uint64(len(m.Approvers[iNdEx])))
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.RoleUpdates) > 0 {
+		for iNdEx := len(m.RoleUpdates) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.RoleUpdates[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if m.Key != nil {
+		{
+			size, err := m.Key.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryValidateRoleChangeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryValidateRoleChangeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryValidateRoleChangeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Authorized {
+		i--
+		if m.Authorized {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Error) > 0 {
+		i -= len(m.Error)
+		copy(dAtA[i:], m.Error)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Error)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -1433,6 +2323,123 @@ func (m *QueryPendingRoleChangesResponse) Size() (n int) {
 	if m.Pagination != nil {
 		l = m.Pagination.Size()
 		n += 2 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryRegistryClassRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.RegistryClassId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryRegistryClassResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.RegistryClass.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryRegistryClassesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryRegistryClassesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.RegistryClasses) > 0 {
+		for _, e := range m.RegistryClasses {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryParamsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Params.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryValidateRoleChangeRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Key != nil {
+		l = m.Key.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if len(m.RoleUpdates) > 0 {
+		for _, e := range m.RoleUpdates {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if len(m.Approvers) > 0 {
+		for _, s := range m.Approvers {
+			l = len(s)
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryValidateRoleChangeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Error)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Authorized {
+		n += 2
 	}
 	return n
 }
@@ -2443,6 +3450,764 @@ func (m *QueryPendingRoleChangesResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryRegistryClassRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryRegistryClassRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryRegistryClassRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RegistryClassId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RegistryClassId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryRegistryClassResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryRegistryClassResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryRegistryClassResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RegistryClass", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.RegistryClass.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryRegistryClassesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryRegistryClassesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryRegistryClassesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryRegistryClassesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryRegistryClassesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryRegistryClassesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RegistryClasses", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RegistryClasses = append(m.RegistryClasses, RegistryClass{})
+			if err := m.RegistryClasses[len(m.RegistryClasses)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryParamsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryParamsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryValidateRoleChangeRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryValidateRoleChangeRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryValidateRoleChangeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Key == nil {
+				m.Key = &RegistryKey{}
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RoleUpdates", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RoleUpdates = append(m.RoleUpdates, RoleUpdate{})
+			if err := m.RoleUpdates[len(m.RoleUpdates)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Approvers", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Approvers = append(m.Approvers, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryValidateRoleChangeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryValidateRoleChangeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryValidateRoleChangeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Error = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authorized", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Authorized = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

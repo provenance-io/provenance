@@ -5,6 +5,8 @@ option go_package          = "github.com/provenance-io/provenance/x/registry/typ
 option java_package        = "io.provenance.registry.v1";
 option java_multiple_files = true;
 
+import "gogoproto/gogo.proto";
+
 // EventNFTRegistered is the event emitted when a registry is created for an NFT.
 message EventNFTRegistered {
   string nft_id         = 1;
@@ -58,4 +60,51 @@ message EventRoleChangeApplied {
   string nft_id         = 1;
   string asset_class_id = 2;
   string change_id      = 3;
+}
+
+// EventRegistryClassCreated is emitted when a registry class is created.
+message EventRegistryClassCreated {
+  string registry_class_id = 1;
+  string asset_class_id    = 2;
+  string maintainer        = 3;
+}
+
+// EventRegistryClassUpdated is emitted when a registry class's authorization rules are updated.
+message EventRegistryClassUpdated {
+  string registry_class_id = 1;
+  string maintainer        = 2;
+}
+
+// EventParamsUpdated is emitted when the registry module's params are updated via governance.
+message EventParamsUpdated {}
+
+// RoleSigner describes a role/assignment whose resolved addresses contributed a signature toward
+// authorizing a role change. It is the structured form of an entry in EventRoleUpdated.signers.
+message RoleSigner {
+  // role is the (registry or NFT) role whose holders provided the signature(s).
+  string role = 1;
+  // assignment is the assignment variant the role was resolved under (e.g. ASSIGNMENT_CURRENT).
+  string assignment = 2;
+  // addresses are the resolved addresses for the role that signed to authorize the change.
+  repeated string addresses = 3;
+}
+
+// EventRoleUpdated is the comprehensive event emitted whenever a role is granted, revoked, or set
+// for a registered NFT. It is emitted for MsgGrantRole, MsgRevokeRole, and once per updated role
+// for MsgSetRoles (including changes applied via the propose/approve accumulation flow).
+message EventRoleUpdated {
+  // nft_id is the ID of the NFT for which the role was updated.
+  string nft_id = 1;
+  // asset_class_id is the ID of the asset class the NFT belongs to.
+  string asset_class_id = 2;
+  // registry_class_id is the registry class governing this NFT (empty if none).
+  string registry_class_id = 3;
+  // role is the role that was updated.
+  string role = 4;
+  // addresses are the addresses assigned to the role after this operation (empty if cleared).
+  repeated string addresses = 5;
+  // previous_addresses are the addresses assigned to the role before this operation.
+  repeated string previous_addresses = 6;
+  // signers describes the roles/addresses that authorized this change.
+  repeated RoleSigner signers = 7 [(gogoproto.nullable) = false];
 }

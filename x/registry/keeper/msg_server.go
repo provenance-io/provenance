@@ -34,8 +34,13 @@ func (k msgServer) RegisterNFT(ctx context.Context, msg *types.MsgRegisterNFT) (
 		return nil, err
 	}
 
+	// If a registry class is referenced, it must exist and match this entry's asset class.
+	if err := k.validateRegistryClassForEntry(ctx, msg.RegistryClassId, msg.Key.AssetClassId); err != nil {
+		return nil, err
+	}
+
 	// Store the registry in state.
-	err := k.CreateRegistry(ctx, msg.Key, msg.Roles)
+	err := k.CreateRegistry(ctx, msg.Key, msg.Roles, msg.RegistryClassId)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +60,10 @@ func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*typ
 		return nil, types.NewErrCodeRegistryNotFound(msg.Key.String())
 	}
 
-	roleAuths := types.RoleAuthorizationMap()
+	roleAuths, err := k.roleAuthorizationsForEntry(ctx, entry)
+	if err != nil {
+		return nil, err
+	}
 	if roleAuth, ok := roleAuths[msg.Role]; ok {
 		// Policy-based path: the incoming addresses are the "new" assignment. A single signer must
 		// satisfy the policy on its own; multi-party changes go through ProposeRoleChange.
@@ -75,6 +83,14 @@ func (k msgServer) GrantRole(ctx context.Context, msg *types.MsgGrantRole) (*typ
 		return nil, err
 	}
 
+	signers, err := k.roleChangeSigners(ctx, entry, msg.Role, msg.Addresses, []string{msg.Signer})
+	if err != nil {
+		return nil, err
+	}
+	if err := k.emitRoleUpdated(ctx, entry, msg.Role, signers); err != nil {
+		return nil, err
+	}
+
 	return &types.MsgGrantRoleResponse{}, nil
 }
 
@@ -90,7 +106,10 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*t
 		return nil, types.NewErrCodeRegistryNotFound(msg.Key.String())
 	}
 
-	roleAuths := types.RoleAuthorizationMap()
+	roleAuths, err := k.roleAuthorizationsForEntry(ctx, entry)
+	if err != nil {
+		return nil, err
+	}
 	if roleAuth, ok := roleAuths[msg.Role]; ok {
 		// Policy-based path. For revoke, no new addresses are being assigned. A single signer must
 		// satisfy the policy on its own; multi-party changes go through ProposeRoleChange.
@@ -110,6 +129,14 @@ func (k msgServer) RevokeRole(ctx context.Context, msg *types.MsgRevokeRole) (*t
 		return nil, err
 	}
 
+	signers, err := k.roleChangeSigners(ctx, entry, msg.Role, nil, []string{msg.Signer})
+	if err != nil {
+		return nil, err
+	}
+	if err := k.emitRoleUpdated(ctx, entry, msg.Role, signers); err != nil {
+		return nil, err
+	}
+
 	return &types.MsgRevokeRoleResponse{}, nil
 }
 
@@ -126,12 +153,17 @@ func (k msgServer) SetRoles(ctx context.Context, msg *types.MsgSetRoles) (*types
 		return nil, types.NewErrCodeRegistryNotFound(msg.Key.String())
 	}
 
-	roleAuths := types.RoleAuthorizationMap()
+	roleAuths, err := k.roleAuthorizationsForEntry(ctx, entry)
+	if err != nil {
+		return nil, err
+	}
 	for _, update := range msg.RoleUpdates {
 		if roleAuth, ok := roleAuths[update.Role]; ok {
-			// The new addresses for this role are the desired state from the update. A single signer
+			// ASSIGNMENT_NEW resolves only the newly-added addresses, so authorize against the
+			// additions relative to the current state (not the full desired set). A single signer
 			// must satisfy the policy on its own; multi-party changes go through ProposeRoleChange.
-			if err := k.Keeper.ValidateRoleChangeAuthorization(ctx, roleAuth, entry, update.Addresses, []string{msg.Signer}); err != nil {
+			newAddrs := additions(entry.GetRoleAddrs(update.Role), update.Addresses)
+			if err := k.Keeper.ValidateRoleChangeAuthorization(ctx, roleAuth, entry, newAddrs, []string{msg.Signer}); err != nil {
 				return nil, err
 			}
 		} else {
@@ -144,6 +176,17 @@ func (k msgServer) SetRoles(ctx context.Context, msg *types.MsgSetRoles) (*types
 
 	if err := k.Keeper.SetRoles(ctx, msg.Key, msg.RoleUpdates); err != nil {
 		return nil, err
+	}
+
+	for _, update := range msg.RoleUpdates {
+		newAddrs := additions(entry.GetRoleAddrs(update.Role), update.Addresses)
+		signers, err := k.roleChangeSigners(ctx, entry, update.Role, newAddrs, []string{msg.Signer})
+		if err != nil {
+			return nil, err
+		}
+		if err := k.emitRoleUpdated(ctx, entry, update.Role, signers); err != nil {
+			return nil, err
+		}
 	}
 
 	return &types.MsgSetRolesResponse{}, nil
@@ -167,6 +210,44 @@ func (k msgServer) ApproveRoleChange(ctx context.Context, msg *types.MsgApproveR
 		return nil, err
 	}
 	return &types.MsgApproveRoleChangeResponse{Applied: applied}, nil
+}
+
+// CreateRegistryClass creates a new registry class defining asset class-level authorization rules.
+func (k msgServer) CreateRegistryClass(ctx context.Context, msg *types.MsgCreateRegistryClass) (*types.MsgCreateRegistryClassResponse, error) {
+	class := types.RegistryClass{
+		RegistryClassId:    msg.RegistryClassId,
+		AssetClassId:       msg.AssetClassId,
+		Maintainer:         msg.Maintainer,
+		RoleAuthorizations: msg.RoleAuthorizations,
+	}
+	if err := k.Keeper.CreateRegistryClass(ctx, class); err != nil {
+		return nil, err
+	}
+	return &types.MsgCreateRegistryClassResponse{}, nil
+}
+
+// UpdateRegistryClassRoleAuthorization replaces the authorization rules for an existing registry
+// class. Only the current maintainer may update the rules.
+func (k msgServer) UpdateRegistryClassRoleAuthorization(ctx context.Context, msg *types.MsgUpdateRegistryClassRoleAuthorization) (*types.MsgUpdateRegistryClassRoleAuthorizationResponse, error) {
+	if err := k.Keeper.UpdateRegistryClassRoleAuthorization(ctx, msg.Signer, msg.RegistryClassId, msg.RoleAuthorizations); err != nil {
+		return nil, err
+	}
+	return &types.MsgUpdateRegistryClassRoleAuthorizationResponse{}, nil
+}
+
+// UpdateParams is a governance proposal endpoint for updating the registry module's params,
+// including the default role authorization policies.
+func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	if err := k.ValidateAuthority(msg.Authority); err != nil {
+		return nil, err
+	}
+
+	if err := k.SetParams(ctx, msg.Params); err != nil {
+		return nil, err
+	}
+
+	k.EmitEvent(ctx, types.NewEventParamsUpdated())
+	return &types.MsgUpdateParamsResponse{}, nil
 }
 
 // UnregisterNFT unregisters an NFT from the registry.
@@ -204,6 +285,11 @@ func (k msgServer) RegistryBulkUpdate(ctx context.Context, msg *types.MsgRegistr
 			if err := k.ValidateNFTOwner(ctx, &entry.Key.AssetClassId, &entry.Key.NftId, msg.Signer); err != nil {
 				return nil, fmt.Errorf("[%d]: %w", i, err)
 			}
+		}
+
+		// If a registry class is referenced, it must exist and match this entry's asset class.
+		if err := k.validateRegistryClassForEntry(ctx, entry.RegistryClassId, entry.Key.AssetClassId); err != nil {
+			return nil, fmt.Errorf("[%d]: %w", i, err)
 		}
 
 		// Get the original registry, so we know what we're updating.
