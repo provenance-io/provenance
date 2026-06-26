@@ -509,7 +509,7 @@ func New(
 	// Configure the hooks keeper
 	hooksKeeper := ibchookskeeper.NewKeeper(
 		appCodec,
-		keys[ibchookstypes.StoreKey],
+		runtime.NewKVStoreService(keys[ibchookstypes.StoreKey]),
 		app.IBCKeeper.ChannelKeeper,
 		nil,
 	)
