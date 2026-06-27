@@ -731,6 +731,73 @@ func TestMsgUpdateForcedTransferRequestValidateBasic(t *testing.T) {
 	}
 }
 
+func TestMsgUpdateRequireDepositAccessRequestValidateBasic(t *testing.T) {
+	goodSigner := sdk.AccAddress("goodAddr____________").String()
+	goodDenom := "gooddenom"
+	tests := []struct {
+		name string
+		msg  *MsgUpdateRequireDepositAccessRequest
+		exp  string
+	}{
+		{
+			name: "invalid denom",
+			msg: &MsgUpdateRequireDepositAccessRequest{
+				Denom:                "x",
+				RequireDepositAccess: true,
+				Signer:               goodSigner,
+			},
+			exp: "invalid denom: x",
+		},
+		{
+			name: "invalid signer",
+			msg: &MsgUpdateRequireDepositAccessRequest{
+				Denom:                goodDenom,
+				RequireDepositAccess: true,
+				Signer:               "x",
+			},
+			exp: "invalid signer: decoding bech32 failed: invalid bech32 string length 1",
+		},
+		{
+			name: "empty signer",
+			msg: &MsgUpdateRequireDepositAccessRequest{
+				Denom:                goodDenom,
+				RequireDepositAccess: true,
+				Signer:               "",
+			},
+			exp: "invalid signer: empty address string is not allowed",
+		},
+		{
+			name: "ok require deposit access true",
+			msg: &MsgUpdateRequireDepositAccessRequest{
+				Denom:                goodDenom,
+				RequireDepositAccess: true,
+				Signer:               goodSigner,
+			},
+			exp: "",
+		},
+		{
+			name: "ok require deposit access false",
+			msg: &MsgUpdateRequireDepositAccessRequest{
+				Denom:                goodDenom,
+				RequireDepositAccess: false,
+				Signer:               goodSigner,
+			},
+			exp: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.exp) > 0 {
+				assert.EqualError(t, err, tc.exp, "ValidateBasic error")
+			} else {
+				assert.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
+
 func TestMsgSetAccountDataRequestValidateBasic(t *testing.T) {
 	addr := sdk.AccAddress("addr________________").String()
 	denom := "somedenom"

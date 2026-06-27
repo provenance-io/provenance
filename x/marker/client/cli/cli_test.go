@@ -1742,6 +1742,73 @@ func (s *IntegrationTestSuite) TestGetCmdUpdateForcedTransfer() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestGetCmdUpdateRequireDepositAccess() {
+	denom := "updaterdacoin"
+	s.Run("add a new marker for this", func() {
+		cmd := markercli.GetCmdAddFinalizeActivateMarker()
+		args := []string{
+			"1000" + denom,
+			s.testnet.Validators[0].Address.String() + ",mint,burn,deposit,withdraw,delete,admin",
+			fmt.Sprintf("--%s=%s", markercli.FlagType, "COIN"),
+			"--" + markercli.FlagSupplyFixed,
+			"--" + markercli.FlagAllowGovernanceControl,
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+		}
+		testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
+	})
+	if s.T().Failed() {
+		s.FailNow("Stopping due to setup error")
+	}
+
+	stdFlags := func(args ...string) []string {
+		return append(args,
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+		)
+	}
+
+	tests := []struct {
+		name   string
+		args   []string
+		expErr string
+	}{
+		{
+			name:   "invalid denom",
+			args:   stdFlags("x", "true"),
+			expErr: "invalid denom: x",
+		},
+		{
+			name:   "invalid bool",
+			args:   stdFlags(denom, "farse"),
+			expErr: "invalid boolean string: \"farse\"",
+		},
+		{
+			name: "admin sets to true",
+			args: stdFlags(denom, "true"),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			testcli.NewTxExecutor(markercli.GetCmdUpdateRequireDepositAccess(), tc.args).
+				WithExpErrMsg(tc.expErr).
+				Execute(s.T(), s.testnet)
+		})
+	}
+
+	s.Run("marker query reflects updated require_deposit_access", func() {
+		clientCtx := s.testnet.Validators[0].ClientCtx
+		out, err := clitestutil.ExecTestCLICmd(clientCtx, markercli.MarkerCmd(), []string{denom})
+		s.Require().NoError(err, "query marker %s", denom)
+		s.Assert().Contains(out.String(), "require_deposit_access: true", "marker %s should reflect updated require_deposit_access", denom)
+	})
+}
+
 func (s *IntegrationTestSuite) TestGetCmdAddNetAssetValues() {
 	denom := "updatenavcoin"
 	argsWStdFlags := func(args ...string) []string {
