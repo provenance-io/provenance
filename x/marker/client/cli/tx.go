@@ -100,6 +100,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdAddFinalizeActivateMarker(),
 		GetCmdUpdateRequiredAttributes(),
 		GetCmdUpdateForcedTransfer(),
+		GetCmdUpdateRequireDepositAccess(),
 		GetCmdSetAccountData(),
 		GetCmdUpdateSendDenyListRequest(),
 		GetCmdAddNetAssetValues(),
@@ -1069,6 +1070,41 @@ func GetCmdUpdateForcedTransfer() *cobra.Command {
 	}
 
 	govcli.AddGovPropFlagsToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdUpdateRequireDepositAccess returns a CLI command for updating a marker's require_deposit_access flag.
+// The signer must have admin access on the marker, or the command can be run as a governance proposal.
+func GetCmdUpdateRequireDepositAccess() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "update-require-deposit-access <denom> {true|false}",
+		Aliases: []string{"urda"},
+		Short:   "Update the require_deposit_access field on a marker (signer must have admin access or be governance)",
+		Example: fmt.Sprintf("$ %s tx marker update-require-deposit-access jackthecatcoin true", version.AppName),
+		Args:    cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+
+			requireDepositAccess, err := ParseBoolStrict(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgUpdateRequireDepositAccessRequest{Denom: args[0], RequireDepositAccess: requireDepositAccess}
+			authSetter := func(authority string) {
+				msg.Signer = authority
+			}
+
+			return generateOrBroadcastOptGovProp(clientCtx, flagSet, authSetter, msg)
+		},
+	}
+
+	addOptGovPropFlags(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

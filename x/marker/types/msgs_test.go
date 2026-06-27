@@ -43,6 +43,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgSupplyDecreaseProposalRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdateRequiredAttributesRequest{TransferAuthority: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdateForcedTransferRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateRequireDepositAccessRequest{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgSetAccountDataRequest{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdateSendDenyListRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgAddNetAssetValuesRequest{Administrator: signer} },

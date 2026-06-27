@@ -515,6 +515,110 @@ func (s *MsgServerTestSuite) TestUpdateForcedTransfer() {
 	}
 }
 
+func (s *MsgServerTestSuite) TestUpdateRequireDepositAccess() {
+	authority := s.app.MarkerKeeper.GetAuthority()
+	adminAddr := sdk.AccAddress("rdaAdminAddr_________")
+	otherAddr := sdk.AccAddress("rdaOtherAddr_________")
+
+	// newMarker builds an unrestricted (coin) marker with adminAddr holding Access_Admin.
+	newMarker := func(denom string, requireDepositAccess, allowGov bool) *types.MarkerAccount {
+		rv := &types.MarkerAccount{
+			BaseAccount: authtypes.NewBaseAccountWithAddress(types.MustGetMarkerAddress(denom)),
+			AccessControl: []types.AccessGrant{
+				{Address: adminAddr.String(), Permissions: types.AccessList{types.Access_Admin}},
+			},
+			Status:                 types.StatusActive,
+			Denom:                  denom,
+			Supply:                 sdkmath.NewInt(1000),
+			MarkerType:             types.MarkerType_Coin,
+			AllowGovernanceControl: allowGov,
+			RequireDepositAccess:   requireDepositAccess,
+		}
+		s.app.AccountKeeper.NewAccount(s.ctx, rv.BaseAccount)
+		return rv
+	}
+	newMsg := func(denom string, requireDepositAccess bool, signer string) *types.MsgUpdateRequireDepositAccessRequest {
+		return &types.MsgUpdateRequireDepositAccessRequest{Denom: denom, RequireDepositAccess: requireDepositAccess, Signer: signer}
+	}
+	markerAddr := func(denom string) string {
+		return types.MustGetMarkerAddress(denom).String()
+	}
+
+	tests := []struct {
+		name       string
+		origMarker *types.MarkerAccount
+		msg        *types.MsgUpdateRequireDepositAccessRequest
+		expErr     string
+	}{
+		{
+			name:   "marker does not exist",
+			msg:    newMsg("nosuchmarker", true, authority),
+			expErr: "could not get marker for nosuchmarker: marker nosuchmarker not found for address: " + markerAddr("nosuchmarker"),
+		},
+		{
+			name:       "signer without admin access",
+			origMarker: newMarker("noadminaccess", false, true),
+			msg:        newMsg("noadminaccess", true, otherAddr.String()),
+			expErr:     "caller " + otherAddr.String() + " does not have admin access on marker noadminaccess",
+		},
+		{
+			name:       "gov signer but governance disabled",
+			origMarker: newMarker("nogovallowed", false, false),
+			msg:        newMsg("nogovallowed", true, authority),
+			expErr:     "nogovallowed marker does not allow governance control",
+		},
+		{
+			name:       "no change true",
+			origMarker: newMarker("alreadytrue", true, true),
+			msg:        newMsg("alreadytrue", true, adminAddr.String()),
+			expErr:     "marker alreadytrue already has require_deposit_access = true",
+		},
+		{
+			name:       "no change false",
+			origMarker: newMarker("alreadyfalse", false, true),
+			msg:        newMsg("alreadyfalse", false, adminAddr.String()),
+			expErr:     "marker alreadyfalse already has require_deposit_access = false",
+		},
+		{
+			name:       "gov toggles false to true",
+			origMarker: newMarker("govtoggle", false, true),
+			msg:        newMsg("govtoggle", true, authority),
+		},
+		{
+			name:       "admin toggles false to true",
+			origMarker: newMarker("adminon", false, true),
+			msg:        newMsg("adminon", true, adminAddr.String()),
+		},
+		{
+			name:       "admin toggles true to false",
+			origMarker: newMarker("adminoff", true, true),
+			msg:        newMsg("adminoff", false, adminAddr.String()),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.origMarker != nil {
+				s.Require().NoError(s.app.MarkerKeeper.SetMarker(s.ctx, tc.origMarker), "SetMarker(%q)", tc.origMarker.Denom)
+			}
+
+			res, err := s.msgServer.UpdateRequireDepositAccess(s.ctx, tc.msg)
+			if len(tc.expErr) > 0 {
+				s.Assert().EqualError(err, tc.expErr, "UpdateRequireDepositAccess error")
+				s.Assert().Nil(res, "UpdateRequireDepositAccess response")
+			} else {
+				s.Require().NoError(err, "UpdateRequireDepositAccess error")
+				s.Assert().Equal(&types.MsgUpdateRequireDepositAccessResponse{}, res, "UpdateRequireDepositAccess response")
+
+				markerNow, err := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, tc.msg.Denom)
+				if s.Assert().NoError(err, "GetMarkerByDenom(%q)", tc.msg.Denom) {
+					s.Assert().Equal(tc.msg.RequireDepositAccess, markerNow.RequiresDepositAccess(), "RequiresDepositAccess after update")
+				}
+			}
+		})
+	}
+}
+
 func (s *MsgServerTestSuite) TestUpdateSendDenyList() {
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 
