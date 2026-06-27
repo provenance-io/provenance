@@ -53,7 +53,6 @@ type MsgServerTestSuite struct {
 }
 
 func (s *MsgServerTestSuite) SetupTest() {
-
 	s.blockStartTime = time.Now()
 	s.app = simapp.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: s.blockStartTime})
@@ -271,12 +270,34 @@ func (s *MsgServerTestSuite) noAccessErr(addr string, role types.Access, denom s
 	return fmt.Sprintf("%s does not have %s on %s marker (%s)", addr, role, denom, mAddr)
 }
 
+func (s *MsgServerTestSuite) TestAddMarkerRequireDepositAccess() {
+	// AddMarker should persist require_deposit_access from the request onto the stored marker.
+	addMsg := types.NewMsgAddMarkerRequest("requiredepositcoin", sdkmath.NewInt(100), s.owner1Addr, s.owner1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0)
+	addMsg.RequireDepositAccess = true
+	_, err := s.msgServer.AddMarker(s.ctx, addMsg)
+	s.Require().NoError(err, "AddMarker(requiredepositcoin)")
+	stored, err := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, "requiredepositcoin")
+	s.Require().NoError(err, "GetMarkerByDenom(requiredepositcoin)")
+	s.Assert().True(stored.RequiresDepositAccess(), "stored requiredepositcoin marker should require deposit access")
+
+	// AddFinalizeActivateMarker should likewise persist require_deposit_access.
+	afaMsg := types.NewMsgAddFinalizeActivateMarkerRequest("requiredepositfinalizecoin", sdkmath.NewInt(100), s.owner1Addr, s.owner1Addr, types.MarkerType_Coin, true, true, false, []string{},
+		[]types.AccessGrant{*types.NewAccessGrant(s.owner1Addr, []types.Access{types.Access_Mint, types.Access_Admin})}, 0, 0)
+	afaMsg.RequireDepositAccess = true
+	_, err = s.msgServer.AddFinalizeActivateMarker(s.ctx, afaMsg)
+	s.Require().NoError(err, "AddFinalizeActivateMarker(requiredepositfinalizecoin)")
+	storedAfa, err := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, "requiredepositfinalizecoin")
+	s.Require().NoError(err, "GetMarkerByDenom(requiredepositfinalizecoin)")
+	s.Assert().True(storedAfa.RequiresDepositAccess(), "stored requiredepositfinalizecoin marker should require deposit access")
+}
+
 func (s *MsgServerTestSuite) TestMsgFinalizeMarkerRequest() {
 	authUser := testUserAddress("test")
 	noNavMarker := types.NewEmptyMarkerAccount(
 		"nonav",
 		authUser.String(),
-		[]types.AccessGrant{})
+		[]types.AccessGrant{},
+	)
 
 	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, noNavMarker))
 
@@ -503,7 +524,8 @@ func (s *MsgServerTestSuite) TestUpdateSendDenyList() {
 	notRestrictedMarker := types.NewEmptyMarkerAccount(
 		"not-restricted-marker",
 		authUser.String(),
-		[]types.AccessGrant{})
+		[]types.AccessGrant{},
+	)
 
 	err := s.app.MarkerKeeper.AddMarkerAccount(s.ctx, notRestrictedMarker)
 	s.Require().NoError(err)
@@ -628,8 +650,10 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 					{
 						Price:  sdk.NewInt64Coin("navcoin", 1),
 						Volume: 1,
-					}},
-				Administrator: authUser.String()},
+					},
+				},
+				Administrator: authUser.String(),
+			},
 			expErr: "marker cantfindme not found for address: cosmos17l2yneua2mdfqaycgyhqag8t20asnjwf6adpmt: invalid request",
 		},
 		{
@@ -735,7 +759,8 @@ func (s *MsgServerTestSuite) TestMsgAddAccessRequest() {
 			Address:     s.owner1,
 			Permissions: types.AccessListByNames("MINT,BURN,DEPOSIT,WITHDRAW,DELETE,ADMIN"),
 		}},
-		0, 0)
+		0, 0,
+	)
 	_, err = s.msgServer.AddFinalizeActivateMarker(s.ctx, addMarkerMsg2)
 	s.Assert().NoError(err, "should successfully add/finalize/activate papaya marker")
 
@@ -758,7 +783,6 @@ func (s *MsgServerTestSuite) TestMsgAddAccessRequest() {
 			errorMsg: "invalid access type: invalid request",
 		},
 		{
-
 			name:     "should fail to ADD access to marker, keeper AddAccess failure",
 			msg:      types.NewMsgAddAccessRequest("hotdog", s.owner2Addr, accessMintGrant),
 			errorMsg: fmt.Sprintf("updates to pending marker hotdog can only be made by %s: unauthorized", s.owner1),
@@ -1240,7 +1264,6 @@ func (s *MsgServerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
 		expectedEvent proto.Message
 		errorMsg      string
 	}{
-
 		{
 			name: "should successfully ADD,FINALIZE,ACTIVATE new marker",
 			handler: func(ctx sdk.Context) error {

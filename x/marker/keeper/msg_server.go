@@ -111,6 +111,7 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		msg.AllowForcedTransfer,
 		normalizedReqAttrs,
 	)
+	ma.SetRequireDepositAccess(msg.RequireDepositAccess)
 
 	if err = k.AddMarkerAccount(ctx, ma); err != nil {
 		ctx.Logger().Error("unable to add marker", "err", err)
@@ -544,6 +545,7 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 		msg.AllowForcedTransfer,
 		normalizedReqAttrs,
 	)
+	ma.SetRequireDepositAccess(msg.RequireDepositAccess)
 
 	// Only create a NAV entry if an explicit value is given for a NAV.  If a zero value is desired this can be set explicitly in a followup call.
 	// This check prevents a proliferation of incorrect NAV entries being recorded when setting up markers.

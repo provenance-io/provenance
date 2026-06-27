@@ -63,6 +63,7 @@ const (
 	FlagUsdMills               = "usd-mills"
 	FlagVolume                 = "volume"
 	FlagTargetAddress          = "target-address"
+	FlagRequireDepositAccess   = "require-deposit-access"
 )
 
 const (
@@ -180,6 +181,7 @@ with the given supply amount and denomination provided in the coin argument
 				flagVals.UsdMills,
 				flagVals.Volume,
 			)
+			msg.RequireDepositAccess = flagVals.RequireDepositAccess
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -985,6 +987,7 @@ with the given supply amount and denomination provided in the coin argument
 				flagVals.SupplyFixed, flagVals.AllowGovControl,
 				flagVals.AllowForceTransfer, flagVals.RequiredAttributes, accessGrants, flagVals.UsdMills, flagVals.Volume,
 			)
+			msg.RequireDepositAccess = flagVals.RequireDepositAccess
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -1641,17 +1644,19 @@ func AddNewMarkerFlags(cmd *cobra.Command) {
 	cmd.Flags().StringSlice(FlagRequiredAttributes, []string{}, "comma delimited list of required attributes needed for a restricted marker to have send authority")
 	cmd.Flags().Uint64(FlagUsdMills, 0, "Indicates the net asset value of marker in usd mills, i.e. 1234 = $1.234")
 	cmd.Flags().Uint64(FlagVolume, 0, "Indicates the volume of the net asset value")
+	cmd.Flags().Bool(FlagRequireDepositAccess, false, "Indicates that deposit access is required to send coins into this marker regardless of marker type")
 }
 
 // NewMarkerFlagValues represents the values provided in the flags added by AddNewMarkerFlags.
 type NewMarkerFlagValues struct {
-	MarkerType         types.MarkerType
-	SupplyFixed        bool
-	AllowGovControl    bool
-	AllowForceTransfer bool
-	RequiredAttributes []string
-	UsdMills           uint64
-	Volume             uint64
+	MarkerType           types.MarkerType
+	SupplyFixed          bool
+	AllowGovControl      bool
+	AllowForceTransfer   bool
+	RequiredAttributes   []string
+	UsdMills             uint64
+	Volume               uint64
+	RequireDepositAccess bool
 }
 
 // ParseNewMarkerFlags reads the flags added by AddNewMarkerFlags.
@@ -1703,6 +1708,11 @@ func ParseNewMarkerFlags(cmd *cobra.Command) (*NewMarkerFlagValues, error) {
 
 	if rv.UsdMills > 0 && rv.Volume == 0 {
 		return nil, fmt.Errorf("incorrect value for %s flag.  Must be positive number if %s flag has been set to positive value", FlagVolume, FlagUsdMills)
+	}
+
+	rv.RequireDepositAccess, err = cmd.Flags().GetBool(FlagRequireDepositAccess)
+	if err != nil {
+		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagRequireDepositAccess, err)
 	}
 
 	return rv, nil

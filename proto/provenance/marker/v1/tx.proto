@@ -120,6 +120,7 @@ message MsgAddMarkerRequest {
   uint64                   usd_cents                = 12 [deprecated = true];
   uint64                   volume                   = 13;
   uint64                   usd_mills                = 14;
+  bool                     require_deposit_access   = 15;
 }
 
 // MsgAddMarkerResponse defines the Msg/AddMarker response type
@@ -290,6 +291,8 @@ message MsgAddFinalizeActivateMarkerRequest {
   uint64                   usd_cents                = 11 [deprecated = true];
   uint64                   volume                   = 12;
   uint64                   usd_mills                = 13;
+  // require_deposit_access enforces deposit-access control on coins sent into this marker regardless of marker type.
+  bool                     require_deposit_access   = 14;
 }
 
 // MsgAddFinalizeActivateMarkerResponse defines the Msg/AddFinalizeActivateMarker response type
