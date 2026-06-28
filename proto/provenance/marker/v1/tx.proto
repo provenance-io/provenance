@@ -61,8 +61,8 @@ service Msg {
   rpc UpdateRequiredAttributes(MsgUpdateRequiredAttributesRequest) returns (MsgUpdateRequiredAttributesResponse);
   // UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal.
   rpc UpdateForcedTransfer(MsgUpdateForcedTransferRequest) returns (MsgUpdateForcedTransferResponse);
-  // UpdateRequireDepositAccess updates the require_deposit_access field of a marker. Signer must have admin access or be
-  // the governance module account.
+  // UpdateRequireDepositAccess updates the require_deposit_access field of a marker. Signer must have admin access or
+  // be the governance module account.
   rpc UpdateRequireDepositAccess(MsgUpdateRequireDepositAccessRequest) returns (MsgUpdateRequireDepositAccessResponse);
   // SetAccountData sets the accountdata for a denom. Signer must have deposit authority.
   rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
@@ -295,7 +295,7 @@ message MsgAddFinalizeActivateMarkerRequest {
   uint64                   volume                   = 12;
   uint64                   usd_mills                = 13;
   // require_deposit_access enforces deposit-access control on coins sent into this marker regardless of marker type.
-  bool                     require_deposit_access   = 14;
+  bool require_deposit_access = 14;
 }
 
 // MsgAddFinalizeActivateMarkerResponse defines the Msg/AddFinalizeActivateMarker response type
