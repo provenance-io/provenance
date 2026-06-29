@@ -69,10 +69,10 @@ func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.Ac
 		}
 	}
 
-	// If it's going to a restricted marker, either an admin (if there is one) or
-	// fromAddr (if there isn't an admin) must have deposit access on that marker.
+	// If it's going to a restricted marker, or one that opts in via require_deposit_access, either an admin
+	// (if there is one) or fromAddr (if there isn't an admin) must have deposit access on that marker.
 	toMarker, _ := k.GetMarker(ctx, toAddr)
-	if toMarker != nil && toMarker.GetMarkerType() == types.MarkerType_RestrictedCoin {
+	if toMarker != nil && (toMarker.GetMarkerType() == types.MarkerType_RestrictedCoin || toMarker.RequiresDepositAccess()) {
 		if len(admins) > 0 {
 			if err := types.ValidateAtLeastOneAddrHasAccess(toMarker, admins, types.Access_Deposit); err != nil {
 				return nil, err
