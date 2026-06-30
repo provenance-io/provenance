@@ -3,117 +3,33 @@ package keeper
 import (
 	"context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/provenance-io/provenance/x/quarantine"
 )
 
-var _ quarantine.MsgServer = Keeper{}
+var _ quarantine.MsgServer = Keeper{} //nolint:staticcheck // SA1019: quarantine query API is deprecated; msg_server retained for compatibility.
 
-func (k Keeper) OptIn(goCtx context.Context, msg *quarantine.MsgOptIn) (*quarantine.MsgOptInResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+// errQuarantineRemoved is returned by all msg and query handlers.
+// The quarantine module has been deactivated and its endpoints are no longer available.
+const errQuarantineRemoved = "quarantine module has been removed"
 
-	toAddr, err := sdk.AccAddressFromBech32(msg.ToAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = k.SetOptIn(ctx, toAddr); err != nil {
-		return nil, err
-	}
-
-	return &quarantine.MsgOptInResponse{}, nil
+func (k Keeper) OptIn(_ context.Context, _ *quarantine.MsgOptIn) (*quarantine.MsgOptInResponse, error) {
+	return nil, sdkerrors.ErrNotSupported.Wrap(errQuarantineRemoved)
 }
 
-func (k Keeper) OptOut(goCtx context.Context, msg *quarantine.MsgOptOut) (*quarantine.MsgOptOutResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	toAddr, err := sdk.AccAddressFromBech32(msg.ToAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = k.SetOptOut(ctx, toAddr); err != nil {
-		return nil, err
-	}
-
-	return &quarantine.MsgOptOutResponse{}, nil
+func (k Keeper) OptOut(_ context.Context, _ *quarantine.MsgOptOut) (*quarantine.MsgOptOutResponse, error) {
+	return nil, sdkerrors.ErrNotSupported.Wrap(errQuarantineRemoved)
 }
 
-func (k Keeper) Accept(goCtx context.Context, msg *quarantine.MsgAccept) (*quarantine.MsgAcceptResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	toAddr, err := sdk.AccAddressFromBech32(msg.ToAddress)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %v", err)
-	}
-
-	fromAddrs := make([]sdk.AccAddress, len(msg.FromAddresses))
-	for i, addr := range msg.FromAddresses {
-		fromAddrs[i], err = sdk.AccAddressFromBech32(addr)
-		if err != nil {
-			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid from address[%d]: %v", i, err)
-		}
-	}
-
-	var fundsReleased sdk.Coins
-	fundsReleased, err = k.AcceptQuarantinedFunds(ctx, toAddr, fromAddrs...)
-	if err != nil {
-		return nil, err
-	}
-
-	if msg.Permanent {
-		for _, fromAddr := range fromAddrs {
-			k.SetAutoResponse(ctx, toAddr, fromAddr, quarantine.AUTO_RESPONSE_ACCEPT)
-		}
-	}
-
-	return &quarantine.MsgAcceptResponse{FundsReleased: fundsReleased}, nil
+func (k Keeper) Accept(_ context.Context, _ *quarantine.MsgAccept) (*quarantine.MsgAcceptResponse, error) {
+	return nil, sdkerrors.ErrNotSupported.Wrap(errQuarantineRemoved)
 }
 
-func (k Keeper) Decline(goCtx context.Context, msg *quarantine.MsgDecline) (*quarantine.MsgDeclineResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	toAddr, err := sdk.AccAddressFromBech32(msg.ToAddress)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %v", err)
-	}
-
-	fromAddrs := make([]sdk.AccAddress, len(msg.FromAddresses))
-	for i, addr := range msg.FromAddresses {
-		fromAddrs[i], err = sdk.AccAddressFromBech32(addr)
-		if err != nil {
-			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid from address[%d]: %v", i, err)
-		}
-	}
-
-	k.DeclineQuarantinedFunds(ctx, toAddr, fromAddrs...)
-
-	if msg.Permanent {
-		for _, fromAddr := range fromAddrs {
-			k.SetAutoResponse(ctx, toAddr, fromAddr, quarantine.AUTO_RESPONSE_DECLINE)
-		}
-	}
-
-	return &quarantine.MsgDeclineResponse{}, nil
+func (k Keeper) Decline(_ context.Context, _ *quarantine.MsgDecline) (*quarantine.MsgDeclineResponse, error) {
+	return nil, sdkerrors.ErrNotSupported.Wrap(errQuarantineRemoved)
 }
 
-func (k Keeper) UpdateAutoResponses(goCtx context.Context, msg *quarantine.MsgUpdateAutoResponses) (*quarantine.MsgUpdateAutoResponsesResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	toAddr, err := sdk.AccAddressFromBech32(msg.ToAddress)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %v", err)
-	}
-
-	for i, update := range msg.Updates {
-		fromAddr, err := sdk.AccAddressFromBech32(update.FromAddress)
-		if err != nil {
-			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid from address[%d]: %v", i, err)
-		}
-		k.SetAutoResponse(ctx, toAddr, fromAddr, update.Response)
-	}
-
-	return &quarantine.MsgUpdateAutoResponsesResponse{}, nil
+func (k Keeper) UpdateAutoResponses(_ context.Context, _ *quarantine.MsgUpdateAutoResponses) (*quarantine.MsgUpdateAutoResponsesResponse, error) {
+	return nil, sdkerrors.ErrNotSupported.Wrap(errQuarantineRemoved)
 }

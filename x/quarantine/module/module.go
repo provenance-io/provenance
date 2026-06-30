@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -18,17 +17,14 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/provenance-io/provenance/x/quarantine"
 	"github.com/provenance-io/provenance/x/quarantine/client/cli"
 	"github.com/provenance-io/provenance/x/quarantine/keeper"
-	"github.com/provenance-io/provenance/x/quarantine/simulation"
 )
 
 var (
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 
 	_ appmodule.AppModule = AppModule{}
 )
@@ -66,6 +62,8 @@ func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the quarantine module.
+//
+//nolint:staticcheck // SA1019: module API is deprecated.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
 	if err := quarantine.RegisterQueryHandlerClient(context.Background(), mux, quarantine.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
@@ -130,34 +128,16 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // RegisterServices registers a gRPC query service to respond to the quarantine-specific gRPC queries.
+//
+//nolint:staticcheck // SA1019: quarantine API is deprecated.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	quarantine.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 	quarantine.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	migrator := keeper.NewMigrator(am.keeper, am.bankKeeper)
+	if err := cfg.RegisterMigration(quarantine.ModuleName, 1, migrator.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to register quarantine migration 1->2: %v", err))
+	}
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 1 }
-
-// ____________________________________________________________________________
-
-// AppModuleSimulation functions
-
-// GenerateGenesisState creates a randomized GenState of the quarantine module.
-func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState, am.keeper.GetFundsHolder())
-}
-
-// RandomizedParams creates randomized quarantine param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
-	return nil
-}
-
-// RegisterStoreDecoder registers a decoder for quarantine module's types
-func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
-	sdr[quarantine.StoreKey] = simulation.NewDecodeStore(am.cdc)
-}
-
-// WeightedOperations returns the all the quarantine module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(simState, am.accKeeper, am.bankKeeper, am.keeper)
-}
+func (AppModule) ConsensusVersion() uint64 { return 2 }
