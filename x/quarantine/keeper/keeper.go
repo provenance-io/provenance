@@ -471,7 +471,7 @@ func (k Keeper) ReleaseAllQuarantinedFunds(ctx sdk.Context, bankKeeper quarantin
 	ctx.Logger().Info("Quarantine funds release complete.", "records_released", released, "records_failed", failed, "accounts_opted_out", len(optedIn))
 
 	if failed > 0 {
-		return fmt.Errorf("ReleaseAllQuarantinedFunds: failed to release funds for %d record(s)", failed)
+		ctx.Logger().Error("ReleaseAllQuarantinedFunds: failed to release funds", "failed_records", failed)
 	}
 	return nil
 }
