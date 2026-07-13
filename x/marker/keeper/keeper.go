@@ -229,6 +229,7 @@ func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) error {
 	if err := k.markers.Set(ctx, marker.GetAddress(), marker.GetAddress()); err != nil {
 		panic(fmt.Errorf("failed to set marker index: %w", err))
 	}
+	return nil
 }
 
 // RemoveMarker removes a marker from the auth account store. Note: if the account holds coins this will
