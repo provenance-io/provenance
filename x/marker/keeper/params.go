@@ -1,9 +1,11 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,7 +17,10 @@ import (
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	params, err := k.params.Get(ctx)
 	if err != nil {
-		return types.DefaultParams()
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.DefaultParams()
+		}
+		panic(err)
 	}
 	return params
 }
