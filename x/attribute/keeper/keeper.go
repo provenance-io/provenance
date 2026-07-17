@@ -549,12 +549,23 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 	// expire exactly on the block time.
 	endDateTime := ctx.BlockTime().Truncate(time.Second).Add(time.Second)
 	iterator := store.Iterator(types.AttributeExpirationKeyPrefix, types.GetAttributeExpireTimePrefix(endDateTime))
+	closeIterator := func() {
+		if iterator != nil {
+			iterator.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
+			iterator = nil
+		}
+	}
+	defer closeIterator()
+	count := 0
 	for ; iterator.Valid(); iterator.Next() {
 		expirationKeys = append(expirationKeys, iterator.Key())
+		count++
+		if limit != 0 && count >= limit {
+			break
+		}
 	}
-	iterator.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
+	closeIterator()
 
-	count := 0
 	for _, expirationKey := range expirationKeys {
 		attrKey := types.GetAddrAttributeKeyFromExpireKey(expirationKey)
 		bz := store.Get(attrKey)
@@ -570,7 +581,6 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 				if err = ctx.EventManager().EmitTypedEvent(deleteExpirationEvent); err != nil {
 					ctx.Logger().Error(fmt.Sprintf("failed to emit typed event %v", err))
 				}
-				count++
 			} else {
 				ctx.Logger().Error(fmt.Sprintf("unable to unmarshal attribute to delete key: %v error: %v", attrKey, err))
 			}
@@ -578,9 +588,6 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 
 		// delete the expiration lookup key
 		store.Delete(expirationKey)
-		if limit != 0 && count >= limit {
-			break
-		}
 	}
 	return count
 }
