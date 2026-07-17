@@ -611,9 +611,14 @@ func (k Keeper) deleteAttributeExpireLookup(store storetypes.KVStore, attr types
 	}
 }
 
+// isExpired returns true if the provided attribute's expiration is before the current blocktime.
+func isExpired(ctx sdk.Context, attr types.Attribute) bool {
+	return attr.ExpirationDate != nil && !attr.ExpirationDate.After(ctx.BlockTime())
+}
+
 // ValidateExpirationDate returns error if attribute has an expiration date that is in the past of current block time
 func (k Keeper) ValidateExpirationDate(ctx sdk.Context, attr types.Attribute) error {
-	if attr.ExpirationDate != nil && !attr.ExpirationDate.After(ctx.BlockTime()) {
+	if isExpired(ctx, attr) {
 		return fmt.Errorf("attribute expiration date %v is not after block time of %v", attr.ExpirationDate.UTC(), ctx.BlockTime().UTC())
 	}
 	return nil
@@ -677,9 +682,4 @@ func (k Keeper) getAddrAttributesByName(store storetypes.KVStore, acctAddr sdk.A
 		attributes = append(attributes, attr)
 	}
 	return attributes, nil
-}
-
-// isExpired returns true if the provided attribute's expiration is before the current blocktime.
-func isExpired(ctx sdk.Context, attr types.Attribute) bool {
-	return attr.ExpirationDate != nil && attr.ExpirationDate.Before(ctx.BlockTime())
 }
