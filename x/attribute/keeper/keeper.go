@@ -499,6 +499,9 @@ func (k Keeper) prefixScan(ctx sdk.Context, prefix []byte, f namePred) (attrs []
 		if err = k.cdc.Unmarshal(it.Value(), &attr); err != nil {
 			return
 		}
+		if isExpired(ctx, attr) {
+			continue
+		}
 		if f(attr.Name) {
 			attrs = append(attrs, attr)
 		}
@@ -674,4 +677,9 @@ func (k Keeper) getAddrAttributesByName(store storetypes.KVStore, acctAddr sdk.A
 		attributes = append(attributes, attr)
 	}
 	return attributes, nil
+}
+
+// isExpired returns true if the provided attribute's expiration is before the current blocktime.
+func isExpired(ctx sdk.Context, attr types.Attribute) bool {
+	return attr.ExpirationDate != nil && attr.ExpirationDate.Before(ctx.BlockTime())
 }
