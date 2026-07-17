@@ -6,8 +6,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/store/prefix"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -30,23 +28,25 @@ func (k Keeper) AllMarkers(c context.Context, req *types.QueryAllMarkersRequest)
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	markers := make([]*codectypes.Any, 0)
-	store := ctx.KVStore(k.storeKey)
-	markerStore := prefix.NewStore(store, types.MarkerStoreKeyPrefix)
-	pageRes, err := query.Paginate(markerStore, req.Pagination, func(_ []byte, value []byte) error {
-		result, err := k.GetMarker(ctx, sdk.AccAddress(value))
-		if err == nil {
-			anyMsg, anyErr := codectypes.NewAnyWithValue(result)
-			if anyErr != nil {
-				return status.Error(codes.Internal, anyErr.Error())
+	markers, pageRes, err := query.CollectionPaginate(
+		ctx, k.markers, req.Pagination,
+		func(_ sdk.AccAddress, value []byte) (*codectypes.Any, error) {
+			result, getErr := k.GetMarker(ctx, sdk.AccAddress(value))
+			if getErr != nil {
+				return nil, getErr
 			}
-			markers = append(markers, anyMsg)
-		}
-		return err
-	})
+			return codectypes.NewAnyWithValue(result)
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
+	// CollectionPaginate may return nil PageResponse when CountTotal is false.
+	// The old query.Paginate always returned non-nil, so normalize for backward compat.
+	if pageRes == nil {
+		pageRes = &query.PageResponse{}
+	}
+
 	return &types.QueryAllMarkersResponse{Markers: markers, Pagination: pageRes}, nil
 }
 
