@@ -712,3 +712,32 @@ func TestValidateAtLeastOneAddrHasAccess(t *testing.T) {
 		})
 	}
 }
+
+func TestMarkerAccountRequireDepositAccess(t *testing.T) {
+	tests := []struct {
+		name string
+		set  bool
+		exp  bool
+	}{
+		{
+			name: "set true",
+			set:  true,
+			exp:  true,
+		},
+		{
+			name: "set false",
+			set:  false,
+			exp:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ma := NewEmptyMarkerAccount("test", creator(t).Address, nil)
+			assert.False(t, ma.RequiresDepositAccess(), "RequiresDepositAccess should default to false")
+
+			ma.SetRequireDepositAccess(tc.set)
+			assert.Equal(t, tc.exp, ma.RequiresDepositAccess(), "RequiresDepositAccess after SetRequireDepositAccess(%t)", tc.set)
+		})
+	}
+}
