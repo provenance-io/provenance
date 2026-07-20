@@ -7,6 +7,7 @@ import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "provlabs/vault/v1/params.proto";
+import "provlabs/vault/v1/vault.proto";
 
 option go_package = "github.com/provlabs/vault/types";
 
@@ -105,6 +106,24 @@ service Msg {
 
   // UpdateVaultAUMFeeBips updates the AUM fee bips for a specific vault.
   rpc UpdateVaultAUMFeeBips(MsgUpdateVaultAUMFeeBipsRequest) returns (MsgUpdateVaultAUMFeeBipsResponse);
+
+  // UpdateVaultNAV creates or updates a vault's internal net asset value entry for a denom.
+  // Must be signed by the vault's NAV authority.
+  rpc UpdateVaultNAV(MsgUpdateVaultNAVRequest) returns (MsgUpdateVaultNAVResponse);
+
+  // UpdateNAVAuthority rotates the address authorized to mutate a vault's internal NAV table.
+  // Must be signed by the vault admin.
+  rpc UpdateNAVAuthority(MsgUpdateNAVAuthorityRequest) returns (MsgUpdateNAVAuthorityResponse);
+
+  // AcceptAsset settles a pending exchange-module payment whose target is the vault,
+  // exchanging an external asset for the vault's underlying asset.
+  // Must be signed by the vault's asset manager; the admin cannot settle.
+  rpc AcceptAsset(MsgAcceptAssetRequest) returns (MsgAcceptAssetResponse);
+
+  // RejectAsset declines a pending exchange-module payment whose target is the vault,
+  // causing the exchange module to cancel it and refund the source's escrow.
+  // Must be signed by the vault's asset manager; the admin cannot reject.
+  rpc RejectAsset(MsgRejectAssetRequest) returns (MsgRejectAssetResponse);
 }
 
 // MsgCreateVaultRequest is the request message for the CreateVault endpoint.
@@ -117,9 +136,10 @@ message MsgCreateVaultRequest {
   string share_denom = 2;
   // underlying_asset is the denomination of the asset supported by the vault.
   string underlying_asset = 3;
-  // payment_denom is the secondary denomination the vault can accept.
-  // if not specified, vault payment_denom will be set to underlying_asset.
-  string payment_denom = 4;
+  // payment_denom previously configured a secondary accepted denomination.
+  // Vaults are single-denom on underlying_asset; if set, this must equal
+  // underlying_asset. Retained for wire compatibility with released clients.
+  string payment_denom = 4 [deprecated = true];
   // withdrawal_delay_seconds is the time period (in seconds) that a withdrawal
   // must wait in the pending queue before being processed.
   uint64 withdrawal_delay_seconds = 5;
@@ -194,10 +214,10 @@ message MsgSwapOutRequest {
   string vault_address = 2;
   // assets is the amount of underlying assets to withdraw.
   cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
-  // redeem_denom selects the payout coin.
-  // - If empty, defaults to the vault’s payment_denom.
-  // - Must be either the vault’s underlying_asset or its payment_denom.
-  string redeem_denom = 4;
+  // redeem_denom previously selected the payout coin. The payout is always the
+  // vault's underlying_asset; if set, this must equal underlying_asset.
+  // Retained for wire compatibility with released clients.
+  string redeem_denom = 4 [deprecated = true];
 }
 
 // MsgSwapOutResponse is the response message for the SwapOut endpoint.
@@ -455,6 +475,13 @@ message MsgPauseVaultRequest {
   // reason is a human-readable explanation for pausing the vault. This is recorded
   // for operators and clients to understand the context (e.g., maintenance or anomaly).
   string reason = 3;
+  // force, when true, allows the pause to proceed even if the pre-pause
+  // reconcile or vault valuation fails. The pause is applied best-effort:
+  // tolerated failures are logged and surfaced on EventVaultPaused, and
+  // PausedBalance may be the net TVV, zero (when valuation itself failed), or
+  // otherwise approximate. When false (default), any reconcile or valuation
+  // failure aborts the pause and the vault remains unpaused.
+  bool force = 4;
 }
 
 // MsgPauseVaultResponse is the response message for the PauseVault endpoint.
@@ -578,3 +605,85 @@ message MsgUpdateVaultAUMFeeBipsRequest {
 
 // MsgUpdateVaultAUMFeeBipsResponse is the response message for the UpdateVaultAUMFeeBips endpoint.
 message MsgUpdateVaultAUMFeeBipsResponse {}
+
+// MsgUpdateVaultNAVRequest is the request message for creating or updating a vault's internal NAV entry.
+message MsgUpdateVaultNAVRequest {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // signer is the address of the vault's NAV authority authorizing this update.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault whose NAV entry is being updated.
+  string vault_address = 2;
+  // denom is the asset denomination being priced. It must not be the vault's
+  // share denom.
+  string denom = 3;
+  // price is the total value of `volume` units of the denom, denominated in
+  // the vault's underlying asset.
+  cosmos.base.v1beta1.Coin price = 4 [(gogoproto.nullable) = false];
+  // volume is the number of units of the denom that price covers. It must be positive.
+  string volume = 5 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // source identifies the origin of this NAV update (for example an oracle name).
+  // It is optional.
+  string source = 6;
+}
+
+// MsgUpdateVaultNAVResponse is the response message for the UpdateVaultNAV endpoint.
+message MsgUpdateVaultNAVResponse {}
+
+// MsgUpdateNAVAuthorityRequest is the request message for rotating a vault's NAV authority.
+message MsgUpdateNAVAuthorityRequest {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // signer is the address of the vault administrator authorizing this rotation.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault whose NAV authority is being rotated.
+  string vault_address = 2;
+  // new_authority is the address that will be authorized to mutate the vault's internal NAV table.
+  string new_authority = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUpdateNAVAuthorityResponse is the response message for the UpdateNAVAuthority endpoint.
+message MsgUpdateNAVAuthorityResponse {}
+
+// MsgAcceptAssetRequest is the request message for settling a pending exchange-module
+// payment whose target is the vault. The payment is identified by its source account and
+// external_id. The vault settles only payments where one leg is the vault's underlying
+// asset; the settlement direction (inbound or outbound) is derived from which leg that is.
+message MsgAcceptAssetRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address of the vault's asset manager authorizing the settlement.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault, which must be the payment's target.
+  string vault_address = 2;
+  // source is the bech32 address of the account that created the pending payment.
+  string source = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // external_id, together with source, uniquely identifies the pending payment to settle.
+  string external_id = 4;
+}
+
+// MsgAcceptAssetResponse is the response message for the AcceptAsset endpoint.
+message MsgAcceptAssetResponse {}
+
+// MsgRejectAssetRequest is the request message for declining a pending exchange-module
+// payment whose target is the vault. The exchange module cancels the payment and refunds
+// the source's escrow. The payment is identified by its source account and external_id.
+message MsgRejectAssetRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address of the vault's asset manager authorizing the rejection.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault, which must be the payment's target.
+  string vault_address = 2;
+  // source is the bech32 address of the account that created the pending payment.
+  string source = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // external_id, together with source, uniquely identifies the pending payment to reject.
+  string external_id = 4;
+}
+
+// MsgRejectAssetResponse is the response message for the RejectAsset endpoint.
+message MsgRejectAssetResponse {}

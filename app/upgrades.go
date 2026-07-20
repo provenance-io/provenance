@@ -65,10 +65,6 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
-			if err = app.VaultKeeper.MigrateVaultAccountPaymentDenomDefaults(ctx); err != nil {
-				return nil, err
-			}
-
 			if err = updateMsgFees(ctx, app); err != nil {
 				return nil, err
 			}
@@ -94,10 +90,6 @@ var upgrades = map[string]appUpgrade{
 			}
 			removeInactiveValidatorDelegations(ctx, app)
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
-				return nil, err
-			}
-
-			if err = app.VaultKeeper.MigrateVaultAccountPaymentDenomDefaults(ctx); err != nil {
 				return nil, err
 			}
 
