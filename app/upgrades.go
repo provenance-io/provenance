@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	vaulttypes "github.com/provlabs/vault/types"
-
 	storetypes "cosmossdk.io/store/types"
 	circuittypes "cosmossdk.io/x/circuit/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -15,8 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint/migrations"
-
-	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -43,71 +39,7 @@ type appUpgrade struct {
 // Entries should be in chronological/alphabetical order, earliest first.
 // I.e. Brand-new flowers should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
-	"daisy-rc1": {
-		Deleted: []string{"interchainquery", "oracle", "capability"},
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
-				return nil, err
-			}
-
-			foundation, team := getTestnetCircuitBreakerAddrs()
-			setupCircuitBreakerPermissions(ctx, app, foundation, team)
-
-			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
-				return nil, err
-			}
-			if err = setupMsgStoreCodeFee(ctx, app); err != nil {
-				return nil, err
-			}
-			removeInactiveValidatorDelegations(ctx, app)
-			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
-				return nil, err
-			}
-
-			if err = app.VaultKeeper.MigrateVaultAccountPaymentDenomDefaults(ctx); err != nil {
-				return nil, err
-			}
-
-			if err = updateMsgFees(ctx, app); err != nil {
-				return nil, err
-			}
-			return vm, nil
-		},
-	},
-	"daisy": {
-		Deleted: []string{"interchainquery", "oracle", "capability"},
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
-				return nil, err
-			}
-
-			foundation, team := getMainnetCircuitBreakerAddrs()
-			setupCircuitBreakerPermissions(ctx, app, foundation, team)
-
-			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
-				return nil, err
-			}
-			if err = setupMsgStoreCodeFee(ctx, app); err != nil {
-				return nil, err
-			}
-			removeInactiveValidatorDelegations(ctx, app)
-			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
-				return nil, err
-			}
-
-			if err = app.VaultKeeper.MigrateVaultAccountPaymentDenomDefaults(ctx); err != nil {
-				return nil, err
-			}
-
-			if err = updateMsgFees(ctx, app); err != nil {
-				return nil, err
-			}
-			return vm, nil
-		},
-	},
-	"edelweiss-rc1": { // v1.29.0-rc1
+	"forsythia-rc1": { // Upgrade for v1.30.0-rc1
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -127,8 +59,7 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
-	"edelweiss-rc2": {}, // Empty upgrade for v1.29.0-rc2
-	"edelweiss-rc3": { // Upgrade for v1.29.0-rc3
+	"forsythia": { // Upgrade for v1.30.0
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -142,34 +73,6 @@ var upgrades = map[string]appUpgrade{
 			removeInactiveValidatorDelegations(ctx, app)
 
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
-				return nil, err
-			}
-
-			if err = setupVaultParams(ctx, app); err != nil {
-				return nil, err
-			}
-
-			return vm, nil
-		},
-	},
-	"edelweiss": { // v1.29.0
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
-				return nil, err
-			}
-
-			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
-				return nil, err
-			}
-
-			removeInactiveValidatorDelegations(ctx, app)
-
-			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
-				return nil, err
-			}
-
-			if err = setupVaultParams(ctx, app); err != nil {
 				return nil, err
 			}
 
@@ -401,134 +304,6 @@ var (
 	_ = unlockVestingAccounts
 )
 
-// setupMsgStoreCodeFee sets the flat fee for MsgStoreCode to $100 (100,000 musd).
-// This allows smart contracts to be stored directly without governance proposals.
-func setupMsgStoreCodeFee(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Setting up MsgStoreCode flat fee.")
-
-	msgFee := flatfeestypes.MsgFee{
-		MsgTypeUrl: "/cosmwasm.wasm.v1.MsgStoreCode",
-		Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 100000)),
-	}
-
-	if err := msgFee.Validate(); err != nil {
-		return fmt.Errorf("invalid MsgStoreCode fee: %w", err)
-	}
-
-	if err := app.FlatFeesKeeper.SetMsgFee(ctx, msgFee); err != nil {
-		return fmt.Errorf("failed to set MsgStoreCode fee: %w", err)
-	}
-
-	ctx.Logger().Info("MsgStoreCode flat fee set successfully.", "msg_type", msgFee.MsgTypeUrl, "fee_musd", "100000", "fee_usd", "$100")
-
-	return nil
-}
-
-// updateMsgFees updates the flat fees for multiple message types.
-// Metadata operations (record/session writes): Lower fees to encourage usage
-// IBC client updates: Minimal fee for relayer operations
-func updateMsgFees(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Updating message fees.")
-
-	// Define all fee updates
-	feeUpdates := []flatfeestypes.MsgFee{
-		{
-			MsgTypeUrl: "/provenance.metadata.v1.MsgWriteRecordRequest",
-			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 10)), // $0.01
-		},
-		{
-			MsgTypeUrl: "/provenance.metadata.v1.MsgWriteSessionRequest",
-			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
-		},
-		{
-			MsgTypeUrl: "/ibc.core.client.v1.MsgUpdateClient",
-			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 10)), // $0.01
-		},
-		{
-			MsgTypeUrl: "/ibc.core.channel.v2.MsgAcknowledgement",
-			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
-		},
-		{
-			MsgTypeUrl: "/ibc.core.channel.v2.MsgRecvPacket",
-			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
-		},
-		{
-			MsgTypeUrl: "/ibc.core.channel.v2.MsgSendPacket",
-			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
-		},
-		{
-			MsgTypeUrl: "/provenance.flatfees.v1.MsgAddOracleAddressRequest",
-			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 0)), // free (gov prop msg)
-		},
-		{
-			MsgTypeUrl: "/provenance.flatfees.v1.MsgRemoveOracleAddressRequest",
-			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 0)), // free (gov prop msg)
-		},
-		{
-			MsgTypeUrl: "/provenance.exchange.v1.MsgMarketCommitmentSettleRequest",
-			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 50)), // $0.05
-		},
-	}
-
-	for _, msgFee := range feeUpdates {
-		if err := msgFee.Validate(); err != nil {
-			return fmt.Errorf("invalid msg fee for %q: %w", msgFee.MsgTypeUrl, err)
-		}
-
-		if err := app.FlatFeesKeeper.SetMsgFee(ctx, msgFee); err != nil {
-			return fmt.Errorf("failed to set msg fee for %q: %w", msgFee.MsgTypeUrl, err)
-		}
-	}
-
-	feeDeletes := []string{
-		"/ibc.core.channel.v1.MsgUpdateParams",
-		"/icq.v1.MsgUpdateParams",
-		"/provenance.oracle.v1.MsgSendQueryOracleRequest",
-		"/provenance.oracle.v1.MsgUpdateOracleRequest",
-	}
-
-	for _, msgTypeURL := range feeDeletes {
-		if err := app.FlatFeesKeeper.RemoveMsgFee(ctx, msgTypeURL); err != nil {
-			ctx.Logger().Info("Could not remove flat-fee entry.", "msg_type_url", msgTypeURL, "error", err)
-		}
-	}
-
-	ctx.Logger().Info("All message fees updated successfully.", "total_updated", len(feeUpdates))
-	return nil
-}
-
-// setupVaultParams initializes the vault module parameters with chain-appropriate
-// default values. The vault Params (tech_fee_address and default_aum_fee_bips) were
-// added after the module was first wired into the chain, so existing chains won't
-// have them set. This establishes the defaults during the upgrade. It is idempotent:
-// re-running it simply re-writes the same default values.
-func setupVaultParams(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Setting up vault module params.")
-
-	params := vaulttypes.Params{
-		TechFeeAddress:    vaulttypes.GetDefaultTechFeeAddress(ctx.ChainID()).String(),
-		DefaultAumFeeBips: vaulttypes.DefaultAumFeeBips,
-	}
-
-	if err := params.Validate(); err != nil {
-		return fmt.Errorf("invalid vault params: %w", err)
-	}
-
-	if err := app.VaultKeeper.Params.Set(ctx, params); err != nil {
-		return fmt.Errorf("failed to set vault params: %w", err)
-	}
-
-	ctx.Logger().Info("Vault module params set successfully.",
-		"tech_fee_address", params.TechFeeAddress,
-		"default_aum_fee_bips", params.DefaultAumFeeBips,
-	)
-	return nil
-}
-
-// setupCircuitBreakerPermissions grants circuit breaker permissions
-// during an upgrade using the caller-provided address lists.
-// The upgrade handlers are responsible for selecting the correct
-// mainnet/testnet address sets.
 func setupCircuitBreakerPermissions(ctx sdk.Context, app *App, foundationAccounts, teamAccounts []string) {
 	ctx.Logger().Info("Setting up circuit breaker permissions.")
 
@@ -567,28 +342,4 @@ func setupCircuitBreakerPermissions(ctx sdk.Context, app *App, foundationAccount
 	grant(teamAccounts, circuittypes.Permissions_LEVEL_ALL_MSGS)
 
 	ctx.Logger().Info("Circuit breaker setup configured.")
-}
-
-// getTestnetCircuitBreakerAddrs returns the list of accounts for Testnet.
-func getTestnetCircuitBreakerAddrs() (foundation []string, team []string) {
-	foundation = []string{
-		"tp1j3uudcktfm98k4f7e6d8z20laxt7zc690f950s", // Danny Wedul.
-	}
-	team = []string{
-		// TODO: Add REAL Testnet team addresses (tp1...)
-	}
-	return foundation, team
-}
-
-// getMainnetCircuitBreakerAddrs returns the list of accounts for Mainnet.
-func getMainnetCircuitBreakerAddrs() (foundation []string, team []string) {
-	foundation = []string{
-		"pb1yfstpvte3a9yyq57qtw5k2vjydpn58992ydnfz9h7d23uhzej3esvnkqay", // A group account owned by the foundation.
-	}
-	team = []string{
-		"pb1yquakyj3p68ugvwmxrw53uv58rr2lv4xzt6ue2", // Danny Wedul.
-		"pb1ktgsj6ap4cfq45g5dyw5vj47zhcrd6cl9p6z43", // Jason Davidson.
-		"pb1ue08tptk5rlye5aujd2k3astacnmufqtstn82t", // Matt Conroy.
-	}
-	return foundation, team
 }
