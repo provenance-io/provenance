@@ -49,6 +49,33 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, `[a-zA-Z][a-zA-Z0-9\\-\\.]{9,20}`, markerGenesis.Params.UnrestrictedDenomRegex)
 }
 
+func TestRandomizedGenStateRequireDepositAccess(t *testing.T) {
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+
+	seen := make(map[bool]bool)
+	for seed := int64(0); seed < 20; seed++ {
+		r := rand.New(rand.NewSource(seed))
+		simState := module.SimulationState{
+			AppParams:    make(simtypes.AppParams),
+			Cdc:          cdc,
+			Rand:         r,
+			NumBonded:    3,
+			Accounts:     simtypes.RandomAccounts(r, 3),
+			InitialStake: sdkmath.NewInt(1000),
+			GenState:     make(map[string]json.RawMessage),
+		}
+		simulation.RandomizedGenState(&simState)
+
+		var markerGenesis types.GenesisState
+		simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &markerGenesis)
+		require.Len(t, markerGenesis.Markers, 1, "seed %d: markers", seed)
+		seen[markerGenesis.Markers[0].RequireDepositAccess] = true
+	}
+	require.True(t, seen[true], "expected at least one seed to generate require_deposit_access = true")
+	require.True(t, seen[false], "expected at least one seed to generate require_deposit_access = false")
+}
+
 // TestRandomizedGenState1 tests abnormal scenarios of applying RandomizedGenState.
 func TestRandomizedGenState1(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
