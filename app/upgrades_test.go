@@ -1040,7 +1040,7 @@ func (s *UpgradeTestSuite) TestForsythiaRC1() {
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
 	}
-	s.AssertUpgradeHandlerLogs("forsythia-rc3", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("forsythia-rc1", expInLog, nil)
 }
 
 func (s *UpgradeTestSuite) TestForsythia() {
