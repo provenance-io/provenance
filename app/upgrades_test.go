@@ -2,8 +2,6 @@ package app
 
 import (
 	"bytes"
-	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"slices"
@@ -12,8 +10,6 @@ import (
 	"testing"
 	"time"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/stretchr/testify/suite"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -1037,64 +1033,6 @@ var (
 	LogMsgConvertFinishedVestingAccountsToBase = "INF Converting completed vesting accounts into base accounts. module=baseapp"
 )
 
-func (s *UpgradeTestSuite) TestDaisyRC1() {
-	expInLog := []string{
-		LogMsgRunModuleMigrations,
-		"INF Setting up circuit breaker permissions. module=baseapp",
-		LogMsgPruneIBCExpiredConsensusStates,
-		"INF Setting up MsgStoreCode flat fee. module=baseapp",
-		LogMsgRemoveInactiveValidatorDelegations,
-		LogMsgConvertFinishedVestingAccountsToBase,
-		"INF Updating message fees. module=baseapp",
-	}
-	s.AssertUpgradeHandlerLogs("daisy-rc1", expInLog, nil)
-}
-
-func (s *UpgradeTestSuite) TestDaisy() {
-	expInLog := []string{
-		LogMsgRunModuleMigrations,
-		"INF Setting up circuit breaker permissions. module=baseapp",
-		LogMsgPruneIBCExpiredConsensusStates,
-		"INF Setting up MsgStoreCode flat fee. module=baseapp",
-		LogMsgRemoveInactiveValidatorDelegations,
-		LogMsgConvertFinishedVestingAccountsToBase,
-		"INF Updating message fees. module=baseapp",
-	}
-	s.AssertUpgradeHandlerLogs("daisy", expInLog, nil)
-}
-
-func (s *UpgradeTestSuite) TestEdelweissRC1() {
-	expInLog := []string{
-		LogMsgRunModuleMigrations,
-		LogMsgPruneIBCExpiredConsensusStates,
-		LogMsgRemoveInactiveValidatorDelegations,
-		LogMsgConvertFinishedVestingAccountsToBase,
-	}
-	s.AssertUpgradeHandlerLogs("edelweiss-rc1", expInLog, nil)
-}
-
-func (s *UpgradeTestSuite) TestEdelweissRC3() {
-	expInLog := []string{
-		LogMsgRunModuleMigrations,
-		LogMsgPruneIBCExpiredConsensusStates,
-		LogMsgRemoveInactiveValidatorDelegations,
-		LogMsgConvertFinishedVestingAccountsToBase,
-		"INF Setting up vault module params. module=baseapp",
-	}
-	s.AssertUpgradeHandlerLogs("edelweiss-rc3", expInLog, nil)
-}
-
-func (s *UpgradeTestSuite) TestEdelweiss() {
-	expInLog := []string{
-		LogMsgRunModuleMigrations,
-		LogMsgPruneIBCExpiredConsensusStates,
-		LogMsgRemoveInactiveValidatorDelegations,
-		LogMsgConvertFinishedVestingAccountsToBase,
-		"INF Setting up vault module params. module=baseapp",
-	}
-	s.AssertUpgradeHandlerLogs("edelweiss", expInLog, nil)
-}
-
 func (s *UpgradeTestSuite) TestForsythiaRC1() {
 	expInLog := []string{
 		LogMsgRunModuleMigrations,
@@ -1113,93 +1051,4 @@ func (s *UpgradeTestSuite) TestForsythia() {
 		LogMsgConvertFinishedVestingAccountsToBase,
 	}
 	s.AssertUpgradeHandlerLogs("forsythia", expInLog, nil)
-}
-
-// wrappedWasmMsgSrvr is a wasmtypes.MsgServer that lets us inject an error to return from StoreCode.
-type wrappedWasmMsgSrvr struct {
-	wasmMsgServer wasmtypes.MsgServer
-	storeCodeErr  string
-}
-
-func newWrappedWasmMsgSrvr(wasmKeeper *wasmkeeper.Keeper) *wrappedWasmMsgSrvr {
-	return &wrappedWasmMsgSrvr{wasmMsgServer: wasmkeeper.NewMsgServerImpl(wasmKeeper)}
-}
-
-func (w *wrappedWasmMsgSrvr) WithStoreCodeErr(str string) *wrappedWasmMsgSrvr {
-	w.storeCodeErr = str
-	return w
-}
-
-func (w *wrappedWasmMsgSrvr) StoreCode(ctx context.Context, msg *wasmtypes.MsgStoreCode) (*wasmtypes.MsgStoreCodeResponse, error) {
-	if len(w.storeCodeErr) > 0 {
-		return nil, errors.New(w.storeCodeErr)
-	}
-	return w.wasmMsgServer.StoreCode(ctx, msg)
-}
-
-func (s *UpgradeTestSuite) TestSetupCircuitBreakerPermissions() {
-	type testCase struct {
-		name       string
-		foundAddrs []string
-		teamAddrs  []string
-		expLogs    []string
-	}
-
-	foundAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("hash", 1)).String()
-	teamAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("hash", 1)).String()
-
-	tests := []testCase{
-		{
-			name:       "Success - Mixed Valid Addresses",
-			foundAddrs: []string{foundAddr},
-			teamAddrs:  []string{teamAddr},
-			expLogs: []string{
-				"INF Setting up circuit breaker permissions.",
-				fmt.Sprintf("INF Granted Level LEVEL_SUPER_ADMIN to %s.", foundAddr),
-				fmt.Sprintf("INF Granted Level LEVEL_ALL_MSGS to %s.", teamAddr),
-				"INF Circuit breaker setup configured.",
-				"",
-			},
-		},
-		{
-			name:       "Partial Failure - Invalid Address",
-			foundAddrs: []string{"invalid-bech32-address", foundAddr},
-			teamAddrs:  []string{},
-			expLogs: []string{
-				"INF Setting up circuit breaker permissions.",
-				"ERR Invalid address at index 0 (invalid-bech32-address): decoding bech32 failed. Skipping.",
-				fmt.Sprintf("INF Granted Level LEVEL_SUPER_ADMIN to %s.", foundAddr),
-				"INF Circuit breaker setup configured.",
-				"",
-			},
-		},
-		{
-			name:       "Empty Lists - No Op",
-			foundAddrs: []string{},
-			teamAddrs:  []string{},
-			expLogs: []string{
-				"INF Setting up circuit breaker permissions.",
-				"INF Circuit breaker setup configured.",
-				"",
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			var buffer bytes.Buffer
-			logger := internal.NewBufferedDebugLogger(&buffer)
-			ctx := s.ctx.WithLogger(logger)
-
-			testFunc := func() {
-				setupCircuitBreakerPermissions(ctx, s.app, tc.foundAddrs, tc.teamAddrs)
-			}
-			s.Require().NotPanics(testFunc, "setupCircuitBreakerPermissions")
-
-			actLog := buffer.String()
-			actLogLines := strings.Split(actLog, "\n")
-
-			s.Assert().Equal(tc.expLogs, actLogLines, "Logged messages.")
-		})
-	}
 }
