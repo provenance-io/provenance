@@ -19,6 +19,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -1092,6 +1093,26 @@ func (s *UpgradeTestSuite) TestEdelweiss() {
 		"INF Setting up vault module params. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("edelweiss", expInLog, nil)
+}
+
+func (s *UpgradeTestSuite) TestForsythiaRC1() {
+	expInLog := []string{
+		LogMsgRunModuleMigrations,
+		LogMsgPruneIBCExpiredConsensusStates,
+		LogMsgRemoveInactiveValidatorDelegations,
+		LogMsgConvertFinishedVestingAccountsToBase,
+	}
+	s.AssertUpgradeHandlerLogs("forsythia-rc3", expInLog, nil)
+}
+
+func (s *UpgradeTestSuite) TestForsythia() {
+	expInLog := []string{
+		LogMsgRunModuleMigrations,
+		LogMsgPruneIBCExpiredConsensusStates,
+		LogMsgRemoveInactiveValidatorDelegations,
+		LogMsgConvertFinishedVestingAccountsToBase,
+	}
+	s.AssertUpgradeHandlerLogs("forsythia", expInLog, nil)
 }
 
 // wrappedWasmMsgSrvr is a wasmtypes.MsgServer that lets us inject an error to return from StoreCode.
