@@ -117,7 +117,7 @@
 * `github.com/olekukonko/tablewriter` removed at v0.0.5 [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/pelletier/go-toml/v2` bumped to v2.3.1 (from v2.2.4) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/polyfloyd/go-errorlint` removed at v1.6.0 [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
-* `github.com/provlabs/vault` bumped to v1.2.0 (from v1.1.0) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
+* `github.com/provlabs/vault` bumped to v1.2.1 (from v1.1.0) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/quasilyte/go-ruleguard` bumped to v0.4.5 (from v0.4.3-0.20240823090925-0fe6f58b47b1) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/quasilyte/go-ruleguard/dsl` bumped to v0.3.23 (from v0.3.22) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/raeperd/recvcheck` added at v0.2.0 [PR 2779](https://github.com/provenance-io/provenance/pull/2779).

@@ -714,6 +714,8 @@
     - [MsgUpdateForcedTransferResponse](#provenance-marker-v1-MsgUpdateForcedTransferResponse)
     - [MsgUpdateParamsRequest](#provenance-marker-v1-MsgUpdateParamsRequest)
     - [MsgUpdateParamsResponse](#provenance-marker-v1-MsgUpdateParamsResponse)
+    - [MsgUpdateRequireDepositAccessRequest](#provenance-marker-v1-MsgUpdateRequireDepositAccessRequest)
+    - [MsgUpdateRequireDepositAccessResponse](#provenance-marker-v1-MsgUpdateRequireDepositAccessResponse)
     - [MsgUpdateRequiredAttributesRequest](#provenance-marker-v1-MsgUpdateRequiredAttributesRequest)
     - [MsgUpdateRequiredAttributesResponse](#provenance-marker-v1-MsgUpdateRequiredAttributesResponse)
     - [MsgUpdateSendDenyListRequest](#provenance-marker-v1-MsgUpdateSendDenyListRequest)
@@ -9993,6 +9995,7 @@ MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker re
 | `usd_cents` | [uint64](#uint64) |  | **Deprecated.**  |
 | `volume` | [uint64](#uint64) |  |  |
 | `usd_mills` | [uint64](#uint64) |  |  |
+| `require_deposit_access` | [bool](#bool) |  | require_deposit_access enforces deposit-access control on coins sent into this marker regardless of marker type. |
 
 
 
@@ -10031,6 +10034,7 @@ If being provided as a governance proposal, set the from_address to the gov modu
 | `usd_cents` | [uint64](#uint64) |  | **Deprecated.**  |
 | `volume` | [uint64](#uint64) |  |  |
 | `usd_mills` | [uint64](#uint64) |  |  |
+| `require_deposit_access` | [bool](#bool) |  |  |
 
 
 
@@ -10611,6 +10615,34 @@ MsgUpdateParamsResponse is a response message for the UpdateParams endpoint.
 
 
 
+<a name="provenance-marker-v1-MsgUpdateRequireDepositAccessRequest"></a>
+
+### MsgUpdateRequireDepositAccessRequest
+MsgUpdateRequireDepositAccessRequest defines a msg to update the require_deposit_access field of a marker.
+Signer must have admin access on the marker or be a governance proposal.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | The denomination of the marker to update. |
+| `require_deposit_access` | [bool](#bool) |  | Whether deposit access is required to send coins into this marker regardless of marker type. |
+| `signer` | [string](#string) |  | The signer of this message. Must have admin access on the marker or be the governance module account address. |
+
+
+
+
+
+
+<a name="provenance-marker-v1-MsgUpdateRequireDepositAccessResponse"></a>
+
+### MsgUpdateRequireDepositAccessResponse
+MsgUpdateRequireDepositAccessResponse defines the Msg/UpdateRequireDepositAccess response type
+
+
+
+
+
+
 <a name="provenance-marker-v1-MsgUpdateRequiredAttributesRequest"></a>
 
 ### MsgUpdateRequiredAttributesRequest
@@ -10760,6 +10792,7 @@ Msg defines the Marker Msg service.
 | `SupplyDecreaseProposal` | [MsgSupplyDecreaseProposalRequest](#provenance-marker-v1-MsgSupplyDecreaseProposalRequest) | [MsgSupplyDecreaseProposalResponse](#provenance-marker-v1-MsgSupplyDecreaseProposalResponse) | SupplyDecreaseProposal can only be called via gov proposal |
 | `UpdateRequiredAttributes` | [MsgUpdateRequiredAttributesRequest](#provenance-marker-v1-MsgUpdateRequiredAttributesRequest) | [MsgUpdateRequiredAttributesResponse](#provenance-marker-v1-MsgUpdateRequiredAttributesResponse) | UpdateRequiredAttributes will only succeed if signer has transfer authority |
 | `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance-marker-v1-MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance-marker-v1-MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. |
+| `UpdateRequireDepositAccess` | [MsgUpdateRequireDepositAccessRequest](#provenance-marker-v1-MsgUpdateRequireDepositAccessRequest) | [MsgUpdateRequireDepositAccessResponse](#provenance-marker-v1-MsgUpdateRequireDepositAccessResponse) | UpdateRequireDepositAccess updates the require_deposit_access field of a marker. Signer must have admin access or be the governance module account. |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance-marker-v1-MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance-marker-v1-MsgSetAccountDataResponse) | SetAccountData sets the accountdata for a denom. Signer must have deposit authority. |
 | `UpdateSendDenyList` | [MsgUpdateSendDenyListRequest](#provenance-marker-v1-MsgUpdateSendDenyListRequest) | [MsgUpdateSendDenyListResponse](#provenance-marker-v1-MsgUpdateSendDenyListResponse) | UpdateSendDenyList will only succeed if signer has admin authority |
 | `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-marker-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-marker-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues sets the net asset value for a marker. |
@@ -11126,6 +11159,7 @@ MarkerAccount holds the marker configuration information in addition to a base a
 | `allow_governance_control` | [bool](#bool) |  | indicates that governance based control is allowed for this marker |
 | `allow_forced_transfer` | [bool](#bool) |  | Whether an admin can transfer restricted coins from a 3rd-party account without their signature. |
 | `required_attributes` | [string](#string) | repeated | list of required attributes on restricted marker in order to send and receive transfers if sender does not have transfer authority |
+| `require_deposit_access` | [bool](#bool) |  | requires that an address have deposit access in order to send coins into this marker account, regardless of marker type. When false (default), only restricted markers enforce deposit access. |
 
 
 
