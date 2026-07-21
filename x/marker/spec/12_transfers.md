@@ -58,7 +58,7 @@ For example, if the sender has `transfer` permission on one of them, it does not
 
 A deposit is when any funds are being sent to a marker's account. The funds being sent do not have to be in the denom of the destination marker.
 
-Whenever funds are being deposited into a marker, the sender (or transfer authority) must have `deposit` permission on the target marker. If the funds to deposit are restricted coins, the sender (or transfer authority) also needs `transfer` permission on the funds being moved; required attributes are not taken into account.
+The `deposit` permission check is applied when the target marker is a restricted coin, or when the target marker has `require_deposit_access` set to `true` (see [Require Deposit Access](./01_state.md#require-deposit-access)). When the check applies, the sender (or transfer authority) must have `deposit` permission on the target marker. If the funds to deposit are restricted coins, the sender (or transfer authority) also needs `transfer` permission on the funds being moved; required attributes are not taken into account.
 
 ### Withdraws
 
@@ -190,7 +190,7 @@ This flow checks that, if this is a deposit, nothing (yet) prevents the send. It
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
 flowchart TD
     start[["checkReceiverMarker(Receiver, Sender, Transfer Agents)"]]
-    issm{{"Is Receiver a restricted marker?"}}
+    issm{{"Is Receiver a restricted marker,\nor does it require deposit access?"}}
     haveta{{"Are there a Transfer Agents?"}}
     isrd{{"Does Sender\nhave deposit access?"}}
     istad{{"Does a Transfer Agent\nhave deposit access?"}}
@@ -210,6 +210,8 @@ flowchart TD
     linkStyle 4,6 stroke:#b30000,color:#b30000
     linkStyle 5,7,8 stroke:#1b8500,color:#1b8500
 ```
+
+The `require_deposit_access` opt-in is only consulted in the [SendRestrictionFn](#SendRestrictionFn) (i.e. bank send) path. In the [MsgTransferRequest](#MsgTransferRequest) path, the deposit-access check is triggered only when the receiver is a restricted marker, regardless of its `require_deposit_access` value.
 
 #### validateSendDenom
 

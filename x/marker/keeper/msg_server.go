@@ -111,6 +111,7 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		msg.AllowForcedTransfer,
 		normalizedReqAttrs,
 	)
+	ma.SetRequireDepositAccess(msg.RequireDepositAccess)
 
 	if err = k.AddMarkerAccount(ctx, ma); err != nil {
 		ctx.Logger().Error("unable to add marker", "err", err)
@@ -544,6 +545,7 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 		msg.AllowForcedTransfer,
 		normalizedReqAttrs,
 	)
+	ma.SetRequireDepositAccess(msg.RequireDepositAccess)
 
 	// Only create a NAV entry if an explicit value is given for a NAV.  If a zero value is desired this can be set explicitly in a followup call.
 	// This check prevents a proliferation of incorrect NAV entries being recorded when setting up markers.
@@ -677,6 +679,42 @@ func (k msgServer) UpdateForcedTransfer(goCtx context.Context, msg *types.MsgUpd
 	}
 
 	return &types.MsgUpdateForcedTransferResponse{}, nil
+}
+
+// UpdateRequireDepositAccess updates the require_deposit_access field of a marker. The signer must have admin access on
+// the marker or be the governance module account.
+func (k msgServer) UpdateRequireDepositAccess(goCtx context.Context, msg *types.MsgUpdateRequireDepositAccessRequest) (*types.MsgUpdateRequireDepositAccessResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	marker, err := k.GetMarkerByDenom(ctx, msg.Denom)
+	if err != nil {
+		return nil, fmt.Errorf("could not get marker for %s: %w", msg.Denom, err)
+	}
+
+	caller, err := sdk.AccAddressFromBech32(msg.Signer)
+	if err != nil {
+		return nil, err
+	}
+
+	switch {
+	case msg.Signer == k.GetAuthority():
+		if !marker.HasGovernanceEnabled() {
+			return nil, fmt.Errorf("%s marker does not allow governance control", msg.Denom)
+		}
+	case !marker.AddressHasAccess(caller, types.Access_Admin):
+		return nil, fmt.Errorf("caller %s does not have admin access on marker %s", msg.Signer, msg.Denom)
+	}
+
+	if marker.RequiresDepositAccess() == msg.RequireDepositAccess {
+		return nil, fmt.Errorf("marker %s already has require_deposit_access = %t", msg.Denom, msg.RequireDepositAccess)
+	}
+
+	marker.SetRequireDepositAccess(msg.RequireDepositAccess)
+	if err := k.SetMarker(ctx, marker); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateRequireDepositAccessResponse{}, nil
 }
 
 // SetAccountData sets the accountdata for a denom. Signer must have deposit authority.
