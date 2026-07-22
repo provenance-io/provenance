@@ -219,7 +219,8 @@ message EventSwapOutRequested {
   string vault_address = 1;
   // owner is the bech32 address of the user who initiated the swap out.
   string owner = 2;
-  // redeem_denom is the denomination of the asset to be redeemed.
+  // redeem_denom is the denomination of the asset to be redeemed. Always the
+  // vault's underlying_asset; retained for event-schema compatibility.
   string redeem_denom = 3;
   // shares is the amount of vault shares the user escrowed for this request.
   string shares = 4;
@@ -270,10 +271,23 @@ message EventVaultPaused {
   string vault_address = 1;
   // authority is the address (admin or asset manager) that paused the vault.
   string authority = 2;
-  // reason is the reason for pausing the vault.
+  // reason is the reason for pausing the vault. For a manual pause (PauseVault
+  // tx) this is the user-supplied reason. For an automated auto-pause triggered
+  // in the begin/end blocker, this carries the hard-coded reason describing the
+  // critical error that forced the pause.
   string reason = 3;
   // total_vault_value is the total value of the vault's assets at the time of pausing.
   string total_vault_value = 4;
+  // forced indicates the pause used the force path, waiving the strict
+  // reconcile/valuation gate. False for a normal strict pause; true for a
+  // forced manual pause and for automated auto-pauses.
+  bool forced = 5;
+  // forced_error records the reconcile and/or valuation error tolerated by a
+  // manual force pause (PauseVault tx). Empty when nothing failed. When
+  // non-empty, total_vault_value may be stale or zero. Only the tx path sets
+  // this; automated auto-pauses leave it empty and instead encode their error
+  // in reason.
+  string forced_error = 6;
 }
 
 // EventVaultUnpaused is emitted when a vault is unpaused.
@@ -424,4 +438,75 @@ message EventMaxSwapOutValueUpdated {
   // - Values must be positive (> 0).
   // - An empty string "" indicates no maximum limit.
   string max_swap_out = 3;
+}
+
+// EventNAVUpdated is emitted when a vault's internal NAV entry for a denom is created or updated.
+message EventNAVUpdated {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // denom is the asset denomination whose NAV entry was updated.
+  string denom = 2;
+  // price is the total value of volume units of the denom, denominated in the vault's underlying asset.
+  string price = 3;
+  // volume is the number of units of the denom that price covers.
+  string volume = 4;
+  // source identifies the origin of this NAV update.
+  string source = 5;
+  // signer is the NAV authority address that performed the update.
+  string signer = 6 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // updated_block_height is the block height at which the NAV entry was updated.
+  int64 updated_block_height = 7;
+}
+
+// EventNAVRemoved is emitted when a vault's internal NAV entry for a denom is removed,
+// such as when an outbound settlement leaves the vault holding zero of the denom.
+message EventNAVRemoved {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // denom is the asset denomination whose NAV entry was removed.
+  string denom = 2;
+  // last_price is the total value of last_volume units of the denom recorded
+  // before removal, rendered as a coin string.
+  string last_price = 3;
+  // last_volume is the number of units of the denom that last_price covered.
+  string last_volume = 4;
+}
+
+// EventNAVAuthorityUpdated is emitted when a vault's NAV authority is rotated.
+message EventNAVAuthorityUpdated {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // admin is the address of the vault administrator that performed the rotation.
+  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // new_authority is the address that is now authorized to mutate the vault's internal NAV table.
+  string new_authority = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventAssetAccepted is emitted when the asset manager settles a pending
+// exchange-module payment whose target is the vault.
+message EventAssetAccepted {
+  // vault_address is the bech32 address of the vault that settled the payment.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // source is the bech32 address of the account that created the settled payment.
+  string source = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // external_id, together with source, identifies the settled payment.
+  string external_id = 3;
+  // source_amount is the funds the source paid the vault, rendered as a coins string.
+  string source_amount = 4;
+  // target_amount is the funds the vault paid the source, rendered as a coins string.
+  string target_amount = 5;
+  // direction indicates whether the asset moved into the vault ("inbound") or
+  // out of the vault ("outbound") relative to the vault's underlying asset.
+  string direction = 6;
+}
+
+// EventAssetRejected is emitted when the asset manager declines a pending
+// exchange-module payment whose target is the vault.
+message EventAssetRejected {
+  // vault_address is the bech32 address of the vault that rejected the payment.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // source is the bech32 address of the account that created the rejected payment.
+  string source = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // external_id, together with source, identifies the rejected payment.
+  string external_id = 3;
 }
