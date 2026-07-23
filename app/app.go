@@ -615,6 +615,8 @@ func New(
 		app.BankKeeper,
 		app.NameKeeper,
 		app.AttributeKeeper,
+		app.ExchangeKeeper,
+		exchangekeeper.NewQueryServer(app.ExchangeKeeper),
 	)
 
 	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[triggertypes.StoreKey], app.MsgServiceRouter())
