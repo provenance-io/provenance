@@ -575,7 +575,7 @@ func New(
 	app.MarkerKeeper = &markerKeeper
 
 	app.MetadataKeeper = metadatakeeper.NewKeeper(
-		appCodec, keys[metadatatypes.StoreKey], app.AccountKeeper, app.AuthzKeeper, app.AttributeKeeper, app.MarkerKeeper, app.BankKeeper,
+		appCodec, runtime.NewKVStoreService(keys[metadatatypes.StoreKey]), app.AccountKeeper, app.AuthzKeeper, app.AttributeKeeper, app.MarkerKeeper, app.BankKeeper,
 	)
 
 	app.NFTKeeper = nftkeeper.NewKeeper(

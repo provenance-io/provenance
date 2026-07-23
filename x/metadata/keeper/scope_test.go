@@ -3331,7 +3331,7 @@ func (s *ScopeKeeperTestSuite) TestGetNetAssetValue() {
 		err := s.app.MetadataKeeper.SetNetAssetValue(ctx, scopeIDOK, okNAV, "testing")
 		s.Require().NoError(err)
 
-		store := ctx.KVStore(s.app.MetadataKeeper.GetStoreKey())
+		store := s.app.MetadataKeeper.GetStoreService().OpenKVStore(ctx)
 		badKey := types.NetAssetValueKey(scopeIDBad, priceDenomBad)
 		badVal := []byte{0, 0, 0}
 		store.Set(badKey, badVal)
@@ -3367,7 +3367,7 @@ func (s *ScopeKeeperTestSuite) TestGetNetAssetValue() {
 			name:    "invalid nav data in state",
 			mdDenom: scopeIDBad.Denom(),
 			pDenom:  priceDenomBad,
-			expErr:  "could not read nav for \"" + scopeIDBad.String() + "\" with price denom \"" + priceDenomBad + "\": proto: NetAssetValue: illegal tag 0 (wire type 0)",
+			expErr:  "could not read nav for \"" + scopeIDBad.String() + "\" with price denom \"" + priceDenomBad + "\": collections: encoding error: value decode: proto: NetAssetValue: illegal tag 0 (wire type 0)",
 		},
 		{
 			name:    "okay",
