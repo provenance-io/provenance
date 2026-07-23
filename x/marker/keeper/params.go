@@ -1,9 +1,11 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,14 +15,13 @@ import (
 
 // GetParams returns the total set of marker parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	params = types.DefaultParams() // Assuming a method that returns default parameters
-
-	// Deserialize parameters if they are set
-	if bz := store.Get(types.MarkerParamStoreKey); bz != nil {
-		k.cdc.MustUnmarshal(bz, &params)
+	params, err := k.params.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.DefaultParams()
+		}
+		panic(err)
 	}
-
 	return params
 }
 
@@ -29,9 +30,9 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	if err := params.Validate(); err != nil {
 		panic(err)
 	}
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&params)
-	store.Set(types.MarkerParamStoreKey, bz)
+	if err := k.params.Set(ctx, params); err != nil {
+		panic(err)
+	}
 }
 
 // GetMaxSupply returns the current parameter value for the max allowed supply.

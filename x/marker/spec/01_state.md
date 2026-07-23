@@ -7,6 +7,7 @@
     - [Fixed Supply vs Floating](#fixed-supply-vs-floating)
     - [Forced Transfers](#forced-transfers)
     - [Required Attributes](#required-attributes)
+    - [Require Deposit Access](#require-deposit-access)
   - [Marker Address Cache](#marker-address-cache)
     - [Marker Net Asset Value](#marker-net-asset-value)
   - [Params](#params)
@@ -66,6 +67,10 @@ type MarkerAccount struct {
 	// list of required attributes on restricted marker in order to send and receive transfers if sender does not have
 	// transfer authority
 	RequiredAttributes []string
+
+	// requires that an address have deposit access in order to send coins into this marker account, regardless of
+	// marker type. When false (default), only restricted markers enforce deposit access.
+	RequireDepositAccess bool
 }
 ```
 
@@ -171,6 +176,12 @@ A marker with the **Restricted Coin** type can be configured to allow transfers 
 This can be configured by setting the `required_attributes` array on the Marker.  When a `MsgSend` transaction is executed and the coin type is `restricted`, the `required_attributes` are checked. If the `ToAddress` associated with the `MsgSend` command has **all** the required attributes, the transfer will be executed.
 
 A single wildcard can only be used for the starting name of the required attribute. For example, `*.provenance.io` is a valid wildcard attribute. Invalid wildcard usages include forms such as `*kyc.provenance.io` or `kyc.*.provenance.io`.  Matching will be accepted for any number of child level names, i.e. `one.two.three.provenance.io` and `one.provenance.io` will be accepted for `*.provenance.io`.
+
+### Require Deposit Access
+
+By default, only **Restricted Coin** markers require an address to have `deposit` access in order to send coins into the marker's account. A marker of any type can opt in to this protection by setting the `require_deposit_access` flag to `true`. When enabled, the deposit-access check applies to every send into the marker account regardless of the marker's type, so unrestricted (**Coin**) markers can guard their escrow the same way restricted markers do.
+
+This flag can be set when the marker is created (via `AddMarker` or `AddFinalizeActivateMarker`) and changed afterward with the [Msg/UpdateRequireDepositAccess](./03_messages.md#msgupdaterequiredepositaccess) endpoint.
 
 ## Marker Address Cache
 

@@ -500,7 +500,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 				"testcoin",
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"8","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false,"allow_forced_transfer":false,"required_attributes":[]}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"8","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false,"allow_forced_transfer":false,"required_attributes":[],"require_deposit_access":false}}`,
 		},
 		{
 			"get testcoin marker test",
@@ -522,6 +522,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
   denom: testcoin
   manager: ""
   marker_type: MARKER_TYPE_COIN
+  require_deposit_access: false
   required_attributes: []
   status: MARKER_STATUS_ACTIVE
   supply: "1000"
@@ -542,7 +543,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 				"lockedcoin",
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			},
-			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"9","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false,"allow_forced_transfer":false,"required_attributes":[]}}`,
+			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"9","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false,"allow_forced_transfer":false,"required_attributes":[],"require_deposit_access":false}}`,
 		},
 		{
 			"get restricted coin marker with forced transfer",
@@ -564,6 +565,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
   denom: ` + s.holderDenom + `
   manager: ""
   marker_type: MARKER_TYPE_RESTRICTED
+  require_deposit_access: false
   required_attributes: []
   status: MARKER_STATUS_ACTIVE
   supply: "3000"
@@ -1738,6 +1740,73 @@ func (s *IntegrationTestSuite) TestGetCmdUpdateForcedTransfer() {
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestGetCmdUpdateRequireDepositAccess() {
+	denom := "updaterdacoin"
+	s.Run("add a new marker for this", func() {
+		cmd := markercli.GetCmdAddFinalizeActivateMarker()
+		args := []string{
+			"1000" + denom,
+			s.testnet.Validators[0].Address.String() + ",mint,burn,deposit,withdraw,delete,admin",
+			fmt.Sprintf("--%s=%s", markercli.FlagType, "COIN"),
+			"--" + markercli.FlagSupplyFixed,
+			"--" + markercli.FlagAllowGovernanceControl,
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+		}
+		testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
+	})
+	if s.T().Failed() {
+		s.FailNow("Stopping due to setup error")
+	}
+
+	stdFlags := func(args ...string) []string {
+		return append(args,
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+		)
+	}
+
+	tests := []struct {
+		name   string
+		args   []string
+		expErr string
+	}{
+		{
+			name:   "invalid denom",
+			args:   stdFlags("x", "true"),
+			expErr: "invalid denom: x",
+		},
+		{
+			name:   "invalid bool",
+			args:   stdFlags(denom, "farse"),
+			expErr: "invalid boolean string: \"farse\"",
+		},
+		{
+			name: "admin sets to true",
+			args: stdFlags(denom, "true"),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			testcli.NewTxExecutor(markercli.GetCmdUpdateRequireDepositAccess(), tc.args).
+				WithExpErrMsg(tc.expErr).
+				Execute(s.T(), s.testnet)
+		})
+	}
+
+	s.Run("marker query reflects updated require_deposit_access", func() {
+		clientCtx := s.testnet.Validators[0].ClientCtx
+		out, err := clitestutil.ExecTestCLICmd(clientCtx, markercli.MarkerCmd(), []string{denom})
+		s.Require().NoError(err, "query marker %s", denom)
+		s.Assert().Contains(out.String(), "require_deposit_access: true", "marker %s should reflect updated require_deposit_access", denom)
+	})
 }
 
 func (s *IntegrationTestSuite) TestGetCmdAddNetAssetValues() {

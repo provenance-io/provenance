@@ -5,6 +5,7 @@ import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/provlabs/vault/types";
 
@@ -22,20 +23,16 @@ message VaultAccount {
   // underlying_asset is the vault’s single principal collateral AND valuation/base unit.
   // - Exactly one denom.
   // - Total Vault Value (TVV) and NAV-per-share are computed and reported in this denom.
-  // - Interest accrual and internal accounting are measured in this denom.
-  // - Any other coin accepted for I/O (i.e. a distinct payment_denom) must have a NAV record priced INTO this denom.
+  // - Interest accrual, fees, and internal accounting are measured in this denom.
+  // - Held assets acquired via settlement must have an internal NAV record priced INTO this denom.
   string underlying_asset = 3;
 
-  // payment_denom is the external payment coin supported for user I/O alongside the underlying_asset.
-  // - Always populated. If not specified during creation, it defaults to underlying_asset.
-  // - If payment_denom equals underlying_asset, the vault operates as a single-denom vault.
-  // - If payment_denom differs from underlying_asset, swap-in/out accept either denom (one per call).
-  // - Default Swap-Out: If a user does not specify a redeem_denom during withdrawal,
-  //   the vault defaults to paying out in this payment_denom.
-  // - NAV Requirement: If payment_denom differs from underlying_asset, it requires an on-chain NAV record
-  //   mapping payment_denom -> underlying_asset to value deposits and redemptions.
-  //   (Note: In current versions, this NAV check is strictly enforced unless payment_denom is 'uylds.fcc').
-  string payment_denom = 4;
+  // payment_denom always equals underlying_asset. Vaults are single-denom; the
+  // field is inert and retained only for wire compatibility.
+  //
+  // Deprecated: The mixed-denom vault concept has been flattened into a single
+  // underlying denom. Deletion of this field is deferred to a future major release.
+  string payment_denom = 4 [deprecated = true];
 
   // admin is the address that has administrative privileges over the vault.
   string admin = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -106,7 +103,7 @@ message VaultAccount {
 
   // outstanding_aum_fee is the amount of AUM fee that has been calculated but not yet collected
   // due to insufficient liquidity in the principal marker. This amount is always denominated
-  // in the vault's payment_denom, must be preserved, and is carried into valuation computations.
+  // in the vault's underlying_asset, must be preserved, and is carried into valuation computations.
   cosmos.base.v1beta1.Coin outstanding_aum_fee = 23 [(gogoproto.nullable) = false];
 
   // aum_fee_bips is the AUM fee rate (in basis points) for this specific vault.
@@ -118,7 +115,6 @@ message VaultAccount {
 
   // min_swap_in_value is a string representing the minimum value required for a deposit.
   // - The value is measured in the underlying_asset.
-  // - Incoming payment_denom deposits are converted to this unit before checking.
   // - Values must be non-negative (>= 0).
   // - If empty ("") or "0", there is no minimum limit.
   string min_swap_in_value = 25 [(cosmos_proto.scalar) = "cosmos.IntString"];
@@ -132,7 +128,6 @@ message VaultAccount {
 
   // max_swap_in_value is a string representing the maximum value allowed for a deposit.
   // - The value is measured in the underlying_asset.
-  // - Incoming payment_denom deposits are converted to this unit before checking.
   // - Values must be positive (> 0).
   // - An empty string "" indicates no maximum limit.
   string max_swap_in_value = 27 [(cosmos_proto.scalar) = "cosmos.IntString"];
@@ -143,6 +138,39 @@ message VaultAccount {
   // - Values must be positive (> 0).
   // - An empty string "" indicates no maximum limit.
   string max_swap_out_value = 28 [(cosmos_proto.scalar) = "cosmos.IntString"];
+
+  // nav_authority is the address authorized to mutate this vault's internal NAV
+  // table via MsgUpdateVaultNAV. If empty, the vault admin is treated as the NAV
+  // authority. It is rotated only via MsgUpdateNAVAuthority.
+  string nav_authority = 29 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// VaultNAV is a single internal net asset value entry recording the price of one
+// asset denom held by a vault. The vault module is the sole source of truth for
+// these values; the NAV authority maintains them via MsgUpdateVaultNAV.
+message VaultNAV {
+  // denom is the asset denomination this entry prices.
+  string denom = 1;
+  // price is the total value of `volume` units of the denom, denominated in the
+  // vault's underlying asset. The per-unit value is price divided by volume.
+  cosmos.base.v1beta1.Coin price = 2 [(gogoproto.nullable) = false];
+  // volume is the number of units of the denom that price covers. It must be
+  // positive; the per-unit value of the denom is price divided by volume.
+  string volume = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // source identifies the origin of this NAV entry (for example an oracle name
+  // or the settlement path), mirroring the Marker module's NAV source attribution.
+  string source = 4;
+  // updated_block_height is the block height at which this entry was last updated.
+  int64 updated_block_height = 5;
+  // updated_time is the block time at which this entry was last updated.
+  google.protobuf.Timestamp updated_time = 6 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false
+  ];
 }
 
 // AccountBalance represents the coin balance of a single account.
@@ -171,6 +199,7 @@ message PendingSwapOut {
   // shares are the shares that were escrowed by the user.
   cosmos.base.v1beta1.Coin shares = 3 [(gogoproto.nullable) = false];
 
-  // redeem_denom is the denomination of the asset to be redeemed.
-  string redeem_denom = 4;
+  // redeem_denom is the denomination of the asset to be redeemed. Always the
+  // vault's underlying_asset; retained for wire compatibility.
+  string redeem_denom = 4 [deprecated = true];
 }

@@ -25,6 +25,7 @@ All created/modified state objects specified by each message are defined within 
   - [Msg/UpdateRequiredAttributes](#msgupdaterequiredattributes)
   - [Msg/UpdateSendDenyList](#msgupdatesenddenylist)
   - [Msg/UpdateForcedTransfer](#msgupdateforcedtransfer)
+  - [Msg/UpdateRequireDepositAccess](#msgupdaterequiredepositaccess)
   - [Msg/SetAccountData](#msgsetaccountdata)
   - [Msg/AddNetAssetValues](#msgaddnetassetvalues)
 
@@ -62,6 +63,8 @@ If issued via governance proposal, and has a `from_address` of the governance mo
 - The `unrestricted_denom_regex` check is not applied. Denoms still need to conform to the base coin denom format though.
 - The marker's `allow_governance_control` flag ignores the `enable_governance` param value, and is set to the provided value.
 - If the marker status is Active, and no `manager` is provided, it is left blank (instead of being populated with the `from_address`).
+
+The optional `require_deposit_access` field sets the new marker's [Require Deposit Access](./01_state.md#require-deposit-access) flag. When `true`, the marker enforces deposit access on incoming sends regardless of its marker type. It defaults to `false`.
 
 ## Msg/AddAccess
 
@@ -313,6 +316,8 @@ This service message is expected to fail if:
   - Contains a grant with an invalid address
   - Contains a grant with an invalid access enum value (Unspecified/0)
 
+The optional `require_deposit_access` field sets the new marker's [Require Deposit Access](./01_state.md#require-deposit-access) flag. When `true`, the marker enforces deposit access on incoming sends regardless of its marker type. It defaults to `false`.
+
 ## Msg/GrantAllowance
 
 GrantAllowance grants a fee allowance to the grantee on the granter's account.
@@ -407,6 +412,17 @@ This service message is expected to fail if:
 - No marker with the provided denom exists.
 - The marker is not a restricted coin.
 - The marker does not allow governance control.
+
+## Msg/UpdateRequireDepositAccess
+
+UpdateRequireDepositAccess updates the `require_deposit_access` flag of a marker. See [Require Deposit Access](./01_state.md#require-deposit-access) for what the flag does. This endpoint can be used directly by an admin or via governance proposal.
+
+This service message is expected to fail if:
+
+- No marker with the provided denom exists.
+- The signer is the governance module account address but the marker does not allow governance control.
+- The signer is not the governance module account and does not have admin access on the marker.
+- The marker's `require_deposit_access` flag already matches the requested value.
 
 ## Msg/SetAccountData
 

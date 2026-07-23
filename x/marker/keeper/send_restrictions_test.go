@@ -151,6 +151,15 @@ func TestSendRestrictionFn(t *testing.T) {
 	nrDenom := "nonrestrictedmarker" // cosmos1kfpnkyu2vln5ywrhhvuwdy5pe9an5krxm09mzm
 	nrMarker := newMarker(nrDenom, coin, nil)
 
+	// dpmDenom is an unrestricted (coin) marker that opts in to deposit-access enforcement via require_deposit_access.
+	dpmDenom := "depositprotectedmarker"
+	dpmMarker := newMarkerAcc(dpmDenom, coin, nil)
+	dpmMarker.RequireDepositAccess = true
+	dpmMarker.AccessControl = []types.AccessGrant{
+		{Address: addrWithDeposit.String(), Permissions: types.AccessList{types.Access_Deposit}},
+	}
+	dpmMarker = createActiveMarker(dpmMarker)
+
 	// Create a marker similar to the ones we use for hash grants.
 	gDenom := "grantmarker" // cosmos1j6pqqrczarugl3zxunvnwgsrq04rzm9wujnlj4
 	gMarker := newMarkerAcc(gDenom, coin, nil)
@@ -442,6 +451,20 @@ func TestSendRestrictionFn(t *testing.T) {
 			name:   "send non-restricted coin to the marker",
 			from:   addrWithoutAttrs,
 			to:     nrMarker.GetAddress(),
+			amt:    cz(c(1, nrDenom)),
+			expErr: "",
+		},
+		{
+			name:   "deposit protected unrestricted marker from account without deposit",
+			from:   addrWithoutAttrs,
+			to:     dpmMarker.GetAddress(),
+			amt:    cz(c(1, nrDenom)),
+			expErr: noAccessErr(addrWithoutAttrs, types.Access_Deposit, dpmDenom),
+		},
+		{
+			name:   "deposit protected unrestricted marker from account with deposit",
+			from:   addrWithDeposit,
+			to:     dpmMarker.GetAddress(),
 			amt:    cz(c(1, nrDenom)),
 			expErr: "",
 		},
