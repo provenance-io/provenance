@@ -20,6 +20,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/quarantine"
@@ -3784,5 +3785,51 @@ func (s *TestSuite) TestInitAndExportGenesis() {
 		}
 		s.Require().NotPanics(testFuncExport, "ExportGenesis")
 		s.Assert().Equal(expectedGenesisState, actualGenesisState, "exported genesis state")
+	})
+}
+
+// fundHolderAndRecord puts coins in the funds-holder account and writes a quarantine record
+// (toAddr <- fromAddr) for those coins, simulating quarantined-but-unaccepted funds.
+func (s *TestSuite) fundHolderAndRecord(toAddr, fromAddr sdk.AccAddress, coins sdk.Coins) {
+	s.Require().NoError(banktestutil.FundAccount(s.sdkCtx, s.app.BankKeeper, s.keeper.GetFundsHolder(), coins), "FundAccount funds-holder %s", coins)
+	s.keeper.SetQuarantineRecord(s.sdkCtx, toAddr, &quarantine.QuarantineRecord{
+		UnacceptedFromAddresses: []sdk.AccAddress{fromAddr},
+		Coins:                   coins,
+		Declined:                false,
+	})
+}
+
+func (s *TestSuite) TestReleaseAllQuarantinedFunds() {
+	s.Run("releases funds for an opted-in account and opts it out", func() {
+		coins := s.cz("100acorns")
+		s.Require().NoError(s.keeper.SetOptIn(s.sdkCtx, s.addr1), "SetOptIn addr1")
+		s.fundHolderAndRecord(s.addr1, s.addr2, coins)
+
+		err := s.keeper.ReleaseAllQuarantinedFunds(s.sdkCtx, s.app.BankKeeper)
+		s.Require().NoError(err, "ReleaseAllQuarantinedFunds")
+
+		bal := s.app.BankKeeper.GetBalance(s.sdkCtx, s.addr1, "acorns")
+		s.Assert().Equal("100acorns", bal.String(), "addr1 balance after release")
+		s.Assert().Nil(s.keeper.GetQuarantineRecord(s.sdkCtx, s.addr1, s.addr2), "record should be deleted")
+		s.Assert().False(s.keeper.IsQuarantinedAddr(s.sdkCtx, s.addr1), "addr1 should be opted out")
+	})
+
+	s.Run("releases funds for an account that opted OUT but still has a record", func() {
+		coins := s.cz("55bcorns")
+		s.Require().NoError(s.keeper.SetOptIn(s.sdkCtx, s.addr3), "SetOptIn addr3")
+		s.fundHolderAndRecord(s.addr3, s.addr4, coins)
+		s.keeper.SetOptOut(s.sdkCtx, s.addr3) // no longer a quarantined account, record remains
+
+		err := s.keeper.ReleaseAllQuarantinedFunds(s.sdkCtx, s.app.BankKeeper)
+		s.Require().NoError(err, "ReleaseAllQuarantinedFunds")
+
+		bal := s.app.BankKeeper.GetBalance(s.sdkCtx, s.addr3, "bcorns")
+		s.Assert().Equal("55bcorns", bal.String(), "addr3 funds must still be released")
+		s.Assert().Nil(s.keeper.GetQuarantineRecord(s.sdkCtx, s.addr3, s.addr4), "record should be deleted")
+	})
+
+	s.Run("no records is a no-op", func() {
+		err := s.keeper.ReleaseAllQuarantinedFunds(s.sdkCtx, s.app.BankKeeper)
+		s.Assert().NoError(err, "ReleaseAllQuarantinedFunds with no records")
 	})
 }
