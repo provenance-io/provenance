@@ -73,7 +73,7 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 			return nil, fmt.Errorf("marker can only be created with a Proposed or Finalized status")
 		}
 		// There's extra restrictions on the denom.
-		if err = k.ValidateUnrestictedDenom(ctx, msg.Amount.Denom); err != nil {
+		if err = k.ValidateUnrestrictedDenom(ctx, msg.Amount.Denom); err != nil {
 			return nil, err
 		}
 	}
@@ -506,7 +506,7 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 
 	var err error
 	// Add marker requests must pass extra validation for denom (in addition to regular coin validation expression)
-	if err = k.ValidateUnrestictedDenom(ctx, msg.Amount.Denom); err != nil {
+	if err = k.ValidateUnrestrictedDenom(ctx, msg.Amount.Denom); err != nil {
 		return nil, err
 	}
 
