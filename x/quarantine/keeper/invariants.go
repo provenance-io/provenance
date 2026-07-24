@@ -25,6 +25,9 @@ func FundsHolderBalanceInvariant(keeper Keeper) sdk.Invariant { //nolint:staticc
 }
 
 func fundsHolderBalanceInvariantHelper(ctx sdk.Context, keeper Keeper) (string, bool) {
+	if keeper.bankKeeper == nil {
+		return "quarantine module deactivated; no funds expected", false
+	}
 	totalQuarantined := sdk.Coins{}
 	accumulator := func(_, _ sdk.AccAddress, record *quarantine.QuarantineRecord) bool {
 		totalQuarantined = totalQuarantined.Add(record.Coins...)
