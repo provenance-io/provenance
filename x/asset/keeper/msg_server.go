@@ -336,6 +336,10 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 func (m msgServer) createMarker(goCtx context.Context, token sdk.Coin, addr string) (*markertypes.MarkerAccount, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	if err := m.markerKeeper.ValidateUnrestrictedDenom(ctx, token.Denom); err != nil {
+		return &markertypes.MarkerAccount{}, types.NewErrCodeInternal(err.Error())
+	}
+
 	marker, err := types.NewDefaultMarker(token, addr)
 	if err != nil {
 		return &markertypes.MarkerAccount{}, types.NewErrCodeInternal(fmt.Sprintf("failed to create marker: %s", err))
