@@ -50,8 +50,8 @@ func (k Keeper) GetUnrestrictedDenomRegex(ctx sdk.Context) (regex string) {
 	return k.GetParams(ctx).UnrestrictedDenomRegex
 }
 
-// ValidateUnrestictedDenom checks if the supplied denom is valid based on the module params
-func (k Keeper) ValidateUnrestictedDenom(ctx sdk.Context, denom string) error {
+// ValidateUnrestrictedDenom checks if the supplied denom is valid based on the module params
+func (k Keeper) ValidateUnrestrictedDenom(ctx sdk.Context, denom string) error {
 	// Anchors are enforced on the denom validation expression.  Similar to how the SDK does hits.
 	// https://github.com/cosmos/cosmos-sdk/blob/512b533242d34926972a8fc2f5639e8cf182f5bd/types/coin.go#L625
 	exp := k.GetUnrestrictedDenomRegex(ctx)
