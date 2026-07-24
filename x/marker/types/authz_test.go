@@ -19,6 +19,7 @@ import (
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
+
 	. "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -60,6 +61,24 @@ func TestMarkerTransferAuthorization(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, resp.Updated)
 	})
+}
+
+func TestMarkerTransferAuthorizationUpdated(t *testing.T) {
+	coin1000 := sdk.NewInt64Coin("stake", 1000)
+	coin300 := sdk.NewInt64Coin("stake", 300)
+	coin700 := sdk.NewInt64Coin("stake", 700)
+	allowedAddr := sdk.AccAddress("allowed_address_____") // cosmos1v9kxcmmhv4j97ctyv3ex2umnta047h6lu6p4pg
+	authorization := NewMarkerTransferAuthorization(sdk.NewCoins(coin1000), []sdk.AccAddress{allowedAddr})
+
+	send := &MsgTransferRequest{Amount: coin300, ToAddress: allowedAddr.String()}
+	resp, err := authorization.Accept(nil, send)
+	require.NoError(t, err, "authorization.Accept(nil, send) error")
+	require.NotNil(t, resp, "authorization.Accept(nil, send) resp")
+	require.NotNil(t, resp.Updated, "resp.Updated")
+	actAuth, ok := resp.Updated.(*MarkerTransferAuthorization)
+	require.True(t, ok, "resp.Updated.(*MarkerTransferAuthorization) cast okay")
+	assert.Equal(t, coin700.String(), actAuth.TransferLimit.String(), "TransferLimit")
+	assert.Equal(t, authorization.AllowList, actAuth.AllowList, "AllowList")
 }
 
 func TestMarkerTransferAuthorizationValidateBasic(t *testing.T) {
