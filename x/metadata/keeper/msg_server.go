@@ -775,7 +775,7 @@ func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNet
 		return nil, sdkerrors.ErrNotFound.Wrap(fmt.Sprintf("scope not found: %v", scopeID.String()))
 	}
 
-	_, err = k.validateAllRequiredSigned(ctx, scope.GetAllOwnerAddresses(), msg)
+	err = k.ValidateSignersWithoutParties(ctx, scope.GetAllOwnerAddresses(), msg)
 	if err != nil {
 		return nil, sdkerrors.ErrUnauthorized.Wrap(err.Error())
 	}
