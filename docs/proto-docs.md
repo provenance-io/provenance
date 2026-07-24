@@ -714,6 +714,8 @@
     - [MsgUpdateForcedTransferResponse](#provenance-marker-v1-MsgUpdateForcedTransferResponse)
     - [MsgUpdateParamsRequest](#provenance-marker-v1-MsgUpdateParamsRequest)
     - [MsgUpdateParamsResponse](#provenance-marker-v1-MsgUpdateParamsResponse)
+    - [MsgUpdateRequireDepositAccessRequest](#provenance-marker-v1-MsgUpdateRequireDepositAccessRequest)
+    - [MsgUpdateRequireDepositAccessResponse](#provenance-marker-v1-MsgUpdateRequireDepositAccessResponse)
     - [MsgUpdateRequiredAttributesRequest](#provenance-marker-v1-MsgUpdateRequiredAttributesRequest)
     - [MsgUpdateRequiredAttributesResponse](#provenance-marker-v1-MsgUpdateRequiredAttributesResponse)
     - [MsgUpdateSendDenyListRequest](#provenance-marker-v1-MsgUpdateSendDenyListRequest)
@@ -1227,15 +1229,15 @@ MsgUpdateAutoResponsesResponse defines the Msg/UpdateAutoResponse response type.
 <a name="cosmos-quarantine-v1beta1-Msg"></a>
 
 ### Msg
-Query defines the quarantine gRPC msg service.
+
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `OptIn` | [MsgOptIn](#cosmos-quarantine-v1beta1-MsgOptIn) | [MsgOptInResponse](#cosmos-quarantine-v1beta1-MsgOptInResponse) | OptIn defines a method for opting in to account quarantine. Funds sent to a quarantined account must be approved before they can be received. |
-| `OptOut` | [MsgOptOut](#cosmos-quarantine-v1beta1-MsgOptOut) | [MsgOptOutResponse](#cosmos-quarantine-v1beta1-MsgOptOutResponse) | OptOut defines a method for opting out of account quarantine. Any pending funds for the account must still be accepted, but new sends will no longer be quarantined. |
-| `Accept` | [MsgAccept](#cosmos-quarantine-v1beta1-MsgAccept) | [MsgAcceptResponse](#cosmos-quarantine-v1beta1-MsgAcceptResponse) | Accept defines a method for accepting quarantined funds. |
-| `Decline` | [MsgDecline](#cosmos-quarantine-v1beta1-MsgDecline) | [MsgDeclineResponse](#cosmos-quarantine-v1beta1-MsgDeclineResponse) | Decline defines a method for declining quarantined funds. |
-| `UpdateAutoResponses` | [MsgUpdateAutoResponses](#cosmos-quarantine-v1beta1-MsgUpdateAutoResponses) | [MsgUpdateAutoResponsesResponse](#cosmos-quarantine-v1beta1-MsgUpdateAutoResponsesResponse) | UpdateAutoResponses defines a method for updating the auto-response settings for a quarantined address. |
+| `OptIn` | [MsgOptIn](#cosmos-quarantine-v1beta1-MsgOptIn) | [MsgOptInResponse](#cosmos-quarantine-v1beta1-MsgOptInResponse) | Deprecated: The quarantine module has been removed. |
+| `OptOut` | [MsgOptOut](#cosmos-quarantine-v1beta1-MsgOptOut) | [MsgOptOutResponse](#cosmos-quarantine-v1beta1-MsgOptOutResponse) | Deprecated: The quarantine module has been removed. |
+| `Accept` | [MsgAccept](#cosmos-quarantine-v1beta1-MsgAccept) | [MsgAcceptResponse](#cosmos-quarantine-v1beta1-MsgAcceptResponse) | Deprecated: The quarantine module has been removed. |
+| `Decline` | [MsgDecline](#cosmos-quarantine-v1beta1-MsgDecline) | [MsgDeclineResponse](#cosmos-quarantine-v1beta1-MsgDeclineResponse) | Deprecated: The quarantine module has been removed. |
+| `UpdateAutoResponses` | [MsgUpdateAutoResponses](#cosmos-quarantine-v1beta1-MsgUpdateAutoResponses) | [MsgUpdateAutoResponsesResponse](#cosmos-quarantine-v1beta1-MsgUpdateAutoResponsesResponse) | Deprecated: The quarantine module has been removed. |
 
  <!-- end services -->
 
@@ -1329,14 +1331,14 @@ EventOptOut is an event emitted when an address opts out of quarantine.
 <a name="cosmos-quarantine-v1beta1-QueryAutoResponsesRequest"></a>
 
 ### QueryAutoResponsesRequest
-QueryAutoResponsesRequest defines the RPC request for getting auto-response settings for an address.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `to_address` | [string](#string) |  | to_address is the quarantined account to get info on. |
-| `from_address` | [string](#string) |  | from_address is an optional sender address to limit results. |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines optional pagination parameters for the request. |
+| `to_address` | [string](#string) |  |  |
+| `from_address` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  |  |
 
 
 
@@ -1346,13 +1348,13 @@ QueryAutoResponsesRequest defines the RPC request for getting auto-response sett
 <a name="cosmos-quarantine-v1beta1-QueryAutoResponsesResponse"></a>
 
 ### QueryAutoResponsesResponse
-QueryAutoResponsesResponse defines the RPC response of a AutoResponses query.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `auto_responses` | [AutoResponseEntry](#cosmos-quarantine-v1beta1-AutoResponseEntry) | repeated | auto_responses are the auto-response entries from the provided query. |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines the pagination parameters of the response. |
+| `auto_responses` | [AutoResponseEntry](#cosmos-quarantine-v1beta1-AutoResponseEntry) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  |  |
 
 
 
@@ -1362,12 +1364,12 @@ QueryAutoResponsesResponse defines the RPC response of a AutoResponses query.
 <a name="cosmos-quarantine-v1beta1-QueryIsQuarantinedRequest"></a>
 
 ### QueryIsQuarantinedRequest
-QueryIsQuarantinedRequest defines the RPC request for checking if an account has opted into quarantine.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `to_address` | [string](#string) |  | to_address is the address to check. |
+| `to_address` | [string](#string) |  |  |
 
 
 
@@ -1377,12 +1379,12 @@ QueryIsQuarantinedRequest defines the RPC request for checking if an account has
 <a name="cosmos-quarantine-v1beta1-QueryIsQuarantinedResponse"></a>
 
 ### QueryIsQuarantinedResponse
-QueryIsQuarantinedResponse defines the RPC response of an IsQuarantined query.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `is_quarantined` | [bool](#bool) |  | is_quarantined is true if the to_address has opted into quarantine. |
+| `is_quarantined` | [bool](#bool) |  |  |
 
 
 
@@ -1392,14 +1394,14 @@ QueryIsQuarantinedResponse defines the RPC response of an IsQuarantined query.
 <a name="cosmos-quarantine-v1beta1-QueryQuarantinedFundsRequest"></a>
 
 ### QueryQuarantinedFundsRequest
-QueryQuarantinedFundsRequest defines the RPC request for looking up quarantined funds.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `to_address` | [string](#string) |  | to_address is the intended recipient of the coins that have been quarantined. |
-| `from_address` | [string](#string) |  | from_address is the sender of the coins. If provided, a to_address must also be provided. |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  | pagination defines optional pagination parameters for the request. |
+| `to_address` | [string](#string) |  |  |
+| `from_address` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos-base-query-v1beta1-PageRequest) |  |  |
 
 
 
@@ -1409,13 +1411,13 @@ QueryQuarantinedFundsRequest defines the RPC request for looking up quarantined 
 <a name="cosmos-quarantine-v1beta1-QueryQuarantinedFundsResponse"></a>
 
 ### QueryQuarantinedFundsResponse
-QueryQuarantinedFundsResponse defines the RPC response of a QuarantinedFunds query.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `quarantinedFunds` | [QuarantinedFunds](#cosmos-quarantine-v1beta1-QuarantinedFunds) | repeated | quarantinedFunds is info about coins sitting in quarantine. |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  | pagination defines the pagination parameters of the response. |
+| `quarantinedFunds` | [QuarantinedFunds](#cosmos-quarantine-v1beta1-QuarantinedFunds) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos-base-query-v1beta1-PageResponse) |  |  |
 
 
 
@@ -1432,12 +1434,13 @@ QueryQuarantinedFundsResponse defines the RPC response of a QuarantinedFunds que
 
 ### Query
 Query defines the quarantine gRPC query service.
+Deprecated: The quarantine module has been removed. All endpoints return Unimplemented.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| `IsQuarantined` | [QueryIsQuarantinedRequest](#cosmos-quarantine-v1beta1-QueryIsQuarantinedRequest) | [QueryIsQuarantinedResponse](#cosmos-quarantine-v1beta1-QueryIsQuarantinedResponse) | IsQuarantined checks if an account has opted into quarantine. |
-| `QuarantinedFunds` | [QueryQuarantinedFundsRequest](#cosmos-quarantine-v1beta1-QueryQuarantinedFundsRequest) | [QueryQuarantinedFundsResponse](#cosmos-quarantine-v1beta1-QueryQuarantinedFundsResponse) | QuarantinedFunds gets information about funds that have been quarantined.<br>If both a to_address and from_address are provided, any such quarantined funds will be returned regardless of whether they've been declined. If only a to_address is provided, the unaccepted and undeclined funds waiting on a response from to_address will be returned. If neither a to_address nor from_address is provided, all non-declined quarantined funds for any address will be returned. The request is invalid if only a from_address is provided. |
-| `AutoResponses` | [QueryAutoResponsesRequest](#cosmos-quarantine-v1beta1-QueryAutoResponsesRequest) | [QueryAutoResponsesResponse](#cosmos-quarantine-v1beta1-QueryAutoResponsesResponse) | AutoResponses gets the auto-response settings for a quarantined account.<br>The to_address is required. If a from_address is provided only the auto response for that from_address will be returned. If no from_address is provided, all auto-response settings for the given to_address will be returned. |
+| `IsQuarantined` | [QueryIsQuarantinedRequest](#cosmos-quarantine-v1beta1-QueryIsQuarantinedRequest) | [QueryIsQuarantinedResponse](#cosmos-quarantine-v1beta1-QueryIsQuarantinedResponse) | Deprecated: The quarantine module has been removed. |
+| `QuarantinedFunds` | [QueryQuarantinedFundsRequest](#cosmos-quarantine-v1beta1-QueryQuarantinedFundsRequest) | [QueryQuarantinedFundsResponse](#cosmos-quarantine-v1beta1-QueryQuarantinedFundsResponse) | Deprecated: The quarantine module has been removed. |
+| `AutoResponses` | [QueryAutoResponsesRequest](#cosmos-quarantine-v1beta1-QueryAutoResponsesRequest) | [QueryAutoResponsesResponse](#cosmos-quarantine-v1beta1-QueryAutoResponsesResponse) | Deprecated: The quarantine module has been removed. |
 
  <!-- end services -->
 
@@ -9993,6 +9996,7 @@ MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker re
 | `usd_cents` | [uint64](#uint64) |  | **Deprecated.**  |
 | `volume` | [uint64](#uint64) |  |  |
 | `usd_mills` | [uint64](#uint64) |  |  |
+| `require_deposit_access` | [bool](#bool) |  | require_deposit_access enforces deposit-access control on coins sent into this marker regardless of marker type. |
 
 
 
@@ -10031,6 +10035,7 @@ If being provided as a governance proposal, set the from_address to the gov modu
 | `usd_cents` | [uint64](#uint64) |  | **Deprecated.**  |
 | `volume` | [uint64](#uint64) |  |  |
 | `usd_mills` | [uint64](#uint64) |  |  |
+| `require_deposit_access` | [bool](#bool) |  |  |
 
 
 
@@ -10611,6 +10616,34 @@ MsgUpdateParamsResponse is a response message for the UpdateParams endpoint.
 
 
 
+<a name="provenance-marker-v1-MsgUpdateRequireDepositAccessRequest"></a>
+
+### MsgUpdateRequireDepositAccessRequest
+MsgUpdateRequireDepositAccessRequest defines a msg to update the require_deposit_access field of a marker.
+Signer must have admin access on the marker or be a governance proposal.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | The denomination of the marker to update. |
+| `require_deposit_access` | [bool](#bool) |  | Whether deposit access is required to send coins into this marker regardless of marker type. |
+| `signer` | [string](#string) |  | The signer of this message. Must have admin access on the marker or be the governance module account address. |
+
+
+
+
+
+
+<a name="provenance-marker-v1-MsgUpdateRequireDepositAccessResponse"></a>
+
+### MsgUpdateRequireDepositAccessResponse
+MsgUpdateRequireDepositAccessResponse defines the Msg/UpdateRequireDepositAccess response type
+
+
+
+
+
+
 <a name="provenance-marker-v1-MsgUpdateRequiredAttributesRequest"></a>
 
 ### MsgUpdateRequiredAttributesRequest
@@ -10760,6 +10793,7 @@ Msg defines the Marker Msg service.
 | `SupplyDecreaseProposal` | [MsgSupplyDecreaseProposalRequest](#provenance-marker-v1-MsgSupplyDecreaseProposalRequest) | [MsgSupplyDecreaseProposalResponse](#provenance-marker-v1-MsgSupplyDecreaseProposalResponse) | SupplyDecreaseProposal can only be called via gov proposal |
 | `UpdateRequiredAttributes` | [MsgUpdateRequiredAttributesRequest](#provenance-marker-v1-MsgUpdateRequiredAttributesRequest) | [MsgUpdateRequiredAttributesResponse](#provenance-marker-v1-MsgUpdateRequiredAttributesResponse) | UpdateRequiredAttributes will only succeed if signer has transfer authority |
 | `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance-marker-v1-MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance-marker-v1-MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. |
+| `UpdateRequireDepositAccess` | [MsgUpdateRequireDepositAccessRequest](#provenance-marker-v1-MsgUpdateRequireDepositAccessRequest) | [MsgUpdateRequireDepositAccessResponse](#provenance-marker-v1-MsgUpdateRequireDepositAccessResponse) | UpdateRequireDepositAccess updates the require_deposit_access field of a marker. Signer must have admin access or be the governance module account. |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance-marker-v1-MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance-marker-v1-MsgSetAccountDataResponse) | SetAccountData sets the accountdata for a denom. Signer must have deposit authority. |
 | `UpdateSendDenyList` | [MsgUpdateSendDenyListRequest](#provenance-marker-v1-MsgUpdateSendDenyListRequest) | [MsgUpdateSendDenyListResponse](#provenance-marker-v1-MsgUpdateSendDenyListResponse) | UpdateSendDenyList will only succeed if signer has admin authority |
 | `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-marker-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-marker-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues sets the net asset value for a marker. |
@@ -11126,6 +11160,7 @@ MarkerAccount holds the marker configuration information in addition to a base a
 | `allow_governance_control` | [bool](#bool) |  | indicates that governance based control is allowed for this marker |
 | `allow_forced_transfer` | [bool](#bool) |  | Whether an admin can transfer restricted coins from a 3rd-party account without their signature. |
 | `required_attributes` | [string](#string) | repeated | list of required attributes on restricted marker in order to send and receive transfers if sender does not have transfer authority |
+| `require_deposit_access` | [bool](#bool) |  | requires that an address have deposit access in order to send coins into this marker account, regardless of marker type. When false (default), only restricted markers enforce deposit access. |
 
 
 

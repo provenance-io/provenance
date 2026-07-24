@@ -40,6 +40,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgSupplyDecreaseProposalRequest)(nil),
 	(*MsgUpdateRequiredAttributesRequest)(nil),
 	(*MsgUpdateForcedTransferRequest)(nil),
+	(*MsgUpdateRequireDepositAccessRequest)(nil),
 	(*MsgSetAccountDataRequest)(nil),
 	(*MsgUpdateSendDenyListRequest)(nil),
 	(*MsgAddNetAssetValuesRequest)(nil),
@@ -563,6 +564,24 @@ func (msg MsgUpdateForcedTransferRequest) ValidateBasic() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
 		return fmt.Errorf("invalid authority: %w", err)
+	}
+	return nil
+}
+
+func NewMsgUpdateRequireDepositAccessRequest(denom string, requireDepositAccess bool, signer sdk.AccAddress) *MsgUpdateRequireDepositAccessRequest {
+	return &MsgUpdateRequireDepositAccessRequest{
+		Denom:                denom,
+		RequireDepositAccess: requireDepositAccess,
+		Signer:               signer.String(),
+	}
+}
+
+func (msg MsgUpdateRequireDepositAccessRequest) ValidateBasic() error {
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
+		return fmt.Errorf("invalid signer: %w", err)
 	}
 	return nil
 }

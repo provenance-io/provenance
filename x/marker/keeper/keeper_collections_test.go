@@ -108,6 +108,30 @@ func (s *ByteCompatTestSuite) TestDenySendAtLegacyKey() {
 		"IsSendDeny must report false after RemoveSendDeny")
 }
 
+func TestExportGenesisPreservesRequireDepositAccess(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+
+	denom := "depositaccesscoin"
+	manager := sdk.AccAddress("manager_address_____")
+	m := types.NewEmptyMarkerAccount(denom, manager.String(), nil)
+	m.SetRequireDepositAccess(true)
+	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, m), "AddMarkerAccount")
+
+	gen := app.MarkerKeeper.ExportGenesis(ctx)
+
+	var exported *types.MarkerAccount
+	for i := range gen.Markers {
+		if gen.Markers[i].Denom == denom {
+			exported = &gen.Markers[i]
+			break
+		}
+	}
+	require.NotNil(t, exported, "exported genesis must contain marker %q", denom)
+	require.True(t, exported.RequireDepositAccess,
+		"exported marker must preserve require_deposit_access")
+}
+
 // TestGenesisRoundTrip verifies that exporting and importing genesis
 // state preserves the same data.
 func TestGenesisRoundTrip(t *testing.T) {

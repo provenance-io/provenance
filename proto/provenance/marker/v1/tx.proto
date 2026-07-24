@@ -61,6 +61,9 @@ service Msg {
   rpc UpdateRequiredAttributes(MsgUpdateRequiredAttributesRequest) returns (MsgUpdateRequiredAttributesResponse);
   // UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal.
   rpc UpdateForcedTransfer(MsgUpdateForcedTransferRequest) returns (MsgUpdateForcedTransferResponse);
+  // UpdateRequireDepositAccess updates the require_deposit_access field of a marker. Signer must have admin access or
+  // be the governance module account.
+  rpc UpdateRequireDepositAccess(MsgUpdateRequireDepositAccessRequest) returns (MsgUpdateRequireDepositAccessResponse);
   // SetAccountData sets the accountdata for a denom. Signer must have deposit authority.
   rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
   // UpdateSendDenyList will only succeed if signer has admin authority
@@ -120,6 +123,7 @@ message MsgAddMarkerRequest {
   uint64                   usd_cents                = 12 [deprecated = true];
   uint64                   volume                   = 13;
   uint64                   usd_mills                = 14;
+  bool                     require_deposit_access   = 15;
 }
 
 // MsgAddMarkerResponse defines the Msg/AddMarker response type
@@ -290,6 +294,8 @@ message MsgAddFinalizeActivateMarkerRequest {
   uint64                   usd_cents                = 11 [deprecated = true];
   uint64                   volume                   = 12;
   uint64                   usd_mills                = 13;
+  // require_deposit_access enforces deposit-access control on coins sent into this marker regardless of marker type.
+  bool require_deposit_access = 14;
 }
 
 // MsgAddFinalizeActivateMarkerResponse defines the Msg/AddFinalizeActivateMarker response type
@@ -358,6 +364,23 @@ message MsgUpdateForcedTransferRequest {
 
 // MsgUpdateForcedTransferResponse defines the Msg/UpdateForcedTransfer response type
 message MsgUpdateForcedTransferResponse {}
+
+// MsgUpdateRequireDepositAccessRequest defines a msg to update the require_deposit_access field of a marker.
+// Signer must have admin access on the marker or be a governance proposal.
+message MsgUpdateRequireDepositAccessRequest {
+  option (gogoproto.equal)      = true;
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // The denomination of the marker to update.
+  string denom = 1;
+  // Whether deposit access is required to send coins into this marker regardless of marker type.
+  bool require_deposit_access = 2;
+  // The signer of this message. Must have admin access on the marker or be the governance module account address.
+  string signer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUpdateRequireDepositAccessResponse defines the Msg/UpdateRequireDepositAccess response type
+message MsgUpdateRequireDepositAccessResponse {}
 
 // MsgSetAccountDataRequest defines a msg to set/update/delete the account data for a marker.
 // Signer must have deposit authority or be a gov proposal.

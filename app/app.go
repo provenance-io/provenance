@@ -615,6 +615,8 @@ func New(
 		app.BankKeeper,
 		app.NameKeeper,
 		app.AttributeKeeper,
+		app.ExchangeKeeper,
+		exchangekeeper.NewQueryServer(app.ExchangeKeeper),
 	)
 
 	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[triggertypes.StoreKey], app.MsgServiceRouter())
@@ -729,7 +731,7 @@ func New(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	app.QuarantineKeeper = quarantinekeeper.NewKeeper(appCodec, keys[quarantine.StoreKey], app.BankKeeper, authtypes.NewModuleAddress(quarantine.ModuleName))
+	app.QuarantineKeeper = quarantinekeeper.NewKeeper(appCodec, keys[quarantine.StoreKey], authtypes.NewModuleAddress(quarantine.ModuleName))
 
 	// Light client modules
 	clientKeeper := app.IBCKeeper.ClientKeeper

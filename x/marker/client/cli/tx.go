@@ -63,6 +63,7 @@ const (
 	FlagUsdMills               = "usd-mills"
 	FlagVolume                 = "volume"
 	FlagTargetAddress          = "target-address"
+	FlagRequireDepositAccess   = "require-deposit-access"
 )
 
 const (
@@ -99,6 +100,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdAddFinalizeActivateMarker(),
 		GetCmdUpdateRequiredAttributes(),
 		GetCmdUpdateForcedTransfer(),
+		GetCmdUpdateRequireDepositAccess(),
 		GetCmdSetAccountData(),
 		GetCmdUpdateSendDenyListRequest(),
 		GetCmdAddNetAssetValues(),
@@ -180,6 +182,7 @@ with the given supply amount and denomination provided in the coin argument
 				flagVals.UsdMills,
 				flagVals.Volume,
 			)
+			msg.RequireDepositAccess = flagVals.RequireDepositAccess
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -985,6 +988,7 @@ with the given supply amount and denomination provided in the coin argument
 				flagVals.SupplyFixed, flagVals.AllowGovControl,
 				flagVals.AllowForceTransfer, flagVals.RequiredAttributes, accessGrants, flagVals.UsdMills, flagVals.Volume,
 			)
+			msg.RequireDepositAccess = flagVals.RequireDepositAccess
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -1066,6 +1070,41 @@ func GetCmdUpdateForcedTransfer() *cobra.Command {
 	}
 
 	govcli.AddGovPropFlagsToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetCmdUpdateRequireDepositAccess returns a CLI command for updating a marker's require_deposit_access flag.
+// The signer must have admin access on the marker, or the command can be run as a governance proposal.
+func GetCmdUpdateRequireDepositAccess() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "update-require-deposit-access <denom> {true|false}",
+		Aliases: []string{"urda"},
+		Short:   "Update the require_deposit_access field on a marker (signer must have admin access or be governance)",
+		Example: fmt.Sprintf("$ %s tx marker update-require-deposit-access jackthecatcoin true", version.AppName),
+		Args:    cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+
+			requireDepositAccess, err := ParseBoolStrict(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgUpdateRequireDepositAccessRequest{Denom: args[0], RequireDepositAccess: requireDepositAccess}
+			authSetter := func(authority string) {
+				msg.Signer = authority
+			}
+
+			return generateOrBroadcastOptGovProp(clientCtx, flagSet, authSetter, msg)
+		},
+	}
+
+	addOptGovPropFlags(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -1641,17 +1680,19 @@ func AddNewMarkerFlags(cmd *cobra.Command) {
 	cmd.Flags().StringSlice(FlagRequiredAttributes, []string{}, "comma delimited list of required attributes needed for a restricted marker to have send authority")
 	cmd.Flags().Uint64(FlagUsdMills, 0, "Indicates the net asset value of marker in usd mills, i.e. 1234 = $1.234")
 	cmd.Flags().Uint64(FlagVolume, 0, "Indicates the volume of the net asset value")
+	cmd.Flags().Bool(FlagRequireDepositAccess, false, "Indicates that deposit access is required to send coins into this marker regardless of marker type")
 }
 
 // NewMarkerFlagValues represents the values provided in the flags added by AddNewMarkerFlags.
 type NewMarkerFlagValues struct {
-	MarkerType         types.MarkerType
-	SupplyFixed        bool
-	AllowGovControl    bool
-	AllowForceTransfer bool
-	RequiredAttributes []string
-	UsdMills           uint64
-	Volume             uint64
+	MarkerType           types.MarkerType
+	SupplyFixed          bool
+	AllowGovControl      bool
+	AllowForceTransfer   bool
+	RequiredAttributes   []string
+	UsdMills             uint64
+	Volume               uint64
+	RequireDepositAccess bool
 }
 
 // ParseNewMarkerFlags reads the flags added by AddNewMarkerFlags.
@@ -1703,6 +1744,11 @@ func ParseNewMarkerFlags(cmd *cobra.Command) (*NewMarkerFlagValues, error) {
 
 	if rv.UsdMills > 0 && rv.Volume == 0 {
 		return nil, fmt.Errorf("incorrect value for %s flag.  Must be positive number if %s flag has been set to positive value", FlagVolume, FlagUsdMills)
+	}
+
+	rv.RequireDepositAccess, err = cmd.Flags().GetBool(FlagRequireDepositAccess)
+	if err != nil {
+		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: true,false Error: %w", FlagRequireDepositAccess, err)
 	}
 
 	return rv, nil

@@ -58,6 +58,9 @@ message MarkerAccount {
   // list of required attributes on restricted marker in order to send and receive transfers if sender does not have
   // transfer authority
   repeated string required_attributes = 11;
+  // requires that an address have deposit access in order to send coins into this marker account, regardless of marker
+  // type. When false (default), only restricted markers enforce deposit access.
+  bool require_deposit_access = 12;
 }
 
 // MarkerType defines the types of marker

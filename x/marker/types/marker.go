@@ -56,6 +56,9 @@ type MarkerAccountI interface {
 	AllowsForcedTransfer() bool
 	SetAllowForcedTransfer(bool)
 
+	RequiresDepositAccess() bool
+	SetRequireDepositAccess(bool)
+
 	GetRequiredAttributes() []string
 	SetRequiredAttributes([]string)
 }
@@ -129,6 +132,15 @@ func (ma MarkerAccount) AllowsForcedTransfer() bool {
 
 func (ma *MarkerAccount) SetAllowForcedTransfer(allowForcedTransfer bool) {
 	ma.AllowForcedTransfer = allowForcedTransfer
+}
+
+// RequiresDepositAccess returns true if deposit access is enforced for sends into this marker regardless of marker type.
+func (ma MarkerAccount) RequiresDepositAccess() bool {
+	return ma.RequireDepositAccess
+}
+
+func (ma *MarkerAccount) SetRequireDepositAccess(requireDepositAccess bool) {
+	ma.RequireDepositAccess = requireDepositAccess
 }
 
 // HasAccess returns true if the provided address has been assigned the provided

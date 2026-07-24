@@ -7,8 +7,13 @@ on:
     branches:
       - main
 
+# GOGC=50 sets the go garbage collector's target heap growth to 50% above the live heap,
+# so it collects once the heap grows to 1.5x the live set (default is 100%, i.e. 2x).
+# It should help prevent these sims from using all the runner's memory (and getting killed).
 env:
   LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
+  GOMEMLIMIT: 6GiB
+  GOGC: 50
 
 # Set concurrency for this workflow to cancel in-progress jobs if retriggered.
 # The github.ref is only available when triggered by a PR so fall back to github.run_id for other cases.

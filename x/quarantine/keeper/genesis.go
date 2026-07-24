@@ -31,7 +31,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genesisState *quarantine.GenesisSta
 		totalQuarantined = totalQuarantined.Add(qf.Coins...)
 	}
 
-	if !totalQuarantined.IsZero() {
+	if !totalQuarantined.IsZero() && k.bankKeeper != nil {
 		qFundHolderBalance := k.bankKeeper.GetAllBalances(ctx, k.fundsHolder)
 		if _, hasNeg := qFundHolderBalance.SafeSub(totalQuarantined...); hasNeg {
 			panic(fmt.Errorf("quarantine fund holder account %q does not have enough funds %q to cover quarantined funds %q",

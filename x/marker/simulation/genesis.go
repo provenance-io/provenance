@@ -21,6 +21,7 @@ const (
 	MaxSupply              = "max_supply"
 	EnableGovernance       = "enable_governance"
 	UnrestrictedDenomRegex = "unresticted_denom_regex"
+	RequireDepositAccess   = "require_deposit_access"
 )
 
 // GenMaxSupply randomized Maximum amount of supply to allow for markers
@@ -41,6 +42,11 @@ func GenUnrestrictedDenomRegex(r *rand.Rand) string {
 	return fmt.Sprintf(`[a-zA-Z][a-zA-Z0-9\\-\\.]{%d,%d}`, minLen, maxLen)
 }
 
+// GenRequireDepositAccess returns a randomized RequireDepositAccess value for the bond denom marker.
+func GenRequireDepositAccess(r *rand.Rand) bool {
+	return r.Int63n(100) < 50
+}
+
 // RandomizedGenState generates a random GenesisState for marker
 func RandomizedGenState(simState *module.SimulationState) {
 	var maxSupply sdkmath.Int
@@ -59,6 +65,12 @@ func RandomizedGenState(simState *module.SimulationState) {
 	simState.AppParams.GetOrGenerate(
 		UnrestrictedDenomRegex, &unrestrictedDenomRegex, simState.Rand,
 		func(r *rand.Rand) { unrestrictedDenomRegex = GenUnrestrictedDenomRegex(r) },
+	)
+
+	var requireDepositAccess bool
+	simState.AppParams.GetOrGenerate(
+		RequireDepositAccess, &requireDepositAccess, simState.Rand,
+		func(r *rand.Rand) { requireDepositAccess = GenRequireDepositAccess(r) },
 	)
 
 	markerGenesis := types.GenesisState{
@@ -85,6 +97,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 				AllowGovernanceControl: true,
 				AllowForcedTransfer:    false,
 				RequiredAttributes:     []string{},
+				RequireDepositAccess:   requireDepositAccess,
 			},
 		},
 	}

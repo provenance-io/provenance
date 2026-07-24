@@ -3,6 +3,7 @@ package provlabs.vault.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
@@ -46,6 +47,30 @@ service Query {
   // Params returns the current module parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/vault/v1/params";
+  }
+
+  // VaultNavs returns a paginated list of all internal NAV entries for a vault.
+  rpc VaultNavs(QueryVaultNavsRequest) returns (QueryVaultNavsResponse) {
+    option (google.api.http).get = "/vault/v1/vaults/{id}/navs";
+  }
+
+  // NavValue returns a single internal NAV entry for a vault and denom.
+  rpc NavValue(QueryNavValueRequest) returns (QueryNavValueResponse) {
+    // denom uses a multi-segment capture so denominations containing "/"
+    // (e.g. "ibc/..." or "factory/...") route correctly.
+    option (google.api.http).get = "/vault/v1/vaults/{id}/navs/{denom=**}";
+  }
+
+  // VaultPayment returns a single pending exchange-module payment targeting a vault,
+  // identified by the payment's source account and external id.
+  rpc VaultPayment(QueryVaultPaymentRequest) returns (QueryVaultPaymentResponse) {
+    option (google.api.http).get = "/vault/v1/vaults/{id}/payment";
+  }
+
+  // VaultPayments returns a paginated list of all pending exchange-module payments
+  // targeting a vault.
+  rpc VaultPayments(QueryVaultPaymentsRequest) returns (QueryVaultPaymentsResponse) {
+    option (google.api.http).get = "/vault/v1/vaults/{id}/payments";
   }
 }
 
@@ -131,7 +156,7 @@ message QueryVaultResponse {
 message QueryEstimateSwapInRequest {
   // vault_address is the bech32 address of the vault to query.
   string vault_address = 1;
-  // assets is the amount of underlying or payment denom to swap in.
+  // assets is the amount of the underlying asset to swap in.
   cosmos.base.v1beta1.Coin assets = 2 [(gogoproto.nullable) = false];
 }
 
@@ -154,8 +179,10 @@ message QueryEstimateSwapOutRequest {
   string vault_address = 1;
   // shares is the amount of shares to swap out.
   string shares = 2;
-  // redeem_denom is the payout denom to estimate; if empty, the underlying asset is used.
-  string redeem_denom = 3;
+  // redeem_denom previously selected the payout denom to estimate. The estimate
+  // is always in the vault's underlying_asset; if set, this must equal
+  // underlying_asset. Retained for wire compatibility with released clients.
+  string redeem_denom = 3 [deprecated = true];
 }
 
 // QueryEstimateSwapOutResponse is the response message for the Query/EstimateSwapOut endpoint.
@@ -178,4 +205,89 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params defines the vault module parameters.
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryVaultNavsRequest is the request message for the Query/VaultNavs endpoint.
+message QueryVaultNavsRequest {
+  // id is the bech32 address of the vault or the vault's share denom to query.
+  string id = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryVaultNavsResponse is the response message for the Query/VaultNavs endpoint.
+message QueryVaultNavsResponse {
+  // navs is the list of internal NAV entries held by the vault.
+  repeated VaultNAV navs = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryNavValueRequest is the request message for the Query/NavValue endpoint.
+message QueryNavValueRequest {
+  // id is the bech32 address of the vault or the vault's share denom to query.
+  string id = 1;
+  // denom is the asset denomination whose NAV entry is being queried.
+  string denom = 2;
+}
+
+// QueryNavValueResponse is the response message for the Query/NavValue endpoint.
+message QueryNavValueResponse {
+  // nav is the internal NAV entry for the requested vault and denom.
+  VaultNAV nav = 1 [(gogoproto.nullable) = false];
+}
+
+// Payment is the vault module's view of a Provenance exchange-module payment. It
+// mirrors the exchange Payment, exposing only the fields relevant to the vault's
+// asset settlement workflow.
+message Payment {
+  // source is the account that created the payment and owns the escrowed source_amount.
+  string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // source_amount is the funds the source pays the target. A hold is placed on this
+  // amount in the source account until the payment is accepted, rejected, or cancelled.
+  repeated cosmos.base.v1beta1.Coin source_amount = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  // target is the account that can accept the payment; for these queries it is the vault.
+  string target = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // target_amount is the funds the target pays the source in exchange for source_amount.
+  repeated cosmos.base.v1beta1.Coin target_amount = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  // external_id, together with source, uniquely identifies the payment.
+  string external_id = 5;
+}
+
+// QueryVaultPaymentRequest is the request message for the Query/VaultPayment endpoint.
+message QueryVaultPaymentRequest {
+  // id is the bech32 address of the vault or the vault's share denom to query.
+  string id = 1;
+  // source is the bech32 address of the account that created the payment.
+  string source = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // external_id, together with source, uniquely identifies the payment.
+  string external_id = 3;
+}
+
+// QueryVaultPaymentResponse is the response message for the Query/VaultPayment endpoint.
+message QueryVaultPaymentResponse {
+  // payment is the pending exchange-module payment targeting the vault.
+  Payment payment = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryVaultPaymentsRequest is the request message for the Query/VaultPayments endpoint.
+message QueryVaultPaymentsRequest {
+  // id is the bech32 address of the vault or the vault's share denom to query.
+  string id = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryVaultPaymentsResponse is the response message for the Query/VaultPayments endpoint.
+message QueryVaultPaymentsResponse {
+  // payments is the list of pending exchange-module payments targeting the vault.
+  repeated Payment payments = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
