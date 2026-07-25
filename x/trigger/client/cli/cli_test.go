@@ -143,7 +143,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {
-	s.keyringEntries, s.keyring = testutil.GenerateTestKeyring(s.T(), number, s.cfg.Codec)
+	s.keyring = testutil.NewTestKeyring(s.T(), s.cfg.Codec)
+	s.keyringEntries = testutil.GenerateTestAccountsInKeyring(s.T(), s.keyring, number)
 	s.accountAddresses = testutil.GetKeyringEntryAddresses(s.keyringEntries)
 }
 
