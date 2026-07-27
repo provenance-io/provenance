@@ -44,3 +44,6 @@ func (x NoOpEventManager) EmitEvent(_ sdk.Event) {}
 
 // EmitEvents ignores the provided events and does nothing.
 func (x NoOpEventManager) EmitEvents(_ sdk.Events) {}
+
+// OverrideEvents ignores the provided events and does nothing.
+func (x NoOpEventManager) OverrideEvents(_ sdk.Events) {}
