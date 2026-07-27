@@ -64,7 +64,11 @@ func (a MarkerTransferAuthorization) Accept(_ context.Context, msg sdk.Msg) (aut
 			return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrapf("cannot send to %s address", toAddress)
 		}
 
-		return authz.AcceptResponse{Accept: true, Delete: shouldDelete, Updated: &MarkerTransferAuthorization{TransferLimit: limitLeft}}, nil
+		return authz.AcceptResponse{
+			Accept:  true,
+			Delete:  shouldDelete,
+			Updated: &MarkerTransferAuthorization{TransferLimit: limitLeft, AllowList: a.AllowList},
+		}, nil
 	default:
 		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("type mismatch")
 	}

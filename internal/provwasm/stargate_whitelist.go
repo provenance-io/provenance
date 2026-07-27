@@ -39,7 +39,6 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
-	"github.com/provenance-io/provenance/x/quarantine"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 	"github.com/provenance-io/provenance/x/sanction"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
@@ -320,11 +319,6 @@ func init() {
 	setWhitelistedQuery("/provenance.name.v1.Query/Resolve", &nametypes.QueryResolveResponse{})
 	setWhitelistedQuery("/provenance.name.v1.Query/ReverseLookup", &nametypes.QueryReverseLookupResponse{})
 
-	// quarantine
-	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/IsQuarantined", &quarantine.QueryIsQuarantinedResponse{})
-	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/QuarantinedFunds", &quarantine.QueryQuarantinedFundsResponse{})
-	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/AutoResponses", &quarantine.QueryAutoResponsesResponse{})
-
 	// registry
 	setWhitelistedQuery("/provenance.registry.v1.Query/GetRegistry", &registrytypes.QueryGetRegistryResponse{})
 	setWhitelistedQuery("/provenance.registry.v1.Query/HasRole", &registrytypes.QueryHasRoleResponse{})
@@ -346,6 +340,10 @@ func init() {
 	setWhitelistedQuery("/provlabs.vault.v1.Query/EstimateSwapOut", &vaulttypes.QueryEstimateSwapOutResponse{})
 	setWhitelistedQuery("/provlabs.vault.v1.Query/PendingSwapOuts", &vaulttypes.QueryPendingSwapOutsResponse{})
 	setWhitelistedQuery("/provlabs.vault.v1.Query/VaultPendingSwapOuts", &vaulttypes.QueryVaultPendingSwapOutsResponse{})
+	setWhitelistedQuery("/provlabs.vault.v1.Query/VaultNavs", &vaulttypes.QueryVaultNavsResponse{})
+	setWhitelistedQuery("/provlabs.vault.v1.Query/NavValue", &vaulttypes.QueryNavValueResponse{})
+	setWhitelistedQuery("/provlabs.vault.v1.Query/VaultPayment", &vaulttypes.QueryVaultPaymentResponse{})
+	setWhitelistedQuery("/provlabs.vault.v1.Query/VaultPayments", &vaulttypes.QueryVaultPaymentsResponse{})
 }
 
 // GetWhitelistedQuery returns the whitelisted query at the provided path.

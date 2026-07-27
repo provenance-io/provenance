@@ -1,7 +1,6 @@
 syntax = "proto3";
 package provlabs.vault.v1;
 
-import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "provlabs/vault/v1/params.proto";
 import "provlabs/vault/v1/vault.proto";
@@ -35,6 +34,15 @@ message PendingSwapOutQueue {
   repeated PendingSwapOutQueueEntry entries = 2 [(gogoproto.nullable) = false];
 }
 
+// VaultNAVEntry pairs a vault address with one of its internal NAV records for
+// genesis import and export.
+message VaultNAVEntry {
+  // vault_address is the bech32 address of the vault that owns this NAV record.
+  string vault_address = 1;
+  // nav is the internal NAV record held by the vault.
+  VaultNAV nav = 2 [(gogoproto.nullable) = false];
+}
+
 // GenesisState defines the vault module's genesis state.
 // NOTE: payout verification queue is not imported or exported.  It will always be empty after endblocker processes it.
 message GenesisState {
@@ -56,4 +64,7 @@ message GenesisState {
 
   // params defines the module parameters.
   Params params = 5 [(gogoproto.nullable) = false];
+
+  // navs contains the internal NAV table entries for all vaults at genesis.
+  repeated VaultNAVEntry navs = 6 [(gogoproto.nullable) = false];
 }

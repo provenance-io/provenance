@@ -10,26 +10,34 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/quarantine";
 
-// Query defines the quarantine gRPC msg service.
 service Msg {
   option (cosmos.msg.v1.service) = true;
+  option deprecated              = true;
 
-  // OptIn defines a method for opting in to account quarantine.
-  // Funds sent to a quarantined account must be approved before they can be received.
-  rpc OptIn(MsgOptIn) returns (MsgOptInResponse);
+  // Deprecated: The quarantine module has been removed.
+  rpc OptIn(MsgOptIn) returns (MsgOptInResponse) {
+    option deprecated = true;
+  }
 
-  // OptOut defines a method for opting out of account quarantine.
-  // Any pending funds for the account must still be accepted, but new sends will no longer be quarantined.
-  rpc OptOut(MsgOptOut) returns (MsgOptOutResponse);
+  // Deprecated: The quarantine module has been removed.
+  rpc OptOut(MsgOptOut) returns (MsgOptOutResponse) {
+    option deprecated = true;
+  }
 
-  // Accept defines a method for accepting quarantined funds.
-  rpc Accept(MsgAccept) returns (MsgAcceptResponse);
+  // Deprecated: The quarantine module has been removed.
+  rpc Accept(MsgAccept) returns (MsgAcceptResponse) {
+    option deprecated = true;
+  }
 
-  // Decline defines a method for declining quarantined funds.
-  rpc Decline(MsgDecline) returns (MsgDeclineResponse);
+  // Deprecated: The quarantine module has been removed.
+  rpc Decline(MsgDecline) returns (MsgDeclineResponse) {
+    option deprecated = true;
+  }
 
-  // UpdateAutoResponses defines a method for updating the auto-response settings for a quarantined address.
-  rpc UpdateAutoResponses(MsgUpdateAutoResponses) returns (MsgUpdateAutoResponsesResponse);
+  // Deprecated: The quarantine module has been removed.
+  rpc UpdateAutoResponses(MsgUpdateAutoResponses) returns (MsgUpdateAutoResponsesResponse) {
+    option deprecated = true;
+  }
 }
 
 // MsgOptIn represents a message for opting in to account quarantine.
