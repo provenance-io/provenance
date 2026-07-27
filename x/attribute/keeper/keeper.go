@@ -580,7 +580,7 @@ func (k Keeper) getExpirationKeys(ctx sdk.Context, store storetypes.KVStore, lim
 	// blocktime to include entries that expire exactly on the block time.
 	endDateTime := ctx.BlockTime().Truncate(time.Second).Add(time.Second)
 	iterator := store.Iterator(types.AttributeExpirationKeyPrefix, types.GetAttributeExpireTimePrefix(endDateTime))
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
 
 	expirationKeys := make([][]byte, 0)
 	count := 0
