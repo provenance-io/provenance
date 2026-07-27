@@ -545,30 +545,8 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 // DeleteExpiredAttributes find and delete expired attributes returns the total deleted
 // limit sets the max amount to delete in a call, 0 for not limit
 func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
-	expirationKeys := [][]byte{}
 	store := ctx.KVStore(k.storeKey)
-
-	// The ending for iterators is exclusive. So we need to add a second to the blocktime to include entries that
-	// expire exactly on the block time.
-	endDateTime := ctx.BlockTime().Truncate(time.Second).Add(time.Second)
-	iterator := store.Iterator(types.AttributeExpirationKeyPrefix, types.GetAttributeExpireTimePrefix(endDateTime))
-	closeIterator := func() {
-		if iterator != nil {
-			iterator.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
-			iterator = nil
-		}
-	}
-	defer closeIterator()
-	count := 0
-	for ; iterator.Valid(); iterator.Next() {
-		expirationKeys = append(expirationKeys, iterator.Key())
-		count++
-		if limit != 0 && count >= limit {
-			break
-		}
-	}
-	closeIterator()
-
+	expirationKeys := k.getExpirationKeys(ctx, store, limit)
 	for _, expirationKey := range expirationKeys {
 		attrKey := types.GetAddrAttributeKeyFromExpireKey(expirationKey)
 		bz := store.Get(attrKey)
@@ -592,7 +570,29 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 		// delete the expiration lookup key
 		store.Delete(expirationKey)
 	}
-	return count
+	return len(expirationKeys)
+}
+
+// getExpirationKeys gets all the keys of the attributes that are expired and should be deleted.
+// If the provided limit is not zero, the result is limited to that number of entries.
+func (k Keeper) getExpirationKeys(ctx sdk.Context, store storetypes.KVStore, limit int) [][]byte {
+	// The ending for iterators is exclusive. So we need to add a second to the
+	// blocktime to include entries that expire exactly on the block time.
+	endDateTime := ctx.BlockTime().Truncate(time.Second).Add(time.Second)
+	iterator := store.Iterator(types.AttributeExpirationKeyPrefix, types.GetAttributeExpireTimePrefix(endDateTime))
+	defer iterator.Close()
+
+	expirationKeys := make([][]byte, 0)
+	count := 0
+	for ; iterator.Valid(); iterator.Next() {
+		expirationKeys = append(expirationKeys, iterator.Key())
+		count++
+		if limit != 0 && count >= limit {
+			break
+		}
+	}
+
+	return expirationKeys
 }
 
 // addAttributeExpireLookup safely adds attribute expire key to store, if expire date exists, else no-op
