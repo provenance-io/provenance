@@ -429,7 +429,8 @@ replace (
 	// This is required for https://github.com/provenance-io/provenance/issues/1414
 	github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.61.10-pio-2
 
-	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.53.5-pio-2
+	// github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.53.5-pio-2
+	github.com/cosmos/cosmos-sdk => ../prov-cosmos-sdk
 
 	// Replace iavl to fix the prune command. This can be removed once upstream is off v1.2.2
 	github.com/cosmos/iavl => github.com/cosmos/iavl v1.2.6
