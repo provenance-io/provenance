@@ -74,6 +74,8 @@ message VaultAccount {
   // paused_balance is the total vault value snapshot taken at the moment of pausing.
   // This value is used for all NAV calculations while the vault is paused to prevent
   // apparent devaluation during collateral rebalancing. It is cleared upon unpausing.
+  // Nothing done during the pause moves it, neither a principal deposit or withdrawal
+  // nor a NAV repricing; those all take effect together when the vault is unpaused.
   cosmos.base.v1beta1.Coin paused_balance = 16 [(gogoproto.nullable) = false];
 
   // paused_reason is a human-readable string explaining why the vault was paused, particularly for automatic pauses.
@@ -202,4 +204,9 @@ message PendingSwapOut {
   // redeem_denom is the denomination of the asset to be redeemed. Always the
   // vault's underlying_asset; retained for wire compatibility.
   string redeem_denom = 4 [deprecated = true];
+
+  // failure_count is the number of consecutive failed processing attempts that
+  // left this request queued. Each failure re-keys the request to a later retry
+  // time so it cannot hold the front of the queue. Reset when expedited.
+  uint32 failure_count = 5;
 }

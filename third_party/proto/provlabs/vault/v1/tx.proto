@@ -110,6 +110,11 @@ service Msg {
   // Must be signed by the vault's NAV authority.
   rpc UpdateVaultNAV(MsgUpdateVaultNAVRequest) returns (MsgUpdateVaultNAVResponse);
 
+  // RemoveVaultNAV deletes a vault's internal net asset value entry for a denom the vault
+  // does not hold, revoking the authorization to acquire it at that price.
+  // Must be signed by the vault's NAV authority.
+  rpc RemoveVaultNAV(MsgRemoveVaultNAVRequest) returns (MsgRemoveVaultNAVResponse);
+
   // UpdateNAVAuthority rotates the address authorized to mutate a vault's internal NAV table.
   // Must be signed by the vault admin.
   rpc UpdateNAVAuthority(MsgUpdateNAVAuthorityRequest) returns (MsgUpdateNAVAuthorityResponse);
@@ -632,6 +637,24 @@ message MsgUpdateVaultNAVRequest {
 
 // MsgUpdateVaultNAVResponse is the response message for the UpdateVaultNAV endpoint.
 message MsgUpdateVaultNAVResponse {}
+
+// MsgRemoveVaultNAVRequest is the request message for deleting a vault's internal NAV
+// entry for a denom. Only entries for denoms the vault does not hold may be removed; a
+// held asset is written down through UpdateVaultNAV instead, so that its value stays
+// accounted for.
+message MsgRemoveVaultNAVRequest {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // signer is the address of the vault's NAV authority authorizing this removal.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault whose NAV entry is being removed.
+  string vault_address = 2;
+  // denom is the asset denomination whose NAV entry is being removed.
+  string denom = 3;
+}
+
+// MsgRemoveVaultNAVResponse is the response message for the RemoveVaultNAV endpoint.
+message MsgRemoveVaultNAVResponse {}
 
 // MsgUpdateNAVAuthorityRequest is the request message for rotating a vault's NAV authority.
 message MsgUpdateNAVAuthorityRequest {
