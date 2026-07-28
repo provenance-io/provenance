@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
-	circuittypes "cosmossdk.io/x/circuit/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -303,43 +302,3 @@ var (
 	_ = convertFinishedVestingAccountsToBase
 	_ = unlockVestingAccounts
 )
-
-func setupCircuitBreakerPermissions(ctx sdk.Context, app *App, foundationAccounts, teamAccounts []string) {
-	ctx.Logger().Info("Setting up circuit breaker permissions.")
-
-	grant := func(addresses []string, level circuittypes.Permissions_Level) {
-		for i, addrStr := range addresses {
-			addr, err := sdk.AccAddressFromBech32(addrStr)
-			if err != nil {
-				ctx.Logger().Error(
-					fmt.Sprintf(
-						"Invalid address at index %d (%s): decoding bech32 failed. Skipping.",
-						i, addrStr,
-					),
-				)
-				continue
-			}
-
-			perms := circuittypes.Permissions{
-				Level:         level,
-				LimitTypeUrls: []string{},
-			}
-
-			if err := app.CircuitKeeper.Permissions.Set(ctx, addr, perms); err != nil {
-				ctx.Logger().Error(
-					fmt.Sprintf("Failed to grant permissions to %s. Skipping.", addrStr),
-				)
-				continue
-			}
-
-			ctx.Logger().Info(fmt.Sprintf("Granted Level %s to %s.", level, addrStr))
-		}
-	}
-	// Apply Foundation Permissions (SUPER_ADMIN)
-	grant(foundationAccounts, circuittypes.Permissions_LEVEL_SUPER_ADMIN)
-
-	// Apply Team Permissions (ALL_MSGS)
-	grant(teamAccounts, circuittypes.Permissions_LEVEL_ALL_MSGS)
-
-	ctx.Logger().Info("Circuit breaker setup configured.")
-}
