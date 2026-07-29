@@ -255,6 +255,26 @@ message EventSwapOutRefunded {
   string reason = 5;
 }
 
+// EventSwapOutRetryScheduled is emitted when a pending swap out could not be
+// settled or refunded and was re-keyed to a later retry time. The shares stay
+// escrowed, so a rising failure_count signals escrow needing operator attention.
+message EventSwapOutRetryScheduled {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1;
+  // owner is the bech32 address of the user whose shares remain escrowed.
+  string owner = 2;
+  // shares is the amount of vault shares still escrowed by the vault.
+  string shares = 3;
+  // request_id is the unique identifier of the swap out request that failed.
+  uint64 request_id = 4;
+  // reason is a string detailing why the attempt failed.
+  string reason = 5;
+  // failure_count is the number of consecutive failed attempts, including this one.
+  uint32 failure_count = 6;
+  // retry_time is the UNIX timestamp (in seconds) at which the request becomes due again.
+  int64 retry_time = 7;
+}
+
 // EventPendingSwapOutExpedited is an event emitted when a pending swap-out is expedited by the authority.
 message EventPendingSwapOutExpedited {
   // request_id is the numerical identifier of the pending swap-out.
@@ -470,6 +490,10 @@ message EventNAVRemoved {
   string last_price = 3;
   // last_volume is the number of units of the denom that last_price covered.
   string last_volume = 4;
+  // signer is the NAV authority address that removed the entry. It is empty when
+  // the protocol removed the entry itself, such as an outbound settlement draining
+  // the denom.
+  string signer = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // EventNAVAuthorityUpdated is emitted when a vault's NAV authority is rotated.
