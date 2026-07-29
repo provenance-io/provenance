@@ -499,6 +499,9 @@ func (k Keeper) prefixScan(ctx sdk.Context, prefix []byte, f namePred) (attrs []
 		if err = k.cdc.Unmarshal(it.Value(), &attr); err != nil {
 			return
 		}
+		if isExpired(ctx, attr) {
+			continue
+		}
 		if f(attr.Name) {
 			attrs = append(attrs, attr)
 		}
@@ -542,19 +545,8 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 // DeleteExpiredAttributes find and delete expired attributes returns the total deleted
 // limit sets the max amount to delete in a call, 0 for not limit
 func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
-	expirationKeys := [][]byte{}
 	store := ctx.KVStore(k.storeKey)
-
-	// The ending for iterators is exclusive. So we need to add a second to the blocktime to include entries that
-	// expire exactly on the block time.
-	endDateTime := ctx.BlockTime().Truncate(time.Second).Add(time.Second)
-	iterator := store.Iterator(types.AttributeExpirationKeyPrefix, types.GetAttributeExpireTimePrefix(endDateTime))
-	for ; iterator.Valid(); iterator.Next() {
-		expirationKeys = append(expirationKeys, iterator.Key())
-	}
-	iterator.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
-
-	count := 0
+	expirationKeys := k.getExpirationKeys(ctx, store, limit)
 	for _, expirationKey := range expirationKeys {
 		attrKey := types.GetAddrAttributeKeyFromExpireKey(expirationKey)
 		bz := store.Get(attrKey)
@@ -570,7 +562,6 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 				if err = ctx.EventManager().EmitTypedEvent(deleteExpirationEvent); err != nil {
 					ctx.Logger().Error(fmt.Sprintf("failed to emit typed event %v", err))
 				}
-				count++
 			} else {
 				ctx.Logger().Error(fmt.Sprintf("unable to unmarshal attribute to delete key: %v error: %v", attrKey, err))
 			}
@@ -578,11 +569,30 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 
 		// delete the expiration lookup key
 		store.Delete(expirationKey)
+	}
+	return len(expirationKeys)
+}
+
+// getExpirationKeys gets all the keys of the attributes that are expired and should be deleted.
+// If the provided limit is not zero, the result is limited to that number of entries.
+func (k Keeper) getExpirationKeys(ctx sdk.Context, store storetypes.KVStore, limit int) [][]byte {
+	// The ending for iterators is exclusive. So we need to add a second to the
+	// blocktime to include entries that expire exactly on the block time.
+	endDateTime := ctx.BlockTime().Truncate(time.Second).Add(time.Second)
+	iterator := store.Iterator(types.AttributeExpirationKeyPrefix, types.GetAttributeExpireTimePrefix(endDateTime))
+	defer iterator.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
+
+	expirationKeys := make([][]byte, 0)
+	count := 0
+	for ; iterator.Valid(); iterator.Next() {
+		expirationKeys = append(expirationKeys, iterator.Key())
+		count++
 		if limit != 0 && count >= limit {
 			break
 		}
 	}
-	return count
+
+	return expirationKeys
 }
 
 // addAttributeExpireLookup safely adds attribute expire key to store, if expire date exists, else no-op
@@ -601,9 +611,14 @@ func (k Keeper) deleteAttributeExpireLookup(store storetypes.KVStore, attr types
 	}
 }
 
+// isExpired returns true if the provided attribute's expiration is before the current blocktime.
+func isExpired(ctx sdk.Context, attr types.Attribute) bool {
+	return attr.ExpirationDate != nil && !attr.ExpirationDate.After(ctx.BlockTime())
+}
+
 // ValidateExpirationDate returns error if attribute has an expiration date that is in the past of current block time
 func (k Keeper) ValidateExpirationDate(ctx sdk.Context, attr types.Attribute) error {
-	if attr.ExpirationDate != nil && !attr.ExpirationDate.After(ctx.BlockTime()) {
+	if isExpired(ctx, attr) {
 		return fmt.Errorf("attribute expiration date %v is not after block time of %v", attr.ExpirationDate.UTC(), ctx.BlockTime().UTC())
 	}
 	return nil
