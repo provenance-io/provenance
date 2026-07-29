@@ -612,6 +612,7 @@ func New(
 		sdk.MustAccAddressFromBech32(govAuthority),
 		app.AccountKeeper,
 		*app.MarkerKeeper,
+		app.MetadataKeeper,
 		app.BankKeeper,
 		app.NameKeeper,
 		app.AttributeKeeper,
