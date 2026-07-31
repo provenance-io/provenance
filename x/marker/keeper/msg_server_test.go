@@ -483,7 +483,7 @@ func (s *MsgServerTestSuite) TestUpdateForcedTransfer() {
 					s.T().Logf("WARNING: overwriting %q marker previously defined in test %q.", denom, markerLastSet[denom])
 				}
 				markerLastSet[denom] = tc.name
-				s.app.MarkerKeeper.SetMarker(s.ctx, tc.origMarker)
+				s.app.MarkerKeeper.SetMarkerWithPerms(s.ctx, tc.origMarker)
 			}
 
 			em := sdk.NewEventManager()
@@ -599,7 +599,7 @@ func (s *MsgServerTestSuite) TestUpdateRequireDepositAccess() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			if tc.origMarker != nil {
-				s.Require().NoError(s.app.MarkerKeeper.SetMarker(s.ctx, tc.origMarker), "SetMarker(%q)", tc.origMarker.Denom)
+				s.Require().NoError(s.app.MarkerKeeper.SetMarkerWithPerms(s.ctx, tc.origMarker), "SetMarker(%q)", tc.origMarker.Denom)
 			}
 
 			res, err := s.msgServer.UpdateRequireDepositAccess(s.ctx, tc.msg)
