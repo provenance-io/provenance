@@ -1,0 +1,10 @@
+* `github.com/hashicorp/go-metrics` bumped to v0.6.1 (from v0.6.0) [PR 2795](https://github.com/provenance-io/provenance/pull/2795).
+* `github.com/klauspost/compress` bumped to v1.19.1 (from v1.18.5) [PR 2795](https://github.com/provenance-io/provenance/pull/2795).
+* `github.com/prometheus/client_golang` bumped to v1.24.1 (from v1.23.2) [PR 2795](https://github.com/provenance-io/provenance/pull/2795).
+* `github.com/prometheus/common` bumped to v0.70.1 (from v0.67.5) [PR 2795](https://github.com/provenance-io/provenance/pull/2795).
+* `github.com/prometheus/procfs` bumped to v0.21.1 (from v0.19.2) [PR 2795](https://github.com/provenance-io/provenance/pull/2795).
+* `go.yaml.in/yaml/v2` bumped to v2.4.4 (from v2.4.3) [PR 2795](https://github.com/provenance-io/provenance/pull/2795).
+* `golang.org/x/crypto` bumped to v0.54.0 (from v0.53.0) [PR 2795](https://github.com/provenance-io/provenance/pull/2795).
+* `golang.org/x/net` bumped to v0.57.0 (from v0.56.0) [PR 2795](https://github.com/provenance-io/provenance/pull/2795).
+* `golang.org/x/sys` bumped to v0.47.0 (from v0.46.0) [PR 2795](https://github.com/provenance-io/provenance/pull/2795).
+* `golang.org/x/term` bumped to v0.45.0 (from v0.44.0) [PR 2795](https://github.com/provenance-io/provenance/pull/2795).
