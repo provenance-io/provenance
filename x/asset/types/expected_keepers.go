@@ -15,8 +15,10 @@ import (
 type MarkerKeeper interface {
 	AddFinalizeAndActivateMarker(ctx sdk.Context, marker markertypes.MarkerAccountI) error
 	GetMarkerByDenom(ctx sdk.Context, denom string) (markertypes.MarkerAccountI, error)
+	GetMarkerByDenomWithPerms(ctx sdk.Context, denom string) (markertypes.MarkerAccountI, error)
 	SetMarker(ctx sdk.Context, marker markertypes.MarkerAccountI) error
 	ValidateUnrestrictedDenom(ctx sdk.Context, denom string) error
+	SetMarkerWithPerms(ctx sdk.Context, marker markertypes.MarkerAccountI) error
 }
 
 // NFTKeeper defines the expected NFT keeper interface.
