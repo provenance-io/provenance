@@ -80,6 +80,9 @@ type Keeper struct {
 	// Key layout: [0x04][len(marker)][marker][denom] → proto(NetAssetValue)
 	navs collections.Map[collections.Pair[sdk.AccAddress, string], types.NetAssetValue]
 
+	// markerPerms stores per-address marker permissions: key = (markerAddr, granteeAddr), value = permission list.
+	// Key layout: [0x01][len(marker)][marker][len(grantee)][grantee] → proto(MarkerPermissions)
+	markerPerms collections.Map[collections.Pair[sdk.AccAddress, sdk.AccAddress], types.MarkerPermissions]
 	// params stores module parameters as a singleton.
 	// Key layout: [0x05] → proto(Params)
 	params collections.Item[types.Params]
@@ -149,7 +152,13 @@ func NewKeeper(
 		ibcTransferServer:     ibcTransferServer,
 		reqAttrBypassAddrs:    types.NewImmutableAccAddresses(reqAttrBypassAddrs),
 		groupChecker:          checker,
-
+		markerPerms: collections.NewMap(
+			sb,
+			collections.NewPrefix(types.MarkerPermsKeyPrefix), // [0x01]
+			"marker_perms",
+			pairAddrCodec,
+			codec.CollValue[types.MarkerPermissions](cdc),
+		),
 		markers: collections.NewMap(
 			sb,
 			collections.NewPrefix(types.MarkerStoreKeyPrefix), // [0x02]
@@ -214,16 +223,89 @@ func (k Keeper) GetMarker(ctx sdk.Context, address sdk.AccAddress) (types.Marker
 		if !ok {
 			return nil, fmt.Errorf("account at %s is not a marker account", address.String())
 		}
+		if ma, ok := macc.(*types.MarkerAccount); ok {
+			ma.AccessControl = nil
+		}
 		return macc, nil
 	}
 	return nil, nil
 }
 
-// SetMarker sets a marker in the auth account store will panic if the marker account is not valid or
-// if the auth module account keeper fails to marshall the account.
+// SetMarker persists the marker WITHOUT touching permissions.
+// This is the normal path — perms live in their own store and are managed
+// separately via SetAccess/RevokeAccessEntry/AddAccess/RemoveAccess.
 func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) error {
+	ma, isMA := marker.(*types.MarkerAccount)
+
+	// Validate needs the real access list — populate for validation only.
+	if isMA {
+		if err := k.PopulateMarkerPerms(ctx, ma); err != nil {
+			return fmt.Errorf("could not populate marker permissions for validation: %w", err)
+		}
+	}
 	if err := marker.Validate(); err != nil {
 		return err
+	}
+	// Never persist perms inside the account.
+	if isMA {
+		ma.AccessControl = nil
+	}
+
+	k.authKeeper.SetAccount(ctx, marker)
+	if err := k.markers.Set(ctx, marker.GetAddress(), marker.GetAddress()); err != nil {
+		panic(fmt.Errorf("failed to set marker index: %w", err))
+	}
+	return nil
+}
+
+// SetMarkerWithPerms persists the marker AND replaces its permission list.
+// Use this only when the caller explicitly wants the perms replaced with the
+// AccessControl field on the marker (e.g. AddMarkerAccount, InitGenesis).
+func (k Keeper) SetMarkerWithPerms(ctx sdk.Context, marker types.MarkerAccountI) error {
+	ma, isMA := marker.(*types.MarkerAccount)
+	if err := marker.Validate(); err != nil {
+		return err
+	}
+	if isMA {
+		if err := k.RemoveAllAccessForMarker(ctx, ma.GetAddress()); err != nil {
+			return err
+		}
+
+		// AccessControl may contain multiple entries for the same address.Merge
+		// them here so persisting doesn't silently drop earlier grants.
+		type mergedGrant struct {
+			addr  sdk.AccAddress
+			perms map[types.Access]bool
+		}
+		order := make([]string, 0, len(ma.AccessControl))
+		merged := make(map[string]*mergedGrant)
+		for _, g := range ma.AccessControl {
+			mg, ok := merged[g.Address]
+			if !ok {
+				gAddr, err := sdk.AccAddressFromBech32(g.Address)
+				if err != nil {
+					return fmt.Errorf("invalid access grant address %q: %w", g.Address, err)
+				}
+				mg = &mergedGrant{addr: gAddr, perms: map[types.Access]bool{}}
+				merged[g.Address] = mg
+				order = append(order, g.Address)
+			}
+			for _, p := range g.Permissions {
+				mg.perms[p] = true
+			}
+		}
+
+		for _, addrStr := range order {
+			mg := merged[addrStr]
+			perms := make(types.AccessList, 0, len(mg.perms))
+			for p := range mg.perms {
+				perms = append(perms, p)
+			}
+			if err := k.SetAccess(ctx, ma.GetAddress(), mg.addr, perms); err != nil {
+				return err
+			}
+		}
+		ma.AccessControl = nil
 	}
 	k.authKeeper.SetAccount(ctx, marker)
 	if err := k.markers.Set(ctx, marker.GetAddress(), marker.GetAddress()); err != nil {
@@ -238,6 +320,9 @@ func (k Keeper) RemoveMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 	k.authKeeper.RemoveAccount(ctx, marker)
 	k.RemoveNetAssetValues(ctx, marker.GetAddress())
 	k.ClearSendDeny(ctx, marker.GetAddress())
+	if err := k.RemoveAllAccessForMarker(ctx, marker.GetAddress()); err != nil {
+		panic(fmt.Errorf("failed to remove marker permissions: %w", err))
+	}
 	if err := k.markers.Remove(ctx, marker.GetAddress()); err != nil {
 		panic(fmt.Errorf("failed to remove marker index: %w", err))
 	}

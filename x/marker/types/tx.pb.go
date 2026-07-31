@@ -3800,8 +3800,8 @@ type MsgClient interface {
 	UpdateRequiredAttributes(ctx context.Context, in *MsgUpdateRequiredAttributesRequest, opts ...grpc.CallOption) (*MsgUpdateRequiredAttributesResponse, error)
 	// UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal.
 	UpdateForcedTransfer(ctx context.Context, in *MsgUpdateForcedTransferRequest, opts ...grpc.CallOption) (*MsgUpdateForcedTransferResponse, error)
-	// UpdateRequireDepositAccess updates the require_deposit_access field of a marker. Signer must have admin access or be
-	// the governance module account.
+	// UpdateRequireDepositAccess updates the require_deposit_access field of a marker. Signer must have admin access or
+	// be the governance module account.
 	UpdateRequireDepositAccess(ctx context.Context, in *MsgUpdateRequireDepositAccessRequest, opts ...grpc.CallOption) (*MsgUpdateRequireDepositAccessResponse, error)
 	// SetAccountData sets the accountdata for a denom. Signer must have deposit authority.
 	SetAccountData(ctx context.Context, in *MsgSetAccountDataRequest, opts ...grpc.CallOption) (*MsgSetAccountDataResponse, error)
@@ -4145,8 +4145,8 @@ type MsgServer interface {
 	UpdateRequiredAttributes(context.Context, *MsgUpdateRequiredAttributesRequest) (*MsgUpdateRequiredAttributesResponse, error)
 	// UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal.
 	UpdateForcedTransfer(context.Context, *MsgUpdateForcedTransferRequest) (*MsgUpdateForcedTransferResponse, error)
-	// UpdateRequireDepositAccess updates the require_deposit_access field of a marker. Signer must have admin access or be
-	// the governance module account.
+	// UpdateRequireDepositAccess updates the require_deposit_access field of a marker. Signer must have admin access or
+	// be the governance module account.
 	UpdateRequireDepositAccess(context.Context, *MsgUpdateRequireDepositAccessRequest) (*MsgUpdateRequireDepositAccessResponse, error)
 	// SetAccountData sets the accountdata for a denom. Signer must have deposit authority.
 	SetAccountData(context.Context, *MsgSetAccountDataRequest) (*MsgSetAccountDataResponse, error)

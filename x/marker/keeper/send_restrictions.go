@@ -51,9 +51,8 @@ func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.Ac
 				return nil, fmt.Errorf("cannot withdraw from marker account %s (%s)",
 					fromAddr.String(), fromMarker.GetDenom())
 			}
-
 			// Need at least one admin that can make withdrawals.
-			if err := types.ValidateAtLeastOneAddrHasAccess(fromMarker, admins, types.Access_Withdraw); err != nil {
+			if err := k.ValidateAtLeastOneHasAccess(ctx, fromMarker.GetAddress(), admins, types.Access_Withdraw); err != nil {
 				return nil, err
 			}
 		}
@@ -74,11 +73,11 @@ func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.Ac
 	toMarker, _ := k.GetMarker(ctx, toAddr)
 	if toMarker != nil && (toMarker.GetMarkerType() == types.MarkerType_RestrictedCoin || toMarker.RequiresDepositAccess()) {
 		if len(admins) > 0 {
-			if err := types.ValidateAtLeastOneAddrHasAccess(toMarker, admins, types.Access_Deposit); err != nil {
+			if err := k.ValidateAtLeastOneHasAccess(ctx, toMarker.GetAddress(), admins, types.Access_Deposit); err != nil {
 				return nil, err
 			}
 		} else {
-			if err := toMarker.ValidateAddressHasAccess(fromAddr, types.Access_Deposit); err != nil {
+			if err := k.ValidateHasAccess(ctx, toMarker.GetAddress(), fromAddr, types.Access_Deposit); err != nil {
 				return nil, err
 			}
 		}
@@ -119,8 +118,10 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 	}
 
 	// If there's an admin that has transfer access, it's not a normal bank send and there's nothing more to do here.
-	if len(admins) > 0 && types.AtLeastOneAddrHasAccess(marker, admins, types.Access_Transfer) {
-		return nil
+	if len(admins) > 0 {
+		if err := k.ValidateAtLeastOneHasAccess(ctx, marker.GetAddress(), admins, types.Access_Transfer); err == nil {
+			return nil
+		}
 	}
 
 	// If from address is in the deny list, prevent sending of restricted marker.
@@ -132,7 +133,7 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 	}
 
 	// If the fromAddr has transfer access, there's nothing left to check.
-	if marker.AddressHasAccess(fromAddr, types.Access_Transfer) {
+	if k.HasAccess(ctx, marker.GetAddress(), fromAddr, types.Access_Transfer) {
 		return nil
 	}
 
