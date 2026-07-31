@@ -655,7 +655,7 @@ func (s *MsgServerTestSuite) TestCreateSecuritization_AdminCheckEnforcedPerPool(
 	poolMarker, err := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, "per-pool-2")
 	s.Require().NoError(err, "per-pool-2 marker must still exist after rejected call")
 	s.Require().True(
-		poolMarker.AddressHasAccess(user2Addr, markertypes.Access_Admin),
+		s.app.MarkerKeeper.HasAccess(s.ctx, poolMarker.GetAddress(), user2Addr, markertypes.Access_Admin),
 		"user2 must still hold Admin on per-pool-2: auth check fires before mutation on this pool",
 	)
 }

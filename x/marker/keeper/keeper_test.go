@@ -113,7 +113,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 	require.Empty(t, getAllMarkerHolders(t, ctx, app, "testcoin"))
 
 	// check for error on invaid marker denom
-	_, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "doesntexist")
+	_, err := app.MarkerKeeper.GetMarkerByDenomWithPerms(ctx, "doesntexist")
 	require.Error(t, err, "marker does not exist, should error")
 }
 
@@ -191,13 +191,13 @@ func TestAccountKeeperReader(t *testing.T) {
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
 
-	m, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "testcoin")
+	m, err := app.MarkerKeeper.GetMarkerByDenomWithPerms(ctx, "testcoin")
 	require.NoError(t, err)
 	require.NotNil(t, m)
 	require.EqualValues(t, m.GetDenom(), "testcoin")
 	require.EqualValues(t, m.GetAddress(), addr)
 
-	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
+	m, err = app.MarkerKeeper.GetMarkerWithPerms(ctx, addr)
 	require.NoError(t, err)
 	require.NotNil(t, m)
 	require.EqualValues(t, m.GetDenom(), "testcoin")
@@ -234,7 +234,7 @@ func TestManageAccess(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
 
 	// Initial, should not have access
-	m, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "testcoin")
+	m, err := app.MarkerKeeper.GetMarkerByDenomWithPerms(ctx, "testcoin")
 	require.NoError(t, err)
 	require.NotNil(t, m)
 	require.False(t, m.AddressHasAccess(user2, types.Access_Burn))
@@ -250,7 +250,7 @@ func TestManageAccess(t *testing.T) {
 		ctx, user2, "testcoin", types.NewAccessGrant(user2, []types.Access{types.Access_Burn})))
 	require.Error(t, app.MarkerKeeper.RemoveAccess(ctx, user2, "testcoin", user1))
 
-	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
+	m, err = app.MarkerKeeper.GetMarkerWithPerms(ctx, addr)
 	require.NoError(t, err)
 	require.NotNil(t, m)
 	require.True(t, m.AddressHasAccess(user2, types.Access_Mint))
@@ -262,7 +262,7 @@ func TestManageAccess(t *testing.T) {
 	// Remove access and check
 	require.NoError(t, app.MarkerKeeper.RemoveAccess(ctx, user1, "testcoin", user2))
 
-	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
+	m, err = app.MarkerKeeper.GetMarkerWithPerms(ctx, addr)
 	require.NoError(t, err)
 	require.NotNil(t, m)
 	require.False(t, m.AddressHasAccess(user2, types.Access_Mint))
@@ -273,7 +273,7 @@ func TestManageAccess(t *testing.T) {
 
 	// Finalize marker and check permission enforcement.
 	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user1, m.GetDenom()))
-	_, err = app.MarkerKeeper.GetMarker(ctx, addr)
+	_, err = app.MarkerKeeper.GetMarkerWithPerms(ctx, addr)
 	require.NoError(t, err)
 
 	// Manager can make changes to grants for finalized markers
@@ -287,7 +287,7 @@ func TestManageAccess(t *testing.T) {
 	// Admin can make changes to grants for finalized markers
 	require.NoError(t, app.MarkerKeeper.AddAccess(ctx, admin, "testcoin",
 		types.NewAccessGrant(user2, []types.Access{types.Access_Mint, types.Access_Delete})))
-	_, err = app.MarkerKeeper.GetMarker(ctx, addr)
+	_, err = app.MarkerKeeper.GetMarkerWithPerms(ctx, addr)
 	require.NoError(t, err)
 
 	// User2 can adjust supply up/down for a finalized marker
@@ -303,7 +303,7 @@ func TestManageAccess(t *testing.T) {
 	require.Error(t, app.MarkerKeeper.RemoveAccess(ctx, admin, "testcoin", user2))
 
 	// Load the marker one last time and verify our permission records are consistent and correct
-	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
+	m, err = app.MarkerKeeper.GetMarkerWithPerms(ctx, addr)
 	require.NoError(t, err)
 
 	require.True(t, m.AddressHasAccess(admin, types.Access_Admin))
@@ -390,7 +390,7 @@ func TestMintBurnCoins(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.ActivateMarker(ctx, user, "testcoin"))
 
 	// Load the created marker
-	m, err := app.MarkerKeeper.GetMarker(ctx, addr)
+	m, err := app.MarkerKeeper.GetMarkerWithPerms(ctx, addr)
 	require.NoError(t, err)
 	require.EqualValues(t, m.GetSupply(), sdk.NewInt64Coin("testcoin", 1000))
 	// entire supply should have been allocated to markeracount
@@ -398,14 +398,14 @@ func TestMintBurnCoins(t *testing.T) {
 
 	// perform a successful mint (and check)
 	require.NoError(t, app.MarkerKeeper.MintCoin(ctx, user, sdk.NewInt64Coin("testcoin", 100)))
-	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
+	m, err = app.MarkerKeeper.GetMarkerWithPerms(ctx, addr)
 	require.NoError(t, err)
 	require.EqualValues(t, m.GetSupply(), sdk.NewInt64Coin("testcoin", 1100))
 	require.EqualValues(t, app.MarkerKeeper.GetEscrow(ctx, m), sdk.NewCoins(sdk.NewInt64Coin("testcoin", 1100)))
 
 	// perform a successful burn (and check)
 	require.NoError(t, app.MarkerKeeper.BurnCoin(ctx, user, sdk.NewInt64Coin("testcoin", 100)))
-	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
+	m, err = app.MarkerKeeper.GetMarkerWithPerms(ctx, addr)
 	require.NoError(t, err)
 	require.EqualValues(t, m.GetSupply(), sdk.NewInt64Coin("testcoin", 1000))
 
@@ -413,7 +413,7 @@ func TestMintBurnCoins(t *testing.T) {
 	require.Error(t, app.MarkerKeeper.BurnCoin(ctx, user, sdk.NewInt64Coin("testcoin", 10000)))
 
 	// check that supply remains unchanged after above error
-	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
+	m, err = app.MarkerKeeper.GetMarkerWithPerms(ctx, addr)
 	require.NoError(t, err)
 	require.EqualValues(t, m.GetSupply(), sdk.NewInt64Coin("testcoin", 1000))
 
@@ -428,7 +428,7 @@ func TestMintBurnCoins(t *testing.T) {
 	require.EqualValues(t, app.BankKeeper.GetBalance(ctx, user, "testcoin").Amount, sdkmath.NewInt(50))
 
 	// verify marker account has remaining coins
-	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
+	m, err = app.MarkerKeeper.GetMarkerWithPerms(ctx, addr)
 	require.NoError(t, err)
 	require.EqualValues(t, app.MarkerKeeper.GetEscrow(ctx, m).AmountOf("testcoin"), sdkmath.NewInt(950))
 
@@ -450,7 +450,7 @@ func TestMintBurnCoins(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, user, "testcoin"))
 
 	// verify status is cancelled
-	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
+	m, err = app.MarkerKeeper.GetMarkerWithPerms(ctx, addr)
 	require.NoError(t, err)
 	require.EqualValues(t, types.StatusCancelled, m.GetStatus())
 
@@ -472,7 +472,7 @@ func TestMintBurnCoins(t *testing.T) {
 	require.Equal(t, 0, len(getAllMarkerHolders(t, ctx, app, "testcoin")))
 
 	// verify status is destroyed and supply is zero.
-	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
+	m, err = app.MarkerKeeper.GetMarkerWithPerms(ctx, addr)
 	require.NoError(t, err)
 	require.EqualValues(t, types.StatusDestroyed, m.GetStatus())
 	require.EqualValues(t, m.GetSupply().Amount, sdkmath.ZeroInt())
@@ -825,11 +825,11 @@ func TestMarkerGetters(t *testing.T) {
 
 	var err error
 	var m types.MarkerAccountI
-	m, err = app.MarkerKeeper.GetMarkerByDenom(ctx, "testcoin")
+	m, err = app.MarkerKeeper.GetMarkerByDenomWithPerms(ctx, "testcoin")
 	require.NoError(t, err)
 	require.NotNil(t, m)
 
-	m, err = app.MarkerKeeper.GetMarkerByDenom(ctx, "secondcoin")
+	m, err = app.MarkerKeeper.GetMarkerByDenomWithPerms(ctx, "secondcoin")
 	require.NoError(t, err)
 	require.NotNil(t, m)
 
@@ -1684,7 +1684,8 @@ func TestMarkerFeeGrant(t *testing.T) {
 	// set some values on the account and save it
 	require.NoError(t, mac.GrantAccess(types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})))
 
-	setNewAccount(app, ctx, mac)
+	// setNewAccount(app, ctx, mac)
+	app.MarkerKeeper.SetNewMarker(ctx, mac)
 
 	existingSupply := sdk.NewInt64Coin("testcoin", 10000)
 	require.NoError(t, testutil.FundAccount(types.WithBypass(ctx), app.BankKeeper, user, sdk.NewCoins(existingSupply)), "funding accont")
@@ -1742,12 +1743,12 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 	// existing coin balance must still be present
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balances must be preserved")
 
-	m, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "testcoin")
+	m, err := app.MarkerKeeper.GetMarkerByDenomWithPerms(ctx, "testcoin")
 	require.NoError(t, err)
 	require.EqualValues(t, m.GetSupply(), sdk.NewInt64Coin("testcoin", 30))
 	require.EqualValues(t, m.GetStatus(), types.StatusActive)
 
-	m, err = app.MarkerKeeper.GetMarker(ctx, user)
+	m, err = app.MarkerKeeper.GetMarkerWithPerms(ctx, user)
 	require.NoError(t, err)
 	require.EqualValues(t, m.GetSupply(), sdk.NewInt64Coin("testcoin", 30))
 	require.EqualValues(t, m.GetStatus(), types.StatusActive)
@@ -1770,7 +1771,7 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 	require.Error(t, err, "fails because marker already exists")
 
 	// Load the created marker
-	m, err = app.MarkerKeeper.GetMarker(ctx, user)
+	m, err = app.MarkerKeeper.GetMarkerWithPerms(ctx, user)
 	require.NoError(t, err)
 	require.EqualValues(t, m.GetSupply(), sdk.NewInt64Coin("testcoin", 30))
 	require.EqualValues(t, m.GetStatus(), types.StatusActive)
@@ -2189,7 +2190,7 @@ func TestMsgUpdateRequiredAttributesRequest(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, res, &types.MsgUpdateRequiredAttributesResponse{})
-				actualMarker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, tc.updateMsgRequest.Denom)
+				actualMarker, err := app.MarkerKeeper.GetMarkerByDenomWithPerms(ctx, tc.updateMsgRequest.Denom)
 				require.NoError(t, err)
 				assert.ElementsMatch(t, tc.expectedReqAttr, actualMarker.GetRequiredAttributes())
 			}
@@ -2858,7 +2859,7 @@ func TestIterateAllNetAssetValues(t *testing.T) {
 				for _, price := range prices {
 					navs = append(navs, types.NewNetAssetValue(price, uint64(1)))
 					navAddr := sdk.AccAddress(price.Denom)
-					if acc, _ := app.MarkerKeeper.GetMarkerByDenom(ctx, price.Denom); acc == nil {
+					if acc, _ := app.MarkerKeeper.GetMarkerByDenomWithPerms(ctx, price.Denom); acc == nil {
 						navMarker := types.NewEmptyMarkerAccount(price.Denom, navAddr.String(), []types.AccessGrant{})
 						navMarker.Supply = sdkmath.OneInt()
 						require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, navMarker), "AddMarkerAccount() error")
@@ -2878,13 +2879,13 @@ func TestIterateAllNetAssetValues(t *testing.T) {
 			// Destroy the marker
 			for i, prices := range tc.markerNavs {
 				coin := fmt.Sprintf("coin%d", i)
-				marker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, coin)
+				marker, err := app.MarkerKeeper.GetMarkerByDenomWithPerms(ctx, coin)
 				require.NoError(t, err, "GetMarkerByDenom() error")
 				app.MarkerKeeper.RemoveMarker(ctx, marker)
 
 				// We need to remove the nav markers
 				for _, price := range prices {
-					if navMarker, _ := app.MarkerKeeper.GetMarkerByDenom(ctx, price.Denom); navMarker != nil {
+					if navMarker, _ := app.MarkerKeeper.GetMarkerByDenomWithPerms(ctx, price.Denom); navMarker != nil {
 						app.MarkerKeeper.RemoveMarker(ctx, navMarker)
 					}
 				}
@@ -3194,12 +3195,12 @@ func TestMarkerCollectionsRoundTrip(t *testing.T) {
 	require.NoError(t, mac.SetSupply(sdk.NewInt64Coin("testround", 1000)))
 	require.NoError(t, mac.SetManager(user))
 
-	setNewAccount(app, ctx, mac)
-	app.MarkerKeeper.SetMarker(ctx, mac)
+	// setNewAccount(app, ctx, mac)
+	app.MarkerKeeper.SetNewMarker(ctx, mac)
 
 	assert.True(t, app.MarkerKeeper.IsMarkerAccount(ctx, mac.GetAddress()), "marker should exist after SetMarker")
 
-	retrieved, err := app.MarkerKeeper.GetMarker(ctx, mac.GetAddress())
+	retrieved, err := app.MarkerKeeper.GetMarkerWithPerms(ctx, mac.GetAddress())
 	require.NoError(t, err, "GetMarker after SetMarker")
 	require.NotNil(t, retrieved, "GetMarker should return non-nil")
 	assert.Equal(t, "testround", retrieved.GetDenom(), "marker denom should match")
@@ -3285,8 +3286,8 @@ func TestIterateMarkersCollections(t *testing.T) {
 			*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin}),
 		})
 		require.NoError(t, mac.SetSupply(sdk.NewInt64Coin(denom, 1000)))
-		setNewAccount(app, ctx, mac)
-		app.MarkerKeeper.SetMarker(ctx, mac)
+		// setNewAccount(app, ctx, mac)
+		app.MarkerKeeper.SetNewMarker(ctx, mac)
 	}
 
 	var found []string
