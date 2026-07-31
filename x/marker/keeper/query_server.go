@@ -31,7 +31,7 @@ func (k Keeper) AllMarkers(c context.Context, req *types.QueryAllMarkersRequest)
 	markers, pageRes, err := query.CollectionPaginate(
 		ctx, k.markers, req.Pagination,
 		func(_ sdk.AccAddress, value []byte) (*codectypes.Any, error) {
-			result, getErr := k.GetMarker(ctx, sdk.AccAddress(value))
+			result, getErr := k.GetMarkerWithPerms(ctx, sdk.AccAddress(value))
 			if getErr != nil {
 				return nil, getErr
 			}
@@ -216,7 +216,7 @@ func accountForDenomOrAddress(ctx sdk.Context, keeper Keeper, lookup string) (ty
 	if addr, addrErr = sdk.AccAddressFromBech32(lookup); addrErr != nil {
 		account, err = keeper.GetMarkerByDenom(ctx, lookup)
 	} else {
-		account, err = keeper.GetMarker(ctx, addr)
+		account, err = keeper.GetMarkerWithPerms(ctx, addr)
 	}
 	if err != nil {
 		return nil, types.ErrMarkerNotFound.Wrap("invalid denom or address")

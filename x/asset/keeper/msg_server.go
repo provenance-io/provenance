@@ -274,19 +274,22 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 		trancheCount++
 	}
 
-	// Reassign the pools permissions to the asset module account (prevent the pools from being transferred)
-	var poolCount uint32
+	poolMarkers := make([]markertypes.MarkerAccountI, 0, len(msg.Pools))
 	for _, pool := range msg.Pools {
-		poolMarker, err := m.markerKeeper.GetMarkerByDenom(ctx, pool)
+		poolMarker, err := m.markerKeeper.GetMarkerByDenomWithPerms(ctx, pool)
 		if err != nil {
 			return nil, types.NewErrCodeNotFound(fmt.Sprintf("pool marker with denom %s", pool))
 		}
-		// Verify the signer holds Admin access on this pool marker before modifying
-		// any permissions.
 		if !poolMarker.AddressHasAccess(signerAddr, markertypes.Access_Admin) {
-			return nil, types.NewErrCodeUnauthorized(fmt.Sprintf("signer %s does not have Admin access on pool marker %s", msg.Signer, pool))
+			return nil, types.NewErrCodeUnauthorized(
+				fmt.Sprintf("signer %s does not have Admin access on pool marker %s", msg.Signer, pool))
 		}
-		// Create a new access grant with the desired permissions
+		poolMarkers = append(poolMarkers, poolMarker)
+	}
+	// Reassign the pools permissions to the asset module account (prevent the pools from being transferred)
+	var poolCount uint32
+	for _, poolMarker := range poolMarkers {
+		// Create the module access grant with the desired permissions
 		moduleAccessGrant := markertypes.NewAccessGrant(
 			m.GetModuleAddress(),
 			[]markertypes.Access{
@@ -298,27 +301,25 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 			},
 		)
 
-		// Revoke all access from the pool marker
+		// Revoke all access from the pool marker (existing grants come from the WithPerms fetch above)
 		accessList := poolMarker.GetAccessList()
 		for i, access := range accessList {
 			accessAcc, err := sdk.AccAddressFromBech32(access.Address)
 			if err != nil {
 				return nil, types.NewErrCodeInvalidField(fmt.Sprintf("pool_marker_access_address[%d]", i), "%s", err)
 			}
-			err = poolMarker.RevokeAccess(accessAcc)
-			if err != nil {
+			if err := poolMarker.RevokeAccess(accessAcc); err != nil {
 				return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to revoke access: %s", err))
 			}
 		}
 
 		// Grant the module account access to the pool marker
-		err = poolMarker.GrantAccess(moduleAccessGrant)
-		if err != nil {
+		if err := poolMarker.GrantAccess(moduleAccessGrant); err != nil {
 			return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to update pool marker access: %s", err))
 		}
 
-		// Save the updated marker
-		if err = m.markerKeeper.SetMarker(ctx, poolMarker); err != nil {
+		// Persist with replace-semantics (SetMarkerWithPerms) since we mutated AccessControl.
+		if err := m.markerKeeper.SetMarkerWithPerms(ctx, poolMarker); err != nil {
 			return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to set pool marker : %s", err))
 		}
 		poolCount++
