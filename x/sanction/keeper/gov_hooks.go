@@ -97,7 +97,9 @@ func (k Keeper) proposalGovHook(goCtx context.Context, proposalID uint64) error 
 		// C) The extra processing from calling DeleteGovPropTempEntries is probably on par with what's needed
 		//    to not always call it.
 		// D) There's no risk of this deleting anything that shouldn't be deleted.
-		k.DeleteGovPropTempEntries(ctx, proposalID)
+		if err := k.DeleteGovPropTempEntries(ctx, proposalID); err != nil {
+			panic(fmt.Errorf("failed to delete temporary entries for proposal %d: %w", proposalID, err))
+		}
 	case govv1.StatusPassed:
 		// Nothing to do. The processing of the proposal message does everything that's needed.
 	default:
