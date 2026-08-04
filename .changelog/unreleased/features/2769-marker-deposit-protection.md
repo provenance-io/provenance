@@ -1,1 +1,0 @@
-* Add an opt-in `require_deposit_access` marker flag that enforces deposit-access control on coins sent into a marker regardless of marker type [#2769](https://github.com/provenance-io/provenance/issues/2769).
