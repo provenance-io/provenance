@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"cosmossdk.io/collections"
@@ -301,6 +302,7 @@ func (k Keeper) SetMarkerWithPerms(ctx sdk.Context, marker types.MarkerAccountI)
 			for p := range mg.perms {
 				perms = append(perms, p)
 			}
+			sort.Slice(perms, func(i, j int) bool { return perms[i] < perms[j] })
 			if err := k.SetAccess(ctx, ma.GetAddress(), mg.addr, perms); err != nil {
 				return err
 			}
