@@ -1,6 +1,10 @@
 package keeper
 
 import (
+	"errors"
+
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/ibchooks/types"
@@ -8,18 +12,19 @@ import (
 
 // GetParams returns the total set of the module's parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.IbcHooksParamStoreKey)
-	if bz == nil {
-		return types.DefaultParams()
+	params, err := k.params.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.DefaultParams()
+		}
+		panic(err)
 	}
-	k.cdc.MustUnmarshal(bz, &params)
 	return params
 }
 
 // SetParams sets the module's parameters with the provided parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&params)
-	store.Set(types.IbcHooksParamStoreKey, bz)
+	if err := k.params.Set(ctx, params); err != nil {
+		panic(err)
+	}
 }
