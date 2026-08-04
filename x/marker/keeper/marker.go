@@ -779,7 +779,7 @@ func (k Keeper) IbcTransferCoin(
 	// checking if escrow account has transfer auth, if not add it
 	escrowAccount := ibctypes.GetEscrowAddress(sourcePort, sourceChannel)
 	if !k.HasAccess(ctx, m.GetAddress(), escrowAccount, types.Access_Transfer) {
-		err = m.GrantAccess(types.NewAccessGrant(escrowAccount, []types.Access{types.Access_Transfer}))
+		err = k.SetAccess(ctx, m.GetAddress(), escrowAccount, types.AccessList{types.Access_Transfer})
 		if err != nil {
 			return err
 		}
