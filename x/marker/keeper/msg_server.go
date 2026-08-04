@@ -47,7 +47,7 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllo
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	if err = k.Keeper.ValidateHasAccess(ctx, m.GetAddress(), admin, types.Access_Admin); err != nil {
+	if err = k.ValidateHasAccess(ctx, m.GetAddress(), admin, types.Access_Admin); err != nil {
 		return nil, sdkerrors.ErrUnauthorized.Wrap(err.Error())
 	}
 	if k.isVaultPrincipalMarker(ctx, m) {
@@ -626,7 +626,7 @@ func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.Ms
 		if !m.HasGovernanceEnabled() {
 			return nil, fmt.Errorf("%s marker does not allow governance control", msg.Denom)
 		}
-	case !k.Keeper.HasAccess(ctx, m.GetAddress(), caller, types.Access_Transfer):
+	case !k.HasAccess(ctx, m.GetAddress(), caller, types.Access_Transfer):
 		return nil, fmt.Errorf("caller does not have authority to update required attributes %s", msg.TransferAuthority)
 	}
 
@@ -708,7 +708,7 @@ func (k msgServer) UpdateRequireDepositAccess(goCtx context.Context, msg *types.
 		if !marker.HasGovernanceEnabled() {
 			return nil, fmt.Errorf("%s marker does not allow governance control", msg.Denom)
 		}
-	case !k.Keeper.HasAccess(ctx, marker.GetAddress(), caller, types.Access_Admin):
+	case !k.HasAccess(ctx, marker.GetAddress(), caller, types.Access_Admin):
 		return nil, fmt.Errorf("caller %s does not have admin access on marker %s", msg.Signer, msg.Denom)
 	}
 
@@ -952,7 +952,7 @@ func (k msgServer) RevokeGrantAllowance(goCtx context.Context, msg *types.MsgRev
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid grantee: %v", err)
 	}
 
-	if err = k.Keeper.ValidateHasAccess(ctx, m.GetAddress(), admin, types.Access_Admin); err != nil {
+	if err = k.ValidateHasAccess(ctx, m.GetAddress(), admin, types.Access_Admin); err != nil {
 		return nil, sdkerrors.ErrUnauthorized.Wrap(err.Error())
 	}
 	// verify the grant exists

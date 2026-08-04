@@ -110,6 +110,9 @@ func GetMarkerFromNetAssetValueKey(key []byte) sdk.AccAddress {
 
 // MarkerPermsKey returns the full store key for one address' permissions on a marker.
 func MarkerPermsKey(markerAddr, granteeAddr sdk.AccAddress) []byte {
-	key := append(MarkerPermsKeyPrefix, address.MustLengthPrefix(markerAddr)...)
-	return append(key, address.MustLengthPrefix(granteeAddr)...)
+	key := make([]byte, 0, len(MarkerPermsKeyPrefix)+len(markerAddr)+len(granteeAddr)+2)
+	key = append(key, MarkerPermsKeyPrefix...)
+	key = append(key, address.MustLengthPrefix(markerAddr)...)
+	key = append(key, address.MustLengthPrefix(granteeAddr)...)
+	return key
 }
