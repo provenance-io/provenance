@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	vaulttypes "github.com/provlabs/vault/types"
+
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -10,8 +12,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ibctypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
-
-	vaulttypes "github.com/provlabs/vault/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -735,7 +735,7 @@ func (k Keeper) canForceTransferFrom(ctx sdk.Context, from sdk.AccAddress) bool 
 		return true
 	}
 
-	// Allow force transfers out of marker accounts, unless the marker is a vault's pricipal account.
+	// Allow force transfers out of marker accounts, unless the marker is a vault's principal account.
 	if marker, isMarker := acc.(types.MarkerAccountI); isMarker {
 		// A vault's principal marker uses the vault's share denom, and its address is derived from that denom.
 		vaultAcc := k.authKeeper.GetAccount(ctx, vaulttypes.GetVaultAddress(marker.GetDenom()))
