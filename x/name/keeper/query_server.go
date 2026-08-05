@@ -3,7 +3,10 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/store/prefix"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -26,48 +29,90 @@ func (k Keeper) Resolve(c context.Context, request *types.QueryResolveRequest) (
 	if err != nil {
 		return nil, err
 	}
-	record, err := k.GetRecordByName(ctx, name)
+	record, err := k.nameRecords.Get(ctx, name)
 	if err != nil {
 		return nil, err
-	}
-	if record == nil {
-		return nil, types.ErrNameNotBound
 	}
 	return &types.QueryResolveResponse{Address: record.Address, Restricted: record.Restricted}, nil
 }
 
-// ReverseLookup gets all names bound to an address.
+// ReverseLookup returns a paginated list of names owned by the specified address.
 func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLookupRequest) (*types.QueryReverseLookupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	names := make([]string, 0)
-	store := ctx.KVStore(k.storeKey)
 	accAddr, err := sdk.AccAddressFromBech32(request.Address)
 	if err != nil {
 		return nil, types.ErrInvalidAddress
 	}
-	key, err := types.GetAddressKeyPrefix(accAddr)
-	if err != nil {
-		return nil, types.ErrInvalidAddress
+
+	limit := request.Pagination.GetLimit()
+	if limit == 0 {
+		limit = query.DefaultLimit
 	}
-	nameStore := prefix.NewStore(store, key)
-	pageRes, err := query.FilteredPaginate(nameStore, request.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
-		var record types.NameRecord
-		err = k.cdc.Unmarshal(value, &record)
+	const maxLimit = 200
+	if limit > maxLimit {
+		limit = maxLimit
+	}
+
+	// Continuation key from previous page
+	var continueAfterName string
+	if len(request.Pagination.GetKey()) > 0 {
+		continueAfterName = string(request.Pagination.GetKey())
+	}
+
+	// Create range for this address
+	refKeyPrefix := collections.PairPrefix[sdk.AccAddress, string](accAddr)
+	prefixRange := collections.NewPrefixedPairRange[
+		collections.Pair[sdk.AccAddress, string],
+		string,
+	](refKeyPrefix)
+
+	iter, err := k.nameRecords.Indexes.AddrIndex.Iterate(ctx, prefixRange)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
+
+	// If we have a continuation key, skip forward past it (inclusive)
+	skipMode := continueAfterName != ""
+
+	var names []string
+	var lastKey string
+
+	for ; iter.Valid(); iter.Next() {
+		pk, err := iter.PrimaryKey()
 		if err != nil {
-			return false, err
+			return nil, status.Error(codes.Internal, err.Error())
 		}
-		if record.Address != request.Address {
-			return false, nil
+		if skipMode {
+			if pk == continueAfterName {
+				skipMode = false
+				continue
+			}
+			if pk < continueAfterName {
+				continue
+			}
+			skipMode = false
 		}
-		if accumulate {
-			names = append(names, record.Name)
+		if uint64(len(names)) >= limit {
+			break
 		}
-		return true, nil
-	})
-
-	if err != nil {
-		return nil, err
+		record, err := k.nameRecords.Get(ctx, pk)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		names = append(names, record.Name)
+		lastKey = pk
 	}
 
-	return &types.QueryReverseLookupResponse{Name: names, Pagination: pageRes}, nil
+	var nextKey []byte
+	if iter.Valid() {
+		nextKey = []byte(lastKey)
+	}
+
+	return &types.QueryReverseLookupResponse{
+		Name: names,
+		Pagination: &query.PageResponse{
+			NextKey: nextKey,
+		},
+	}, nil
 }
