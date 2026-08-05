@@ -1652,6 +1652,29 @@ func TestCanForceTransferFrom(t *testing.T) {
 		return vault.GetAddress(), principalAddr
 	}
 
+	createMarkerAccWithNonVaultAtVaultAddr := func(denom string) sdk.AccAddress {
+		nonVault := &types.MarkerAccount{
+			BaseAccount: authtypes.NewBaseAccountWithAddress(vaulttypes.GetVaultAddress(denom)),
+			Status:      types.StatusActive,
+			Denom:       denom,
+			Supply:      sdkmath.NewInt(0),
+			MarkerType:  types.MarkerType_RestrictedCoin,
+		}
+		setNewAccount(app, ctx, nonVault)
+
+		markerAddr := types.MustGetMarkerAddress(denom)
+		marker := &types.MarkerAccount{
+			BaseAccount: authtypes.NewBaseAccountWithAddress(markerAddr),
+			Status:      types.StatusActive,
+			Denom:       denom,
+			Supply:      sdkmath.NewInt(0),
+			MarkerType:  types.MarkerType_RestrictedCoin,
+		}
+		setNewAccount(app, ctx, marker)
+
+		return markerAddr
+	}
+
 	addrNoAcc := testAddr("addrNoAcc")
 	addrSeq0 := setAcc("addrSeq0", 0)
 	addrSeq1 := setAcc("addrSeq1", 1)
@@ -1659,6 +1682,7 @@ func TestCanForceTransferFrom(t *testing.T) {
 	addrMarker := createMarkerAcc("addrMarker")
 	addrMarket := createMarketAcc("addrMarket")
 	addrVault, addrVaultPrincipal := createVaultAccs("vaultshares")
+	addrMarkerNonVaultAtVaultAddr := createMarkerAccWithNonVaultAtVaultAddr("notavault")
 
 	tests := []struct {
 		name string
@@ -1673,6 +1697,7 @@ func TestCanForceTransferFrom(t *testing.T) {
 		{name: "market address", from: addrMarket, exp: true},
 		{name: "vault address", from: addrVault, exp: false},
 		{name: "vault principal marker address", from: addrVaultPrincipal, exp: false},
+		{name: "marker address with a non-vault account at its vault address", from: addrMarkerNonVaultAtVaultAddr, exp: true},
 	}
 
 	for _, tc := range tests {
