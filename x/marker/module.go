@@ -149,6 +149,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
 		panic(fmt.Errorf("failed to register marker migration: %w", err))
 	}
+	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
+		panic(fmt.Errorf("failed to register marker migration 3->4: %w", err))
+	}
 }
 
 // InitGenesis performs genesis initialization for the account module. It returns no validator updates.
@@ -199,4 +202,4 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 3 }
+func (AppModule) ConsensusVersion() uint64 { return 4 }

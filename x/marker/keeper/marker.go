@@ -67,7 +67,7 @@ func (k Keeper) AddMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) e
 		return err
 	}
 
-	if err := k.SetMarker(ctx, marker); err != nil {
+	if err := k.SetMarkerWithPerms(ctx, marker); err != nil {
 		return err
 	}
 
@@ -90,7 +90,7 @@ func (k Keeper) AddAccess(
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "add_access")
 
 	// (if marker does not exist then fail)
-	m, err := k.GetMarkerByDenom(ctx, denom)
+	m, err := k.GetMarkerByDenomWithPerms(ctx, denom)
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", denom, err)
 	}
@@ -116,7 +116,7 @@ func (k Keeper) AddAccess(
 		if err := m.Validate(); err != nil {
 			return err
 		}
-		if err := k.SetMarker(ctx, m); err != nil {
+		if err := k.SetMarkerWithPerms(ctx, m); err != nil {
 			return err
 		}
 	// Undefined, Cancelled, Destroyed -- no modifications are supported in these states
@@ -134,7 +134,7 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "remove_access")
 
 	// (if marker does not exist then fail)
-	m, err := k.GetMarkerByDenom(ctx, denom)
+	m, err := k.GetMarkerByDenomWithPerms(ctx, denom)
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", denom, err)
 	}
@@ -144,8 +144,7 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		if (!caller.Equals(m.GetManager()) || m.GetStatus() != types.StatusFinalized) &&
 			!m.AddressHasAccess(caller, types.Access_Admin) &&
 			!k.accountControlsAllSupply(ctx, caller, m) {
-			return fmt.Errorf("%s is not authorized to make access list changes against finalized/active %s marker",
-				caller, m.GetDenom())
+			return fmt.Errorf("%s is not authorized to make access list changes against finalized/active %s marker", caller, m.GetDenom())
 		}
 		fallthrough
 	case types.StatusProposed:
@@ -160,7 +159,7 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		if err := m.Validate(); err != nil {
 			return err
 		}
-		if err := k.SetMarker(ctx, m); err != nil {
+		if err := k.SetMarkerWithPerms(ctx, m); err != nil {
 			return err
 		}
 	// Undefined, Cancelled, Destroyed -- no modifications are supported in these states
@@ -185,7 +184,7 @@ func (k Keeper) WithdrawCoins(
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", denom, err)
 	}
-	if err = m.ValidateAddressHasAccess(caller, types.Access_Withdraw); err != nil {
+	if err = k.ValidateHasAccess(ctx, m.GetAddress(), caller, types.Access_Withdraw); err != nil {
 		return err
 	}
 
@@ -228,7 +227,7 @@ func (k Keeper) MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", coin.Denom, err)
 	}
-	if err = m.ValidateAddressHasAccess(caller, types.Access_Mint); err != nil {
+	if err = k.ValidateHasAccess(ctx, m.GetAddress(), caller, types.Access_Mint); err != nil {
 		return err
 	}
 
@@ -270,7 +269,7 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", coin.Denom, err)
 	}
-	if err = m.ValidateAddressHasAccess(caller, types.Access_Burn); err != nil {
+	if err = k.ValidateHasAccess(ctx, m.GetAddress(), caller, types.Access_Burn); err != nil {
 		return err
 	}
 
@@ -437,12 +436,6 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 	if m.GetStatus() != types.StatusProposed {
 		return fmt.Errorf("can only finalize markeraccounts in the Proposed status")
 	}
-
-	// verify marker configuration is sane
-	if err = m.Validate(); err != nil {
-		return fmt.Errorf("invalid marker, cannot be finalized: %w", err)
-	}
-
 	// Amount to mint is typically the defined supply however...
 	supplyRequest := m.GetSupply()
 
@@ -467,9 +460,6 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 	// transition to finalized state ... then to active once mint is complete
 	if err = m.SetStatus(types.StatusFinalized); err != nil {
 		return fmt.Errorf("could not transition marker account state to finalized: %w", err)
-	}
-	if err := m.Validate(); err != nil {
-		return err
 	}
 	if err := k.SetMarker(ctx, m); err != nil {
 		return err
@@ -522,9 +512,6 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 	if err = m.SetStatus(types.StatusActive); err != nil {
 		return fmt.Errorf("could not set marker status to active: %w", err)
 	}
-	if err := m.Validate(); err != nil {
-		return err
-	}
 	// record status as active
 	if err := k.SetMarker(ctx, m); err != nil {
 		return err
@@ -547,7 +534,7 @@ func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	switch m.GetStatus() {
 	case types.StatusFinalized, types.StatusActive:
 		// for active or finalized markers the caller must be assigned permission to perform this action.
-		if err = m.ValidateAddressHasAccess(caller, types.Access_Delete); err != nil {
+		if err = k.ValidateHasAccess(ctx, m.GetAddress(), caller, types.Access_Delete); err != nil {
 			return err
 		}
 		// for finalized/active we need to ensure the full coin supply has been recalled as it will all be burned.
@@ -560,9 +547,9 @@ func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 				" ensure marker account holds the entire supply of %s", inCirculation, totalSupply, denom)
 		}
 	case types.StatusProposed:
-		// for a proposed marker either the manager or someone assigned `delete` can perform this action
-		if err = m.ValidateAddressHasAccess(caller, types.Access_Delete); err != nil && !m.GetManager().Equals(caller) {
-			return err
+		if !k.HasAccess(ctx, m.GetAddress(), caller, types.Access_Delete) && !m.GetManager().Equals(caller) {
+			return fmt.Errorf("%s does not have %s access on %s marker and is not the manager",
+				caller, types.Access_Delete, m.GetDenom())
 		}
 	case types.StatusCancelled:
 		return nil // nothing to be done here.
@@ -595,8 +582,9 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	}
 
 	// either the manager [set if a proposed marker was cancelled] or someone assigned `delete` can perform this action
-	if err = m.ValidateAddressHasAccess(caller, types.Access_Delete); err != nil && !m.GetManager().Equals(caller) {
-		return err
+	if !k.HasAccess(ctx, m.GetAddress(), caller, types.Access_Delete) && !m.GetManager().Equals(caller) {
+		return fmt.Errorf("%s does not have %s access on %s marker and is not the manager",
+			caller, types.Access_Delete, m.GetDenom())
 	}
 
 	// status must currently be set to cancelled
@@ -662,9 +650,11 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		return fmt.Errorf("marker type is not restricted_coin, brokered transfer not supported")
 	}
 
-	adminCanForceTransfer := m.AddressHasAccess(admin, types.Access_ForceTransfer)
-	if err = m.ValidateAddressHasAccess(admin, types.Access_Transfer); err != nil && !adminCanForceTransfer {
-		return err
+	adminCanForceTransfer := k.HasAccess(ctx, m.GetAddress(), admin, types.Access_ForceTransfer)
+	if !adminCanForceTransfer {
+		if err := k.ValidateHasAccess(ctx, m.GetAddress(), admin, types.Access_Transfer); err != nil {
+			return err
+		}
 	}
 
 	// If going to a restricted marker, the admin must have deposit access on that marker too.
@@ -773,7 +763,7 @@ func (k Keeper) IbcTransferCoin(
 	if m.GetMarkerType() != types.MarkerType_RestrictedCoin {
 		return fmt.Errorf("marker type is not restricted_coin, brokered transfer not supported")
 	}
-	if err = m.ValidateAddressHasAccess(admin, types.Access_Transfer); err != nil {
+	if err = k.ValidateHasAccess(ctx, m.GetAddress(), admin, types.Access_Transfer); err != nil {
 		return err
 	}
 	to, err := sdk.AccAddressFromBech32(receiver)
@@ -789,8 +779,8 @@ func (k Keeper) IbcTransferCoin(
 
 	// checking if escrow account has transfer auth, if not add it
 	escrowAccount := ibctypes.GetEscrowAddress(sourcePort, sourceChannel)
-	if !m.AddressHasAccess(escrowAccount, types.Access_Transfer) {
-		err = m.GrantAccess(types.NewAccessGrant(escrowAccount, []types.Access{types.Access_Transfer}))
+	if !k.HasAccess(ctx, m.GetAddress(), escrowAccount, types.Access_Transfer) {
+		err = k.SetAccess(ctx, m.GetAddress(), escrowAccount, types.AccessList{types.Access_Transfer})
 		if err != nil {
 			return err
 		}
@@ -851,8 +841,9 @@ func (k Keeper) SetMarkerDenomMetadata(ctx sdk.Context, metadata banktypes.Metad
 	if markerErr != nil {
 		return fmt.Errorf("marker not found for %s: %w", metadata.Base, markerErr)
 	}
-	if err := marker.ValidateAddressHasAccess(caller, types.Access_Admin); err != nil && !marker.GetManager().Equals(caller) {
-		return err
+	if !k.HasAccess(ctx, marker.GetAddress(), caller, types.Access_Admin) && !marker.GetManager().Equals(caller) {
+		return fmt.Errorf("%s does not have %s access on %s marker and is not the manager",
+			caller, types.Access_Admin, marker.GetDenom())
 	}
 
 	var existing *banktypes.Metadata
@@ -920,5 +911,5 @@ func (k Keeper) validateSendToMarker(ctx sdk.Context, toAddr, admin sdk.AccAddre
 	if marker.GetMarkerType() != types.MarkerType_RestrictedCoin {
 		return nil
 	}
-	return marker.ValidateAddressHasAccess(admin, types.Access_Deposit)
+	return k.ValidateHasAccess(ctx, marker.GetAddress(), admin, types.Access_Deposit)
 }
