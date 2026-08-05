@@ -1631,8 +1631,6 @@ func TestCanForceTransferFrom(t *testing.T) {
 		return addr
 	}
 
-	// createVaultAccs creates a vault with the provided share denom along with the marker account
-	// that holds that vault's principal. It returns the vault address and the principal marker address.
 	createVaultAccs := func(shareDenom string) (sdk.AccAddress, sdk.AccAddress) {
 		vault := vaulttypes.NewVaultAccount(
 			authtypes.NewBaseAccountWithAddress(vaulttypes.GetVaultAddress(shareDenom)),
