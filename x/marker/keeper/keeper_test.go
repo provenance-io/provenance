@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	vaulttypes "github.com/provlabs/vault/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -1630,12 +1631,36 @@ func TestCanForceTransferFrom(t *testing.T) {
 		return addr
 	}
 
+	// createVaultAccs creates a vault with the provided share denom along with the marker account
+	// that holds that vault's principal. It returns the vault address and the principal marker address.
+	createVaultAccs := func(shareDenom string) (sdk.AccAddress, sdk.AccAddress) {
+		vault := vaulttypes.NewVaultAccount(
+			authtypes.NewBaseAccountWithAddress(vaulttypes.GetVaultAddress(shareDenom)),
+			testAddr("vaultAdmin").String(), shareDenom, "underlying",
+			0, vaulttypes.DefaultAumFeeBips, "", "", "", "",
+		)
+		setNewAccount(app, ctx, vault)
+
+		principalAddr := types.MustGetMarkerAddress(shareDenom)
+		principal := &types.MarkerAccount{
+			BaseAccount: authtypes.NewBaseAccountWithAddress(principalAddr),
+			Status:      types.StatusActive,
+			Denom:       shareDenom,
+			Supply:      sdkmath.NewInt(0),
+			MarkerType:  types.MarkerType_RestrictedCoin,
+		}
+		setNewAccount(app, ctx, principal)
+
+		return vault.GetAddress(), principalAddr
+	}
+
 	addrNoAcc := testAddr("addrNoAcc")
 	addrSeq0 := setAcc("addrSeq0", 0)
 	addrSeq1 := setAcc("addrSeq1", 1)
 	addrGroup := createGroup()
 	addrMarker := createMarkerAcc("addrMarker")
 	addrMarket := createMarketAcc("addrMarket")
+	addrVault, addrVaultPrincipal := createVaultAccs("vaultshares")
 
 	tests := []struct {
 		name string
@@ -1648,6 +1673,8 @@ func TestCanForceTransferFrom(t *testing.T) {
 		{name: "group address", from: addrGroup, exp: true},
 		{name: "marker address", from: addrMarker, exp: true},
 		{name: "market address", from: addrMarket, exp: true},
+		{name: "vault address", from: addrVault, exp: false},
+		{name: "vault principal marker address", from: addrVaultPrincipal, exp: false},
 	}
 
 	for _, tc := range tests {
