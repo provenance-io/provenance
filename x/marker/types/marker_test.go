@@ -94,117 +94,119 @@ func TestNewMarkerValidate(t *testing.T) {
 	fmt.Printf("Marker address: %s", mAddr)
 	baseAcc := authtypes.NewBaseAccount(mAddr, nil, 0, 0)
 	tests := []struct {
-		name   string
-		acc    authtypes.GenesisAccount
-		expErr error
+		name                  string
+		acc                   authtypes.GenesisAccount
+		expErr                error
+		useAccessControlCheck bool
 	}{
 		{
 			"empty marker is invalid",
 			NewEmptyMarkerAccount("test", "", nil),
 			fmt.Errorf("a manager is required if there are no accounts with ACCESS_ADMIN and marker is not ACTIVE"),
+			true,
 		},
 		{
 			"insufficient supply",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("test", 0), manager, nil, StatusFinalized, MarkerType_Coin, true, true, false, []string{}),
-			fmt.Errorf("cannot create a marker with zero total supply and no authorization for minting more"),
+			fmt.Errorf("cannot create a marker with zero total supply and no authorization for minting more"), true,
 		},
 		{
 			"invalid status",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("test", 0), manager, nil, StatusUndefined, MarkerType_Coin, true, false, false, []string{}),
-			fmt.Errorf("invalid marker status"),
+			fmt.Errorf("invalid marker status"), false,
 		},
 		{
 			"invalid name and address pair",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("nottest", 1), manager, nil, StatusProposed, MarkerType_Coin, true, false, false, []string{}),
-			fmt.Errorf("address %s cannot be derived from the marker denom 'nottest'", baseAcc.GetAddress()),
+			fmt.Errorf("address %s cannot be derived from the marker denom 'nottest'", baseAcc.GetAddress()), false,
 		},
 		{
 			"invalid marker account permissions",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("test", 1), manager,
 				[]AccessGrant{{Address: MustGetMarkerAddress("foo").String(),
 					Permissions: []Access{Access_Unknown}}}, StatusProposed, MarkerType_Coin, true, false, false, []string{}),
-			fmt.Errorf("invalid access privileges granted: ACCESS_UNSPECIFIED is not supported for marker type MARKER_TYPE_COIN"),
+			fmt.Errorf("invalid access privileges granted: ACCESS_UNSPECIFIED is not supported for marker type MARKER_TYPE_COIN"), false,
 		},
 		{
 			"invalid restricted marker account permissions",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("test", 1), manager,
 				[]AccessGrant{{Address: MustGetMarkerAddress("foo").String(),
 					Permissions: []Access{Access_Unknown}}}, StatusProposed, MarkerType_RestrictedCoin, true, false, false, []string{}),
-			fmt.Errorf("invalid access privileges granted: ACCESS_UNSPECIFIED is not supported for marker type MARKER_TYPE_RESTRICTED"),
+			fmt.Errorf("invalid access privileges granted: ACCESS_UNSPECIFIED is not supported for marker type MARKER_TYPE_RESTRICTED"), false,
 		},
 		{
 			"marker account permissions assigned to self",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("test", 1), manager, []AccessGrant{{Address: baseAcc.Address,
 				Permissions: []Access{Access_Mint, Access_Admin}}}, StatusProposed, MarkerType_Coin, true, false, false, []string{}),
-			fmt.Errorf("permissions cannot be granted to 'test' marker account: [ACCESS_MINT ACCESS_ADMIN]"),
+			fmt.Errorf("permissions cannot be granted to 'test' marker account: [ACCESS_MINT ACCESS_ADMIN]"), false,
 		},
 		{
 			"invalid marker account permissions for type",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("test", 1), manager,
 				[]AccessGrant{{Address: MustGetMarkerAddress("foo").String(),
 					Permissions: []Access{Access_Mint, Access_Admin, Access_Transfer}}}, StatusActive, MarkerType_Coin, true, false, false, []string{}),
-			fmt.Errorf("invalid access privileges granted: ACCESS_TRANSFER is not supported for marker type MARKER_TYPE_COIN"),
+			fmt.Errorf("invalid access privileges granted: ACCESS_TRANSFER is not supported for marker type MARKER_TYPE_COIN"), false,
 		},
 		{
 			"invalid marker ibc type fixed supply",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("ibc/test", 1), manager,
 				[]AccessGrant{{Address: MustGetMarkerAddress("foo").String(),
 					Permissions: []Access{Access_Admin, Access_Withdraw}}}, StatusActive, MarkerType_Coin, true, false, false, []string{}),
-			fmt.Errorf("invalid ibc denom configuration: fixed supply is not supported for ibc marker"),
+			fmt.Errorf("invalid ibc denom configuration: fixed supply is not supported for ibc marker"), false,
 		},
 		{
 			"invalid marker ibc type has mint",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("ibc/test", 1), manager,
 				[]AccessGrant{{Address: MustGetMarkerAddress("foo").String(),
 					Permissions: []Access{Access_Mint, Access_Admin, Access_Withdraw}}}, StatusActive, MarkerType_Coin, false, false, false, []string{}),
-			fmt.Errorf("invalid ibc denom configuration: ACCESS_MINT is not supported for ibc marker"),
+			fmt.Errorf("invalid ibc denom configuration: ACCESS_MINT is not supported for ibc marker"), false,
 		},
 		{
 			"invalid marker ibc type has burn",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("ibc/test", 1), manager,
 				[]AccessGrant{{Address: MustGetMarkerAddress("foo").String(),
 					Permissions: []Access{Access_Burn, Access_Admin, Access_Withdraw}}}, StatusActive, MarkerType_Coin, false, false, false, []string{}),
-			fmt.Errorf("invalid ibc denom configuration: ACCESS_BURN is not supported for ibc marker"),
+			fmt.Errorf("invalid ibc denom configuration: ACCESS_BURN is not supported for ibc marker"), false,
 		},
 		{
 			"reserved metadata namespace denom is invalid",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("nft/test", 1), manager, nil, StatusProposed, MarkerType_Coin, true, false, false, []string{}),
-			fmt.Errorf("denom \"nft/test\" uses the reserved \"nft/\" namespace and cannot be a marker"),
+			fmt.Errorf("denom \"nft/test\" uses the reserved \"nft/\" namespace and cannot be a marker"), false,
 		},
 		{
 			"valid marker account",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("test", 1), manager, nil, StatusProposed, MarkerType_Coin, true, false, false, []string{}),
-			nil,
+			nil, false,
 		},
 		{
 			"valid marker account",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("test", 1), manager, nil, StatusActive, MarkerType_Coin, true, false, false, []string{}),
-			nil,
+			nil, false,
 		},
 		{
 			"coin type with forced transfer is invalid",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("test", 1), manager, nil, StatusActive, MarkerType_Coin, true, true, true, []string{}),
-			fmt.Errorf("forced transfers can only be allowed on restricted markers"),
+			fmt.Errorf("forced transfers can only be allowed on restricted markers"), false,
 		},
 		{
 			"coin type without forced transfer is ok",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("test", 1), manager, nil, StatusActive, MarkerType_Coin, true, true, false, []string{}),
-			nil,
+			nil, false,
 		},
 		{
 			"restricted type with froced transfer is ok",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("test", 1), manager, nil, StatusActive, MarkerType_RestrictedCoin, true, true, true, []string{}),
-			nil,
+			nil, false,
 		},
 		{
 			"restricted type without forced transfer is ok",
 			NewMarkerAccount(baseAcc, sdk.NewInt64Coin("test", 1), manager, nil, StatusActive, MarkerType_RestrictedCoin, true, true, false, []string{}),
-			nil,
+			nil, false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.acc.Validate()
+			err := tt.acc.(MarkerAccountI).ValidateWithAccessControl()
 			if err == nil {
 				require.Equal(t, tt.expErr, err)
 			} else {
