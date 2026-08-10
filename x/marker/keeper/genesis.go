@@ -42,7 +42,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 					panic(err)
 				}
 			}
-			if err := k.SetMarkerWithPerms(ctx, &data.Markers[i]); err != nil {
+			if err := k.SetMarker(ctx, &data.Markers[i]); err != nil {
 				panic(err)
 			}
 		}
