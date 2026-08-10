@@ -17,7 +17,10 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-// GetMarkerByDenom looks up marker with the given denom
+// GetMarkerByDenom looks up marker with the given denom. The returned marker's
+// AccessControl is always empty — see GetMarkerByDenomWithPerms if you need the
+// marker's permissions, or use the dedicated permission methods directly
+// (HasAccess, ValidateHasAccess, GetMarkerAccessList, etc).
 func (k Keeper) GetMarkerByDenom(ctx sdk.Context, denom string) (types.MarkerAccountI, error) {
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "get_marker_by_denom")
 
@@ -39,7 +42,7 @@ func (k Keeper) GetMarkerByDenom(ctx sdk.Context, denom string) (types.MarkerAcc
 func (k Keeper) AddMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) error {
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "add_marker_account")
 
-	if err := marker.Validate(); err != nil {
+	if err := marker.ValidateWithAccessControl(); err != nil {
 		return err
 	}
 	markerAddress := types.MustGetMarkerAddress(marker.GetDenom())
@@ -63,11 +66,11 @@ func (k Keeper) AddMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) e
 	// set base account number
 	marker = k.NewMarker(ctx, marker)
 
-	if err := marker.Validate(); err != nil {
+	if err := marker.ValidateWithAccessControl(); err != nil {
 		return err
 	}
 
-	if err := k.SetMarkerWithPerms(ctx, marker); err != nil {
+	if err := k.SetMarker(ctx, marker); err != nil {
 		return err
 	}
 
@@ -112,10 +115,10 @@ func (k Keeper) AddAccess(
 		if err = m.GrantAccess(grant); err != nil {
 			return fmt.Errorf("access grant failed: %w", err)
 		}
-		if err := m.Validate(); err != nil {
+		if err := m.ValidateWithAccessControl(); err != nil {
 			return err
 		}
-		if err := k.SetMarkerWithPerms(ctx, m); err != nil {
+		if err := k.SetMarker(ctx, m); err != nil {
 			return err
 		}
 	// Undefined, Cancelled, Destroyed -- no modifications are supported in these states
@@ -155,10 +158,10 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		if err = m.RevokeAccess(remove); err != nil {
 			return fmt.Errorf("access revoke failed: %w", err)
 		}
-		if err := m.Validate(); err != nil {
+		if err := m.ValidateWithAccessControl(); err != nil {
 			return err
 		}
-		if err := k.SetMarkerWithPerms(ctx, m); err != nil {
+		if err := k.SetMarker(ctx, m); err != nil {
 			return err
 		}
 	// Undefined, Cancelled, Destroyed -- no modifications are supported in these states
