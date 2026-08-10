@@ -219,99 +219,90 @@ func (k Keeper) NewMarker(ctx sdk.Context, marker types.MarkerAccountI) types.Ma
 // GetMarker looks up a marker by a given address
 func (k Keeper) GetMarker(ctx sdk.Context, address sdk.AccAddress) (types.MarkerAccountI, error) {
 	mac := k.authKeeper.GetAccount(ctx, address)
-	if mac != nil {
-		macc, ok := mac.(types.MarkerAccountI)
-		if !ok {
-			return nil, fmt.Errorf("account at %s is not a marker account", address.String())
-		}
-		if ma, ok := macc.(*types.MarkerAccount); ok {
-			ma.AccessControl = nil
-		}
-		return macc, nil
+	if mac == nil {
+		return nil, nil
 	}
-	return nil, nil
+	macc, ok := mac.(*types.MarkerAccount)
+	if !ok {
+		return nil, fmt.Errorf("account at %s is not a marker account", address.String())
+	}
+	macc.AccessControl = nil
+	return macc, nil
 }
 
-// SetMarker persists the marker WITHOUT touching permissions.
-// This is the normal path — perms live in their own store and are managed
-// separately via SetAccess/RevokeAccessEntry/AddAccess/RemoveAccess.
+// SetMarker persists the marker account and, if the marker has any access grants attached,
+// fully replaces its stored permission list with them. This is the only way to persist a
+// marker — there is no separate "with perms" variant to choose incorrectly. If you only
+// changed status/supply/metadata (marker fetched via plain GetMarker, no AccessControl
+// attached), permissions are left untouched. If you built or mutated AccessControl yourself
+// before calling this, it gets replaced accordingly.
 func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) error {
-	ma, isMA := marker.(*types.MarkerAccount)
-
-	// Validate needs the real access list — populate for validation only.
-	if isMA {
-		if err := k.PopulateMarkerPerms(ctx, ma); err != nil {
-			return fmt.Errorf("could not populate marker permissions for validation: %w", err)
-		}
-	}
 	if err := marker.Validate(); err != nil {
 		return err
 	}
-	// Never persist perms inside the account.
-	if isMA {
-		ma.AccessControl = nil
-	}
 
-	k.authKeeper.SetAccount(ctx, marker)
-	if err := k.markers.Set(ctx, marker.GetAddress(), marker.GetAddress()); err != nil {
-		panic(fmt.Errorf("failed to set marker index: %w", err))
+	accessList := marker.GetAccessList()
+	marker.ClearAccessList()
+
+	k.setMarkerAccount(ctx, marker)
+
+	if len(accessList) > 0 {
+		if err := k.setMarkerAccessList(ctx, marker.GetAddress(), accessList); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-// SetMarkerWithPerms persists the marker AND replaces its permission list.
-// Use this only when the caller explicitly wants the perms replaced with the
-// AccessControl field on the marker (e.g. AddMarkerAccount, InitGenesis).
-func (k Keeper) SetMarkerWithPerms(ctx sdk.Context, marker types.MarkerAccountI) error {
-	ma, isMA := marker.(*types.MarkerAccount)
-	if err := marker.Validate(); err != nil {
-		return err
-	}
-	if isMA {
-		if err := k.RemoveAllAccessForMarker(ctx, ma.GetAddress()); err != nil {
-			return err
-		}
-
-		// AccessControl may contain multiple entries for the same address.Merge
-		// them here so persisting doesn't silently drop earlier grants.
-		type mergedGrant struct {
-			addr  sdk.AccAddress
-			perms map[types.Access]bool
-		}
-		order := make([]string, 0, len(ma.AccessControl))
-		merged := make(map[string]*mergedGrant)
-		for _, g := range ma.AccessControl {
-			mg, ok := merged[g.Address]
-			if !ok {
-				gAddr, err := sdk.AccAddressFromBech32(g.Address)
-				if err != nil {
-					return fmt.Errorf("invalid access grant address %q: %w", g.Address, err)
-				}
-				mg = &mergedGrant{addr: gAddr, perms: map[types.Access]bool{}}
-				merged[g.Address] = mg
-				order = append(order, g.Address)
-			}
-			for _, p := range g.Permissions {
-				mg.perms[p] = true
-			}
-		}
-
-		for _, addrStr := range order {
-			mg := merged[addrStr]
-			perms := make(types.AccessList, 0, len(mg.perms))
-			for p := range mg.perms {
-				perms = append(perms, p)
-			}
-			sort.Slice(perms, func(i, j int) bool { return perms[i] < perms[j] })
-			if err := k.SetAccess(ctx, ma.GetAddress(), mg.addr, perms); err != nil {
-				return err
-			}
-		}
-		ma.AccessControl = nil
-	}
+// setMarkerAccount persists just the marker's account fields (no permissions).
+// Only ever called from SetMarker.
+func (k Keeper) setMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) {
 	k.authKeeper.SetAccount(ctx, marker)
 	if err := k.markers.Set(ctx, marker.GetAddress(), marker.GetAddress()); err != nil {
 		panic(fmt.Errorf("failed to set marker index: %w", err))
+	}
+}
+
+// setMarkerAccessList fully replaces the given marker's stored permission list with
+// accessList, merging any duplicate per-address entries first so nothing is silently
+// dropped. Only ever called from SetMarker.
+func (k Keeper) setMarkerAccessList(ctx sdk.Context, markerAddr sdk.AccAddress, accessList []types.AccessGrant) error {
+	if err := k.RemoveAllAccessForMarker(ctx, markerAddr); err != nil {
+		return err
+	}
+
+	type mergedGrant struct {
+		addr  sdk.AccAddress
+		perms map[types.Access]bool
+	}
+	order := make([]string, 0, len(accessList))
+	merged := make(map[string]*mergedGrant)
+	for _, g := range accessList {
+		mg, ok := merged[g.Address]
+		if !ok {
+			gAddr, err := sdk.AccAddressFromBech32(g.Address)
+			if err != nil {
+				return fmt.Errorf("invalid access grant address %q: %w", g.Address, err)
+			}
+			mg = &mergedGrant{addr: gAddr, perms: map[types.Access]bool{}}
+			merged[g.Address] = mg
+			order = append(order, g.Address)
+		}
+		for _, p := range g.Permissions {
+			mg.perms[p] = true
+		}
+	}
+
+	for _, addrStr := range order {
+		mg := merged[addrStr]
+		perms := make(types.AccessList, 0, len(mg.perms))
+		for p := range mg.perms {
+			perms = append(perms, p)
+		}
+		sort.Slice(perms, func(i, j int) bool { return perms[i] < perms[j] })
+		if err := k.SetAccess(ctx, markerAddr, mg.addr, perms); err != nil {
+			return err
+		}
 	}
 	return nil
 }
