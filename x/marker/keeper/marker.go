@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	vaulttypes "github.com/provlabs/vault/types"
+
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -96,8 +98,7 @@ func (k Keeper) AddAccess(
 	// marker is fixed/active, assert permission to make changes by checking for Grant Permission
 	case types.StatusFinalized, types.StatusActive:
 		if (!caller.Equals(m.GetManager()) || m.GetStatus() != types.StatusFinalized) &&
-			!m.AddressHasAccess(caller, types.Access_Admin) &&
-			!k.accountControlsAllSupply(ctx, caller, m) {
+			!m.AddressHasAccess(caller, types.Access_Admin) {
 			return fmt.Errorf("%s is not authorized to make access list changes against finalized/active %s marker",
 				caller, m.GetDenom())
 		}
@@ -140,8 +141,7 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	// marker is fixed/active, assert permission to make changes by checking for Grant Permission
 	case types.StatusFinalized, types.StatusActive:
 		if (!caller.Equals(m.GetManager()) || m.GetStatus() != types.StatusFinalized) &&
-			!m.AddressHasAccess(caller, types.Access_Admin) &&
-			!k.accountControlsAllSupply(ctx, caller, m) {
+			!m.AddressHasAccess(caller, types.Access_Admin) {
 			return fmt.Errorf("%s is not authorized to make access list changes against finalized/active %s marker",
 				caller, m.GetDenom())
 		}
@@ -733,9 +733,15 @@ func (k Keeper) canForceTransferFrom(ctx sdk.Context, from sdk.AccAddress) bool 
 		return true
 	}
 
-	// Allow force transfers out of marker accounts still.
-	if _, isMarker := acc.(types.MarkerAccountI); isMarker {
-		return true
+	// Allow force transfers out of marker accounts, unless the marker is a vault's principal account.
+	if marker, isMarker := acc.(types.MarkerAccountI); isMarker {
+		// A vault's principal marker uses the vault's share denom, and its address is derived from that denom.
+		vaultAcc := k.authKeeper.GetAccount(ctx, vaulttypes.GetVaultAddress(marker.GetDenom()))
+		if vaultAcc == nil {
+			return true
+		}
+		_, isVault := vaultAcc.(vaulttypes.VaultAccountI)
+		return !isVault
 	}
 
 	// Allow force transfers out of market accounts too.
@@ -886,21 +892,6 @@ func (k Keeper) AddFinalizeAndActivateMarker(ctx sdk.Context, marker types.Marke
 	}
 
 	return k.ActivateMarker(ctx, marker.GetManager(), marker.GetDenom())
-}
-
-// accountControlsAllSupply return true if the caller account address possess 100% of the total supply of a marker.
-// This check is used to determine if an account should be allowed to perform defacto admin operations on a marker.
-func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress, m types.MarkerAccountI) bool {
-	// If the given account is currently holding 100% of the supply of a marker then it should be able to invoke
-	// the operations as an admin on the marker.
-	// Use the live circulating supply from the bank keeper instead of m.GetSupply().
-	// m.GetSupply() can become outdated after minting.
-	supply := k.bankKeeper.GetSupply(ctx, m.GetDenom())
-	if supply.Amount.IsNil() || supply.Amount.IsZero() {
-		return false
-	}
-	balance := k.bankKeeper.GetBalance(ctx, caller, m.GetDenom())
-	return supply.Equal(sdk.NewCoin(m.GetDenom(), balance.Amount))
 }
 
 // validateSendToMarker returns an error if the toAddr is a restricted marker but the admin doesn't have deposit access on it.
