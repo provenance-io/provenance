@@ -497,6 +497,7 @@ func TestWithdrawCoins(t *testing.T) {
 
 	denomMain := "mackenzie"
 	denomCoin := "norman"
+	denomCoinDepProtected := "quinn"
 	denomToDeposit := "dana"
 	denomInactive := "indigo"
 	denomNoMarker := "noah"
@@ -605,6 +606,18 @@ func TestWithdrawCoins(t *testing.T) {
 	}
 	addrMarkerCoin := createMarker(denomCoin, markerCoin)
 
+	markerCoinDepProtected := &types.MarkerAccount{
+		AccessControl: []types.AccessGrant{
+			allAccessExcept(addrManager, types.Access_Transfer, types.Access_ForceTransfer),
+			accessOnly(addrWithDep, types.Access_Deposit),
+		},
+		MarkerType:             types.MarkerType_Coin,
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+		RequireDepositAccess:   true,
+	}
+	addrMarkerCoinDepProtected := createMarker(denomCoinDepProtected, markerCoinDepProtected)
+
 	markerToDeposit := &types.MarkerAccount{
 		AccessControl: []types.AccessGrant{
 			accessOnly(addrOnlyWithdraw, types.Access_Withdraw),
@@ -660,12 +673,31 @@ func TestWithdrawCoins(t *testing.T) {
 			expErr:    noAccessErr(addrNoWithdraw, types.Access_Withdraw, denomMain),
 		},
 		{
+			// Guards against over-tightening: a coin marker that has not opted into deposit
+			// protection must still accept withdrawals from a caller without deposit access.
 			name:                  "to a coin marker",
 			caller:                addrManager,
 			recipient:             addrMarkerCoin,
 			denom:                 denomMain,
 			coins:                 sdk.NewCoins(coin(3, denomMain)),
 			expEventTo:            addrMarkerCoin,
+			expRecipientGetsCoins: true,
+		},
+		{
+			name:      "to a coin marker requiring deposit: caller does not have deposit on it",
+			caller:    addrOnlyWithdraw,
+			recipient: addrMarkerCoinDepProtected,
+			denom:     denomMain,
+			coins:     sdk.NewCoins(coin(8, denomMain)),
+			expErr:    noAccessErr(addrOnlyWithdraw, types.Access_Deposit, denomCoinDepProtected),
+		},
+		{
+			name:                  "to a coin marker requiring deposit: caller has deposit on it",
+			caller:                addrWithDep,
+			recipient:             addrMarkerCoinDepProtected,
+			denom:                 denomMain,
+			coins:                 sdk.NewCoins(coin(9, denomMain)),
+			expEventTo:            addrMarkerCoinDepProtected,
 			expRecipientGetsCoins: true,
 		},
 		{
@@ -1040,6 +1072,7 @@ func TestTransferCoin(t *testing.T) {
 
 	denomCoin := "normalcoin"
 	denomRestricted := "restrictedcoin"
+	denomDepProtected := "depprotectedcoin"
 	denomOnlyDeposit := "onlydepositcoin"
 	denomOnlyWithdraw := "onlywithdrawcoin"
 	denomForceTrans := "jedicoin"
@@ -1179,6 +1212,21 @@ func TestTransferCoin(t *testing.T) {
 	}
 	markerAddrCoin := createMarker(denomCoin, markerCoin)
 
+	// An unrestricted marker that opts into deposit protection via require_deposit_access.
+	// Only addrTransDepWithdraw can deposit into it.
+	markerDepProtected := &types.MarkerAccount{
+		AccessControl: []types.AccessGrant{
+			allAccessExcept(addrManager, types.Access_Transfer, types.Access_ForceTransfer),
+			accessOnly(addrTransDepWithdraw, types.Access_Deposit),
+		},
+		MarkerType:             types.MarkerType_Coin,
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+		AllowForcedTransfer:    false,
+		RequireDepositAccess:   true,
+	}
+	markerAddrDepProtected := createMarker(denomDepProtected, markerDepProtected)
+
 	markerRestricted := &types.MarkerAccount{
 		AccessControl: []types.AccessGrant{
 			accessOnly(addrTransOnly, types.Access_Transfer),
@@ -1290,11 +1338,28 @@ func TestTransferCoin(t *testing.T) {
 			amount: sdk.NewInt64Coin(denomRestricted, 9),
 		},
 		{
+			// Guards against over-tightening: an unrestricted marker that has not opted into
+			// deposit protection must still accept brokered transfers from an admin without deposit.
 			name:   "going to unrestricted",
 			from:   addrTransOnly,
 			to:     markerAddrCoin,
 			admin:  addrTransOnly,
 			amount: sdk.NewInt64Coin(denomRestricted, 17),
+		},
+		{
+			name:   "going to unrestricted with deposit required: admin does not have deposit",
+			from:   addrTransOnly,
+			to:     markerAddrDepProtected,
+			admin:  addrTransOnly,
+			amount: sdk.NewInt64Coin(denomRestricted, 13),
+			expErr: noAccessErr(addrTransOnly, types.Access_Deposit, denomDepProtected),
+		},
+		{
+			name:   "going to unrestricted with deposit required: admin has deposit",
+			from:   addrTransDepWithdraw,
+			to:     markerAddrDepProtected,
+			admin:  addrTransDepWithdraw,
+			amount: sdk.NewInt64Coin(denomRestricted, 21),
 		},
 		{
 			name:        "admin not from: no force transfer: no authz",
