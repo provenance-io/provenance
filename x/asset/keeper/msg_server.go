@@ -319,7 +319,7 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 		}
 
 		// Persist with replace-semantics (SetMarkerWithPerms) since we mutated AccessControl.
-		if err := m.markerKeeper.SetMarkerWithPerms(ctx, poolMarker); err != nil {
+		if err := m.markerKeeper.SetMarker(ctx, poolMarker); err != nil {
 			return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to set pool marker : %s", err))
 		}
 		poolCount++
