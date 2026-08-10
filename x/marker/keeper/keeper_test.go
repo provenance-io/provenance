@@ -12,12 +12,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -933,14 +934,52 @@ func TestImplictControl(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, user, user2, "testcoin",
 		sdk.NewCoins(sdk.NewInt64Coin("testcoin", 1000))))
 
-	// Succeeds now because user2 is holding all of the testcoin supply.
-	require.NoError(t, app.MarkerKeeper.AddAccess(ctx, user2, "testcoin",
-		types.NewAccessGrant(user2, []types.Access{types.Access_Mint, types.Access_Delete, types.Access_Transfer})))
+	// fails now even though user2 is holding all of the testcoin supply.
+	err := app.MarkerKeeper.AddAccess(ctx, user2, "testcoin",
+		types.NewAccessGrant(user2, []types.Access{types.Access_Mint, types.Access_Delete, types.Access_Transfer}))
+	require.EqualError(t, err, user2.String()+" is not authorized to make access list changes against finalized/active testcoin marker")
 
-	// succeeds for a user with transfer rights
-	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, user2, user, user2, sdk.NewInt64Coin("testcoin", 10)))
+	// fails for user2 that doesn't have transfer authority
+	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, user2, user, user2, sdk.NewInt64Coin("testcoin", 10)))
 	// fails if the admin user does not have transfer authority
 	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, user, user2, user, sdk.NewInt64Coin("testcoin", 10)))
+}
+
+func TestAuthzControl(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+
+	setAcc := func(addr sdk.AccAddress, sequence uint64) {
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		require.NoError(t, acc.SetSequence(sequence), "%s.SetSequence(%d)", string(addr), sequence)
+		app.AccountKeeper.SetAccount(ctx, acc)
+	}
+
+	user := testUserAddress("test")
+	user2 := testUserAddress("test2")
+	setAcc(user, 1)
+	setAcc(user2, 1)
+
+	// create account and check default values
+	mac := types.NewEmptyMarkerAccount("testcoin", user.String(), []types.AccessGrant{
+		*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Burn, types.Access_Withdraw, types.Access_Delete, types.Access_Transfer}),
+		*types.NewAccessGrant(user2, []types.Access{types.Access_Mint, types.Access_Delete, types.Access_Transfer}),
+	})
+
+	mac.MarkerType = types.MarkerType_RestrictedCoin
+	require.NoError(t, mac.SetManager(user))
+	require.NoError(t, mac.SetSupply(sdk.NewInt64Coin("testcoin", 1000)))
+
+	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
+
+	// Moves to finalized, mints required supply, moves to active status.
+	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
+	require.NoError(t, app.MarkerKeeper.ActivateMarker(ctx, user, "testcoin"))
+
+	// Move some of the supply into user and user2.
+	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, user, user, "testcoin", sdk.NewCoins(sdk.NewInt64Coin("testcoin", 100))))
+	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, user, user2, "testcoin", sdk.NewCoins(sdk.NewInt64Coin("testcoin", 200))))
 
 	// validate authz when 'from' is different from 'admin'
 	granter := user
