@@ -894,13 +894,16 @@ func (k Keeper) AddFinalizeAndActivateMarker(ctx sdk.Context, marker types.Marke
 	return k.ActivateMarker(ctx, marker.GetManager(), marker.GetDenom())
 }
 
-// validateSendToMarker returns an error if the toAddr is a restricted marker but the admin doesn't have deposit access on it.
+// validateSendToMarker returns an error if the toAddr is a marker that requires deposit access
+// (either because it's restricted, or because it opts in via require_deposit_access) but the admin
+// doesn't have deposit access on it. This mirrors the destination check in SendRestrictionFn, which
+// the callers of this func bypass by sending with types.WithBypass.
 func (k Keeper) validateSendToMarker(ctx sdk.Context, toAddr, admin sdk.AccAddress) error {
 	marker, _ := k.GetMarker(ctx, toAddr)
 	if marker == nil {
 		return nil
 	}
-	if marker.GetMarkerType() != types.MarkerType_RestrictedCoin {
+	if marker.GetMarkerType() != types.MarkerType_RestrictedCoin && !marker.RequiresDepositAccess() {
 		return nil
 	}
 	return marker.ValidateAddressHasAccess(admin, types.Access_Deposit)
