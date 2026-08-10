@@ -12,12 +12,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -496,6 +497,7 @@ func TestWithdrawCoins(t *testing.T) {
 
 	denomMain := "mackenzie"
 	denomCoin := "norman"
+	denomCoinDepProtected := "quinn"
 	denomToDeposit := "dana"
 	denomInactive := "indigo"
 	denomNoMarker := "noah"
@@ -604,6 +606,18 @@ func TestWithdrawCoins(t *testing.T) {
 	}
 	addrMarkerCoin := createMarker(denomCoin, markerCoin)
 
+	markerCoinDepProtected := &types.MarkerAccount{
+		AccessControl: []types.AccessGrant{
+			allAccessExcept(addrManager, types.Access_Transfer, types.Access_ForceTransfer),
+			accessOnly(addrWithDep, types.Access_Deposit),
+		},
+		MarkerType:             types.MarkerType_Coin,
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+		RequireDepositAccess:   true,
+	}
+	addrMarkerCoinDepProtected := createMarker(denomCoinDepProtected, markerCoinDepProtected)
+
 	markerToDeposit := &types.MarkerAccount{
 		AccessControl: []types.AccessGrant{
 			accessOnly(addrOnlyWithdraw, types.Access_Withdraw),
@@ -659,12 +673,31 @@ func TestWithdrawCoins(t *testing.T) {
 			expErr:    noAccessErr(addrNoWithdraw, types.Access_Withdraw, denomMain),
 		},
 		{
+			// Guards against over-tightening: a coin marker that has not opted into deposit
+			// protection must still accept withdrawals from a caller without deposit access.
 			name:                  "to a coin marker",
 			caller:                addrManager,
 			recipient:             addrMarkerCoin,
 			denom:                 denomMain,
 			coins:                 sdk.NewCoins(coin(3, denomMain)),
 			expEventTo:            addrMarkerCoin,
+			expRecipientGetsCoins: true,
+		},
+		{
+			name:      "to a coin marker requiring deposit: caller does not have deposit on it",
+			caller:    addrOnlyWithdraw,
+			recipient: addrMarkerCoinDepProtected,
+			denom:     denomMain,
+			coins:     sdk.NewCoins(coin(8, denomMain)),
+			expErr:    noAccessErr(addrOnlyWithdraw, types.Access_Deposit, denomCoinDepProtected),
+		},
+		{
+			name:                  "to a coin marker requiring deposit: caller has deposit on it",
+			caller:                addrWithDep,
+			recipient:             addrMarkerCoinDepProtected,
+			denom:                 denomMain,
+			coins:                 sdk.NewCoins(coin(9, denomMain)),
+			expEventTo:            addrMarkerCoinDepProtected,
 			expRecipientGetsCoins: true,
 		},
 		{
@@ -933,14 +966,52 @@ func TestImplictControl(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, user, user2, "testcoin",
 		sdk.NewCoins(sdk.NewInt64Coin("testcoin", 1000))))
 
-	// Succeeds now because user2 is holding all of the testcoin supply.
-	require.NoError(t, app.MarkerKeeper.AddAccess(ctx, user2, "testcoin",
-		types.NewAccessGrant(user2, []types.Access{types.Access_Mint, types.Access_Delete, types.Access_Transfer})))
+	// fails now even though user2 is holding all of the testcoin supply.
+	err := app.MarkerKeeper.AddAccess(ctx, user2, "testcoin",
+		types.NewAccessGrant(user2, []types.Access{types.Access_Mint, types.Access_Delete, types.Access_Transfer}))
+	require.EqualError(t, err, user2.String()+" is not authorized to make access list changes against finalized/active testcoin marker")
 
-	// succeeds for a user with transfer rights
-	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, user2, user, user2, sdk.NewInt64Coin("testcoin", 10)))
+	// fails for user2 that doesn't have transfer authority
+	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, user2, user, user2, sdk.NewInt64Coin("testcoin", 10)))
 	// fails if the admin user does not have transfer authority
 	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, user, user2, user, sdk.NewInt64Coin("testcoin", 10)))
+}
+
+func TestAuthzControl(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+
+	setAcc := func(addr sdk.AccAddress, sequence uint64) {
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		require.NoError(t, acc.SetSequence(sequence), "%s.SetSequence(%d)", string(addr), sequence)
+		app.AccountKeeper.SetAccount(ctx, acc)
+	}
+
+	user := testUserAddress("test")
+	user2 := testUserAddress("test2")
+	setAcc(user, 1)
+	setAcc(user2, 1)
+
+	// create account and check default values
+	mac := types.NewEmptyMarkerAccount("testcoin", user.String(), []types.AccessGrant{
+		*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Burn, types.Access_Withdraw, types.Access_Delete, types.Access_Transfer}),
+		*types.NewAccessGrant(user2, []types.Access{types.Access_Mint, types.Access_Delete, types.Access_Transfer}),
+	})
+
+	mac.MarkerType = types.MarkerType_RestrictedCoin
+	require.NoError(t, mac.SetManager(user))
+	require.NoError(t, mac.SetSupply(sdk.NewInt64Coin("testcoin", 1000)))
+
+	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
+
+	// Moves to finalized, mints required supply, moves to active status.
+	require.NoError(t, app.MarkerKeeper.FinalizeMarker(ctx, user, "testcoin"))
+	require.NoError(t, app.MarkerKeeper.ActivateMarker(ctx, user, "testcoin"))
+
+	// Move some of the supply into user and user2.
+	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, user, user, "testcoin", sdk.NewCoins(sdk.NewInt64Coin("testcoin", 100))))
+	require.NoError(t, app.MarkerKeeper.WithdrawCoins(ctx, user, user2, "testcoin", sdk.NewCoins(sdk.NewInt64Coin("testcoin", 200))))
 
 	// validate authz when 'from' is different from 'admin'
 	granter := user
@@ -1001,6 +1072,7 @@ func TestTransferCoin(t *testing.T) {
 
 	denomCoin := "normalcoin"
 	denomRestricted := "restrictedcoin"
+	denomDepProtected := "depprotectedcoin"
 	denomOnlyDeposit := "onlydepositcoin"
 	denomOnlyWithdraw := "onlywithdrawcoin"
 	denomForceTrans := "jedicoin"
@@ -1140,6 +1212,21 @@ func TestTransferCoin(t *testing.T) {
 	}
 	markerAddrCoin := createMarker(denomCoin, markerCoin)
 
+	// An unrestricted marker that opts into deposit protection via require_deposit_access.
+	// Only addrTransDepWithdraw can deposit into it.
+	markerDepProtected := &types.MarkerAccount{
+		AccessControl: []types.AccessGrant{
+			allAccessExcept(addrManager, types.Access_Transfer, types.Access_ForceTransfer),
+			accessOnly(addrTransDepWithdraw, types.Access_Deposit),
+		},
+		MarkerType:             types.MarkerType_Coin,
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+		AllowForcedTransfer:    false,
+		RequireDepositAccess:   true,
+	}
+	markerAddrDepProtected := createMarker(denomDepProtected, markerDepProtected)
+
 	markerRestricted := &types.MarkerAccount{
 		AccessControl: []types.AccessGrant{
 			accessOnly(addrTransOnly, types.Access_Transfer),
@@ -1251,11 +1338,28 @@ func TestTransferCoin(t *testing.T) {
 			amount: sdk.NewInt64Coin(denomRestricted, 9),
 		},
 		{
+			// Guards against over-tightening: an unrestricted marker that has not opted into
+			// deposit protection must still accept brokered transfers from an admin without deposit.
 			name:   "going to unrestricted",
 			from:   addrTransOnly,
 			to:     markerAddrCoin,
 			admin:  addrTransOnly,
 			amount: sdk.NewInt64Coin(denomRestricted, 17),
+		},
+		{
+			name:   "going to unrestricted with deposit required: admin does not have deposit",
+			from:   addrTransOnly,
+			to:     markerAddrDepProtected,
+			admin:  addrTransOnly,
+			amount: sdk.NewInt64Coin(denomRestricted, 13),
+			expErr: noAccessErr(addrTransOnly, types.Access_Deposit, denomDepProtected),
+		},
+		{
+			name:   "going to unrestricted with deposit required: admin has deposit",
+			from:   addrTransDepWithdraw,
+			to:     markerAddrDepProtected,
+			admin:  addrTransDepWithdraw,
+			amount: sdk.NewInt64Coin(denomRestricted, 21),
 		},
 		{
 			name:        "admin not from: no force transfer: no authz",

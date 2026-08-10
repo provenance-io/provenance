@@ -58,6 +58,7 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
+	"forsythia-rc2": {}, // Upgrade for v1.30.0-rc2
 	"forsythia": { // Upgrade for v1.30.0
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
