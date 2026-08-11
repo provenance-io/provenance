@@ -45,6 +45,7 @@ type MarkerAccountI interface {
 	GrantAccess(AccessGrantI) error
 	RevokeAccess(sdk.AccAddress) error
 	GetAccessList() []AccessGrant
+	SetAccessList([]AccessGrant)
 	ClearAccessList()
 
 	HasAccess(string, Access) bool
@@ -464,6 +465,11 @@ func (ma *MarkerAccount) RevokeAccess(addr sdk.AccAddress) error {
 // GetAccessList returns the full access list for the marker
 func (ma *MarkerAccount) GetAccessList() []AccessGrant {
 	return ma.AccessControl
+}
+
+// SetAccessList replaces the marker's in-memory AccessControl field.
+func (ma *MarkerAccount) SetAccessList(accessList []AccessGrant) {
+	ma.AccessControl = accessList
 }
 
 // ClearAccessList removes all access grants from the marker's in-memory AccessControl field.

@@ -736,7 +736,7 @@ func (k msgServer) SetAccountData(goCtx context.Context, msg *types.MsgSetAccoun
 	} else {
 		signerAddr, err := sdk.AccAddressFromBech32(msg.Signer)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("invalid signer %q: %w", msg.Signer, err)
 		}
 		if err = k.ValidateHasAccess(ctx, marker.GetAddress(), signerAddr, types.Access_Deposit); err != nil {
 			return nil, err
@@ -771,7 +771,7 @@ func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdat
 	} else {
 		callerAddr, err := sdk.AccAddressFromBech32(msg.Authority)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("invalid authority %q: %w", msg.Authority, err)
 		}
 		if err = k.ValidateHasAccess(ctx, marker.GetAddress(), callerAddr, types.Access_Transfer); err != nil {
 			return nil, err
