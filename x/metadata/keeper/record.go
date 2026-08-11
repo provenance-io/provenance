@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -21,13 +21,11 @@ func (k Keeper) GetRecord(ctx sdk.Context, id types.MetadataAddress) (record typ
 	if !id.IsRecordAddress() {
 		return record, false
 	}
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(id)
-	if b == nil {
+	val, err := k.recordCollections.Get(ctx, mdKey(id))
+	if err != nil {
 		return types.Record{}, false
 	}
-	k.cdc.MustUnmarshal(b, &record)
-	return record, true
+	return val, true
 }
 
 // GetRecords returns records for a scope optionally limited to a name.
@@ -58,17 +56,16 @@ func (k Keeper) GetRecords(ctx sdk.Context, scopeAddress types.MetadataAddress, 
 
 // SetRecord stores a record in the module kv store.
 func (k Keeper) SetRecord(ctx sdk.Context, record types.Record) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshal(&record)
-
 	recordID := record.SessionId.MustGetAsRecordAddress(record.Name)
 
 	var event proto.Message = types.NewEventRecordCreated(recordID, record.SessionId)
-	if store.Has(recordID) {
+	if has, _ := k.recordCollections.Has(ctx, mdKey(recordID)); has {
 		event = types.NewEventRecordUpdated(recordID, record.SessionId)
 	}
 
-	store.Set(recordID, b)
+	if err := k.recordCollections.Set(ctx, mdKey(recordID), record); err != nil {
+		panic(err)
+	}
 	k.EmitEvent(ctx, event)
 }
 
@@ -81,10 +78,10 @@ func (k Keeper) RemoveRecord(ctx sdk.Context, id types.MetadataAddress) {
 	if !found {
 		return
 	}
-	store := ctx.KVStore(k.storeKey)
-	store.Delete(id)
+	if err := k.recordCollections.Remove(ctx, mdKey(id)); err != nil {
+		panic(err)
+	}
 	k.EmitEvent(ctx, types.NewEventRecordDeleted(id))
-
 	// Remove the session too if there are no more records in it.
 	k.RemoveSession(ctx, record.SessionId)
 }
@@ -93,24 +90,14 @@ func (k Keeper) RemoveRecord(ctx sdk.Context, id types.MetadataAddress) {
 // If the scopeID is an empty MetadataAddress, all records will be processed.
 // Otherwise, just the records for the given scopeID will be processed.
 func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, handler func(types.Record) (stop bool)) error {
-	store := ctx.KVStore(k.storeKey)
-	prefix, err := scopeID.ScopeRecordIteratorPrefix()
-	if err != nil {
-		return err
+	walkFn := func(_ []byte, record types.Record) (stop bool, err error) {
+		return handler(record), nil
 	}
-	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
-
-	for ; it.Valid(); it.Next() {
-		var record types.Record
-		err = k.cdc.Unmarshal(it.Value(), &record)
-		if err != nil {
-			k.Logger(ctx).Error("could not unmarshal record", "address", it.Key(), "error", err)
-		} else if handler(record) {
-			break
-		}
+	if len(scopeID) > 1 {
+		rng := new(collections.Range[[]byte]).Prefix(scopeID[1:]) // 16-byte scope UUID
+		return k.recordCollections.Walk(ctx, rng, walkFn)
 	}
-	return nil
+	return k.recordCollections.Walk(ctx, nil, walkFn) // literal nil → whole collection
 }
 
 // ValidateWriteRecord checks the current record and the proposed record to determine if the proposed changes are valid
