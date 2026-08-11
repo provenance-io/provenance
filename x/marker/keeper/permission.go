@@ -87,43 +87,38 @@ func (k Keeper) AddressesWithAccess(ctx sdk.Context, markerAddr sdk.AccAddress, 
 	return addrs, err
 }
 
-// GetMarkerWithPerms returns the marker with its AccessControl populated.
+// GetMarkerWithPerms looks up a marker by address and populates its AccessControl from the
+// permission store.
 func (k Keeper) GetMarkerWithPerms(ctx sdk.Context, addr sdk.AccAddress) (types.MarkerAccountI, error) {
 	m, err := k.GetMarker(ctx, addr)
 	if err != nil || m == nil {
 		return m, err
 	}
-	if ma, ok := m.(*types.MarkerAccount); ok {
-		if err := k.PopulateMarkerPerms(ctx, ma); err != nil {
-			return nil, err
-		}
+	if err := k.PopulateMarkerPerms(ctx, m); err != nil {
+		return nil, err
 	}
 	return m, nil
 }
 
 // GetMarkerByDenomWithPerms is the denom variant of GetMarkerWithPerms.
 func (k Keeper) GetMarkerByDenomWithPerms(ctx sdk.Context, denom string) (types.MarkerAccountI, error) {
-	addr, err := types.MarkerAddress(denom)
-	if err != nil {
-		return nil, err
+	m, err := k.GetMarkerByDenom(ctx, denom)
+	if err != nil || m == nil {
+		return m, err
 	}
-	m, err := k.GetMarkerWithPerms(ctx, addr)
-	if err != nil {
+	if err := k.PopulateMarkerPerms(ctx, m); err != nil {
 		return nil, err
-	}
-	if m == nil {
-		return nil, fmt.Errorf("marker %s not found for address: %s", denom, addr)
 	}
 	return m, nil
 }
 
 // PopulateMarkerPerms looks up and sets the marker's AccessControl from the perms store.
-func (k Keeper) PopulateMarkerPerms(ctx sdk.Context, ma *types.MarkerAccount) error {
+func (k Keeper) PopulateMarkerPerms(ctx sdk.Context, ma types.MarkerAccountI) error {
 	grants, err := k.GetMarkerAccessList(ctx, ma.GetAddress())
 	if err != nil {
 		return err
 	}
-	ma.AccessControl = grants
+	ma.SetAccessList(grants)
 	return nil
 }
 
