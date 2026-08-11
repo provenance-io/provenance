@@ -164,6 +164,13 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		if err := k.SetMarker(ctx, m); err != nil {
 			return err
 		}
+		// SetMarker only rewrites the perms store when the marker's remaining access list is
+		// non-empty — it can't distinguish "nothing was touched" from "everything was
+		// intentionally revoked" just from an empty list. Explicitly clear this address's
+		// entry so revoking someone's last grant doesn't leave them with stale access.
+		if err := k.RevokeAccessEntry(ctx, m.GetAddress(), remove); err != nil {
+			return err
+		}
 	// Undefined, Cancelled, Destroyed -- no modifications are supported in these states
 	default:
 		return fmt.Errorf("marker in %s state can not be modified", m.GetStatus())
@@ -549,6 +556,7 @@ func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 				" ensure marker account holds the entire supply of %s", inCirculation, totalSupply, denom)
 		}
 	case types.StatusProposed:
+		// for a proposed marker either the manager or someone assigned `delete` can perform this action.
 		if !k.HasAccess(ctx, m.GetAddress(), caller, types.Access_Delete) && !m.GetManager().Equals(caller) {
 			return fmt.Errorf("%s does not have %s access on %s marker and is not the manager",
 				caller, types.Access_Delete, m.GetDenom())
