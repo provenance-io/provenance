@@ -206,7 +206,13 @@ func TestNewMarkerValidate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.acc.(MarkerAccountI).ValidateWithAccessControl()
+			macc := tt.acc.(MarkerAccountI)
+			var err error
+			if tt.useAccessControlCheck {
+				err = macc.ValidateWithAccessControl()
+			} else {
+				err = macc.Validate()
+			}
 			if err == nil {
 				require.Equal(t, tt.expErr, err)
 			} else {
