@@ -1015,8 +1015,8 @@ github.com/provenance-io/cosmos-sdk v0.53.8-pio-1 h1:5dKqG4Utb6s79uafWi62185PA2F
 github.com/provenance-io/cosmos-sdk v0.53.8-pio-1/go.mod h1:b/De6uhCfooGEy4kE5G4C0A+MxK9aPr0nZNMyR+PmY0=
 github.com/provenance-io/wasmd v0.61.10-pio-2 h1:uc0gDj31d2S4010dIy+rtI6RawUzsZ60i0BXcUT2gEk=
 github.com/provenance-io/wasmd v0.61.10-pio-2/go.mod h1:GMPqtsb1T8FvaKpQGJmGuj/JMPXBauk4ZhUErgmtEus=
-github.com/provlabs/vault v1.2.3 h1:FUOrtt6E0IxZJperVqvXaRAw+Z0eLmV9S+y2GTevcoE=
-github.com/provlabs/vault v1.2.3/go.mod h1:CKzGWxgN2QXqY0hkyf6oir4I6rU7R/oDcLXMkUigemM=
+github.com/provlabs/vault v1.2.4 h1:EdcSfMy6uql2mMDv0VpCy5xfpHsUAATB1OH8Gq5wLo0=
+github.com/provlabs/vault v1.2.4/go.mod h1:7qBWmdh3VnUwUy7ZVl/ARYl2yZA41oLt+zktyEkslew=
 github.com/provlabs/vault/simapp v0.0.0-20250618191328-f45c4bfe12b9 h1:cu+rMHYCZIE9+StrjgwKn+cKta7wmDi9qBgVAb09e1g=
 github.com/provlabs/vault/simapp v0.0.0-20250618191328-f45c4bfe12b9/go.mod h1:Ha7fmwkYtr49a2VtWplC/lP/LKqJf3uLBH1CLIP5DFg=
 github.com/quasilyte/go-ruleguard v0.4.5 h1:AGY0tiOT5hJX9BTdx/xBdoCubQUAE2grkqY2lSwvZcA=

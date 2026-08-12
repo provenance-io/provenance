@@ -81,6 +81,16 @@ message VaultAccount {
   // paused_reason is a human-readable string explaining why the vault was paused, particularly for automatic pauses.
   string paused_reason = 17;
 
+  // paused_by is the address that initiated the current pause, empty for an automatic
+  // pause and cleared on unpause. MsgRepriceVault consults it so the NAV authority
+  // can only resume a pause it took itself.
+  string paused_by = 30 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // paused_forced reports whether the current pause waived the strict reconcile and
+  // valuation gate, true for a forced MsgPauseVault and every automatic pause. A forced
+  // pause records a tolerated failure, so MsgRepriceVault refuses to resume one.
+  bool paused_forced = 31;
+
   // bridge_address is the single external address allowed to mint or burn shares on behalf
   // of this vault (e.g., for bridging to another chain). All mint/burn must flow through the
   // vault keeper, which enforces that marker supply never exceeds total_shares.
@@ -209,4 +219,32 @@ message PendingSwapOut {
   // left this request queued. Each failure re-keys the request to a later retry
   // time so it cannot hold the front of the queue. Reset when expedited.
   uint32 failure_count = 5;
+}
+
+// Payment is the vault module's view of a Provenance exchange-module payment. It
+// mirrors the exchange Payment, exposing only the fields relevant to the vault's
+// asset settlement workflow.
+//
+// It serves two roles. As a query result it reports a pending payment targeting the
+// vault. In MsgAcceptAssetRequest it carries the terms the asset manager reviewed, and
+// settlement proceeds only if they still match the stored payment exactly.
+message Payment {
+  // source is the account that created the payment and owns the escrowed source_amount.
+  string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // source_amount is the funds the source pays the target. A hold is placed on this
+  // amount in the source account until the payment is accepted, rejected, or cancelled.
+  repeated cosmos.base.v1beta1.Coin source_amount = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  // target is the account that can accept the payment; for the vault's settlement
+  // workflow it is the vault.
+  string target = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // target_amount is the funds the target pays the source in exchange for source_amount.
+  repeated cosmos.base.v1beta1.Coin target_amount = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  // external_id, together with source, uniquely identifies the payment.
+  string external_id = 5;
 }
