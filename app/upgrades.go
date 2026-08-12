@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	vaulttypes "github.com/provlabs/vault/types"
+
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
@@ -12,6 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint/migrations"
+
+	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -75,6 +79,8 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
+			setFees(ctx, app)
+
 			return vm, nil
 		},
 	},
@@ -94,6 +100,8 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
+
+			setFees(ctx, app)
 
 			return vm, nil
 		},
@@ -322,3 +330,40 @@ var (
 	_ = convertFinishedVestingAccountsToBase
 	_ = unlockVestingAccounts
 )
+
+func setFees(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Setting fees")
+
+	newMsgFee := func(msgType sdk.Msg, musdAmt int64) flatfeestypes.MsgFee {
+		return flatfeestypes.MsgFee{
+			MsgTypeUrl: sdk.MsgTypeURL(msgType),
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", musdAmt)),
+		}
+	}
+
+	fees := []flatfeestypes.MsgFee{
+		newMsgFee(&vaulttypes.MsgCreateVaultRequest{}, 3000),
+		newMsgFee(&vaulttypes.MsgExpeditePendingSwapOutRequest{}, 2000),
+		newMsgFee(&vaulttypes.MsgSwapOutRequest{}, 500),
+		newMsgFee(&vaulttypes.MsgRepriceVaultRequest{}, 500),
+		newMsgFee(&vaulttypes.MsgSwapInRequest{}, 100),
+		newMsgFee(&vaulttypes.MsgAcceptAssetRequest{}, 100),
+		newMsgFee(&vaulttypes.MsgRejectAssetRequest{}, 50),
+		newMsgFee(&vaulttypes.MsgUpdateVaultNAVRequest{}, 50),
+		newMsgFee(&vaulttypes.MsgRemoveVaultNAVRequest{}, 50),
+		newMsgFee(&vaulttypes.MsgDepositPrincipalFundsRequest{}, 50),
+		newMsgFee(&vaulttypes.MsgWithdrawPrincipalFundsRequest{}, 50),
+		newMsgFee(&vaulttypes.MsgDepositInterestFundsRequest{}, 50),
+		newMsgFee(&vaulttypes.MsgWithdrawInterestFundsRequest{}, 50),
+		newMsgFee(&vaulttypes.MsgUpdateParamsRequest{}, 0),
+	}
+
+	for _, fee := range fees {
+		err := app.FlatFeesKeeper.SetMsgFee(ctx, fee)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("Failed to set fee for MsgFee %s", fee.MsgTypeUrl))
+		}
+	}
+
+	ctx.Logger().Info("Done setting fees")
+}

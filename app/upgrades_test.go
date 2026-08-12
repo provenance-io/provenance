@@ -1049,6 +1049,7 @@ func (s *UpgradeTestSuite) TestForsythiaRC2() {
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
+		"INF Setting fees module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("forsythia-rc2", expInLog, nil)
 }
@@ -1059,6 +1060,7 @@ func (s *UpgradeTestSuite) TestForsythia() {
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
+		"INF Setting fees module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("forsythia", expInLog, nil)
 }
