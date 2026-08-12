@@ -7,6 +7,7 @@ import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "provlabs/vault/v1/params.proto";
+import "provlabs/vault/v1/vault.proto";
 
 option go_package = "github.com/provlabs/vault/types";
 
@@ -15,8 +16,9 @@ service Msg {
   option (cosmos.msg.v1.service) = true;
 
   // CreateVault creates a new vault.
-  // Must be signed by the governance module account, so vaults can only be created
-  // through a passed governance proposal.
+  // When the gov_only_vault_creation param is enabled, this must be signed by the
+  // governance module account, so vaults can only be created through a passed
+  // governance proposal. Otherwise any account may create a vault directly.
   rpc CreateVault(MsgCreateVaultRequest) returns (MsgCreateVaultResponse);
 
   // SetShareDenomMetadata allows Denom Metadata (see bank module) to be set for the vault's share denom.
@@ -79,14 +81,20 @@ service Msg {
   rpc ExpeditePendingSwapOut(MsgExpeditePendingSwapOutRequest) returns (MsgExpeditePendingSwapOutResponse);
 
   // PauseVault pauses user-facing swap operations for a vault and records a reason.
-  // May be signed by the vault admin or the configured asset manager.
+  // May be signed by the vault admin, the configured asset manager, or the NAV authority.
   rpc PauseVault(MsgPauseVaultRequest) returns (MsgPauseVaultResponse);
 
   // UnpauseVault re-enables user-facing swap operations for a vault.
-  // May be signed by the vault admin or the configured asset manager.
+  // May be signed by the vault admin or the configured asset manager. The NAV authority
+  // cannot unpause a vault outright; it resumes its own repricing pause through
+  // RepriceVault.
   rpc UnpauseVault(MsgUnpauseVaultRequest) returns (MsgUnpauseVaultResponse);
 
   // SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
+  //
+  // Rotation does not move or burn any share balance the outgoing bridge holds. Drain the outgoing bridge
+  // before rotating; otherwise mint capacity stays reduced by that balance until it is transferred to the
+  // new bridge and burned.
   rpc SetBridgeAddress(MsgSetBridgeAddressRequest) returns (MsgSetBridgeAddressResponse);
 
   // ToggleBridge enables or disables the bridge functionality for a vault.
@@ -112,6 +120,11 @@ service Msg {
   // Must be signed by the vault's NAV authority.
   rpc UpdateVaultNAV(MsgUpdateVaultNAVRequest) returns (MsgUpdateVaultNAVResponse);
 
+  // RepriceVault applies a batch of internal NAV updates to a vault, optionally unpausing it
+  // in the same step. Must be signed by the vault's NAV authority, and only resumes a strict
+  // pause that same authority took.
+  rpc RepriceVault(MsgRepriceVaultRequest) returns (MsgRepriceVaultResponse);
+
   // RemoveVaultNAV deletes a vault's internal net asset value entry for a denom the vault
   // does not hold, revoking the authorization to acquire it at that price.
   // Must be signed by the vault's NAV authority.
@@ -133,13 +146,15 @@ service Msg {
 }
 
 // MsgCreateVaultRequest is the request message for the CreateVault endpoint.
-// Vault creation is governance-gated: the message must be signed by the governance
-// module account, so it can only be executed as part of a passed proposal.
+// Who may sign depends on the module's gov_only_vault_creation param: when it is
+// enabled only the governance module account may sign, so a vault can only come
+// into existence through a passed proposal; when it is disabled any account may
+// sign and create a vault directly.
 message MsgCreateVaultRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
   // admin is the initial administrator of the vault. It is designated by the
-  // governance proposal and is not required to be the signer.
+  // signer and is not required to be the signer itself.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // share_denom is the name of the assets created by the vault used for distribution.
   string share_denom = 2;
@@ -168,7 +183,9 @@ message MsgCreateVaultRequest {
   // - Values must be positive (> 0).
   // - An empty string "" indicates no maximum limit.
   string max_swap_out_value = 9 [(cosmos_proto.scalar) = "cosmos.IntString"];
-  // authority is the address of the governance module account.
+  // authority is the address signing the message. It must be the governance module
+  // account while the gov_only_vault_creation param is enabled; otherwise it may be
+  // any account.
   string authority = 10 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
@@ -479,7 +496,9 @@ message MsgExpeditePendingSwapOutResponse {}
 message MsgPauseVaultRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
-  // authority is the address of the vault administrator or asset manager initiating the pause.
+  // authority is the address initiating the pause: the vault administrator, the asset
+  // manager, or the NAV authority. The NAV authority gets no matching unpause; it can
+  // only resume its own pause via RepriceVault.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // vault_address is the bech32 address of the vault to pause.
   string vault_address = 2;
@@ -513,6 +532,9 @@ message MsgUnpauseVaultRequest {
 message MsgUnpauseVaultResponse {}
 
 // MsgSetBridgeAddressRequest is the request message for configuring the bridge address for a vault.
+//
+// Rotation leaves any share balance on the outgoing bridge in place, reducing mint capacity by that amount
+// until it is transferred to the new bridge and burned. Drain the outgoing bridge before rotating.
 message MsgSetBridgeAddressRequest {
   option (cosmos.msg.v1.signer) = "admin";
 
@@ -645,6 +667,59 @@ message MsgUpdateVaultNAVRequest {
 // MsgUpdateVaultNAVResponse is the response message for the UpdateVaultNAV endpoint.
 message MsgUpdateVaultNAVResponse {}
 
+// NAVUpdate is one denom's price restatement within a RepriceVault batch. It carries
+// only the operator-supplied fields of a VaultNAV; the module stamps the update height
+// and time itself.
+message NAVUpdate {
+  // denom is the asset denomination being priced. It must not be the vault's share denom.
+  string denom = 1;
+  // price is the total value of `volume` units of the denom, denominated in
+  // the vault's underlying asset.
+  cosmos.base.v1beta1.Coin price = 2 [(gogoproto.nullable) = false];
+  // volume is the number of units of the denom that price covers. It must be positive.
+  string volume = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // source identifies the origin of this NAV update (for example an oracle name).
+  // It is optional.
+  string source = 4;
+}
+
+// MsgRepriceVaultRequest applies a batch of internal NAV updates and, when resume is set,
+// unpauses the vault in the same state transition. It is the batched form of
+// MsgUpdateVaultNAV, carrying the identical per-entry rules, plus an optional resume.
+//
+// The updates are a batch because a vault holding many priced positions, such as a book of
+// loans, restates them on one cadence. A book too large for one transaction is repriced by
+// sending several of these with resume unset and a final one with resume set, so the vault
+// stays frozen for the whole restatement and reopens once, on the last message.
+//
+// With resume set, the whole batch and the unpause commit together, so there is never a
+// block in which the vault is live, a new price is public, and the share price step has not
+// yet landed. It resumes only a strict pause the current NAV authority took itself;
+// operator, forced, and automatic pauses still require a management unpause.
+message MsgRepriceVaultRequest {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // signer is the address of the vault's NAV authority authorizing these updates.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault being repriced.
+  string vault_address = 2;
+  // navs are the price restatements to apply. At least one is required, each denom may
+  // appear only once, and the batch is capped at MaxRepriceBatchSize.
+  repeated NAVUpdate navs = 3 [(gogoproto.nullable) = false];
+  // resume, when true, unpauses the vault after applying the batch. Leave it false to
+  // apply a batch and keep the vault frozen, which is how a restatement too large for one
+  // transaction is continued across several. Setting it requires the vault to be under a
+  // strict pause this same NAV authority took.
+  bool resume = 4;
+}
+
+// MsgRepriceVaultResponse is the response message for the RepriceVault endpoint.
+message MsgRepriceVaultResponse {}
+
 // MsgRemoveVaultNAVRequest is the request message for deleting a vault's internal NAV
 // entry for a denom. Only entries for denoms the vault does not hold may be removed; a
 // held asset is written down through UpdateVaultNAV instead, so that its value stays
@@ -679,20 +754,28 @@ message MsgUpdateNAVAuthorityRequest {
 message MsgUpdateNAVAuthorityResponse {}
 
 // MsgAcceptAssetRequest is the request message for settling a pending exchange-module
-// payment whose target is the vault. The payment is identified by its source account and
-// external_id. The vault settles only payments where one leg is the vault's underlying
-// asset; the settlement direction (inbound or outbound) is derived from which leg that is.
+// payment whose target is the vault. The vault settles only payments where one leg is the
+// vault's underlying asset; the settlement direction (inbound or outbound) is derived from
+// which leg that is.
+//
+// The message carries the complete payment, so the asset manager's signature commits to the
+// economic terms of the deal. Settlement requires the payment held by the exchange module to
+// match those terms exactly.
 message MsgAcceptAssetRequest {
   option (cosmos.msg.v1.signer) = "authority";
+
+  reserved 3, 4;
+  reserved "source", "external_id";
 
   // authority is the address of the vault's asset manager authorizing the settlement.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // vault_address is the bech32 address of the vault, which must be the payment's target.
   string vault_address = 2;
-  // source is the bech32 address of the account that created the pending payment.
-  string source = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // external_id, together with source, uniquely identifies the pending payment to settle.
-  string external_id = 4;
+  // payment is the full set of terms the asset manager reviewed and is approving. It
+  // identifies the pending payment by its source and external_id, and binds the approval
+  // to that payment's exact legs. Settlement fails if any field does not match the
+  // payment held by the exchange module.
+  Payment payment = 5 [(gogoproto.nullable) = false];
 }
 
 // MsgAcceptAssetResponse is the response message for the AcceptAsset endpoint.

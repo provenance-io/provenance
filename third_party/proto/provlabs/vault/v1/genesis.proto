@@ -44,7 +44,6 @@ message VaultNAVEntry {
 }
 
 // GenesisState defines the vault module's genesis state.
-// NOTE: payout verification queue is not imported or exported.  It will always be empty after endblocker processes it.
 message GenesisState {
   // vaults defines the vaults that exist at genesis.
   repeated VaultAccount vaults = 1 [(gogoproto.nullable) = false];
@@ -67,4 +66,7 @@ message GenesisState {
 
   // navs contains the internal NAV table entries for all vaults at genesis.
   repeated VaultNAVEntry navs = 6 [(gogoproto.nullable) = false];
+
+  // payout_verification_set contains bech32 addresses of vaults awaiting their next interest affordability check.
+  repeated string payout_verification_set = 7;
 }
