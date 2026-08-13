@@ -1,3 +1,30 @@
+## [v1.30.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.30.0-rc2) 2026-08-13
+
+Provenance Blockchain version `v1.30.0` contains some exciting new features, improvements and bug fixes.
+
+### Improvements
+
+* Detect vault principal accounts, which are marker accounts, and exclude them from force transfers [PR 2804](https://github.com/provenance-io/provenance/pull/2804).
+* Remove the marker all-supply permissions bypass [PR 2807](https://github.com/provenance-io/provenance/pull/2807).
+* Set the flatfees for some vault messages [PR 2815](https://github.com/provenance-io/provenance/pull/2815).
+
+### Bug Fixes
+
+* Honor `require_deposit_access` when withdrawing to or depositing into an unrestricted marker account [PR 2809](https://github.com/provenance-io/provenance/pull/2809).
+
+### Dependencies
+
+* `docker/login-action` bumped to 4.6.0 (from 4.5.2) [PR 2802](https://github.com/provenance-io/provenance/pull/2802).
+* `github.com/provlabs/vault` bumped to v1.2.4 (from v1.2.3) [PR 2811](https://github.com/provenance-io/provenance/pull/2811).
+* `github/codeql-action` bumped to 4.37.6 (from 4.37.3) [PR 2806](https://github.com/provenance-io/provenance/pull/2806).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.30.0-rc1...v1.30.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.29.0...v1.30.0-rc2
+
+---
+
 ## [v1.30.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.30.0-rc1) 2026-07-31
 
 Provenance Blockchain version `v1.30.0` contains some exciting new features, improvements and bug fixes.
