@@ -1043,6 +1043,16 @@ func (s *UpgradeTestSuite) TestForsythiaRC1() {
 	s.AssertUpgradeHandlerLogs("forsythia-rc1", expInLog, nil)
 }
 
+func (s *UpgradeTestSuite) TestForsythiaRC2() {
+	expInLog := []string{
+		LogMsgRunModuleMigrations,
+		LogMsgPruneIBCExpiredConsensusStates,
+		LogMsgRemoveInactiveValidatorDelegations,
+		LogMsgConvertFinishedVestingAccountsToBase,
+	}
+	s.AssertUpgradeHandlerLogs("forsythia-rc2", expInLog, nil)
+}
+
 func (s *UpgradeTestSuite) TestForsythia() {
 	expInLog := []string{
 		LogMsgRunModuleMigrations,
