@@ -340,6 +340,7 @@ func init() {
 	setWhitelistedQuery("/provlabs.vault.v1.Query/EstimateSwapOut", &vaulttypes.QueryEstimateSwapOutResponse{})
 	setWhitelistedQuery("/provlabs.vault.v1.Query/PendingSwapOuts", &vaulttypes.QueryPendingSwapOutsResponse{})
 	setWhitelistedQuery("/provlabs.vault.v1.Query/VaultPendingSwapOuts", &vaulttypes.QueryVaultPendingSwapOutsResponse{})
+	setWhitelistedQuery("/provlabs.vault.v1.Query/Params", &vaulttypes.QueryParamsResponse{})
 	setWhitelistedQuery("/provlabs.vault.v1.Query/VaultNavs", &vaulttypes.QueryVaultNavsResponse{})
 	setWhitelistedQuery("/provlabs.vault.v1.Query/NavValue", &vaulttypes.QueryNavValueResponse{})
 	setWhitelistedQuery("/provlabs.vault.v1.Query/VaultPayment", &vaulttypes.QueryVaultPaymentResponse{})

@@ -15,4 +15,9 @@ message Params {
   string tech_fee_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // default_aum_fee_bips is the default fee rate (in basis points) applied to new vaults upon creation.
   uint32 default_aum_fee_bips = 2;
+  // gov_only_vault_creation restricts CreateVault to the governance module account.
+  // When true, a vault can only come into existence through a passed governance proposal.
+  // When false (the default), any account may sign CreateVault directly, which is how
+  // development, docker, and testnet chains are expected to run.
+  bool gov_only_vault_creation = 3;
 }
