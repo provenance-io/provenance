@@ -286,7 +286,7 @@ func TestAppImportExport(t *testing.T) {
 			feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
 			slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
 			wasmtypes.StoreKey:     {wasmtypes.TXCounterPrefix, wasmtypes.ContractCodeHistoryElementPrefix},
-			vaulttypes.StoreKey:    {vaulttypes.VaultPayoutVerificationSetPrefix},
+			vaulttypes.StoreKey:    {vaulttypes.VaultPayoutVerificationSetPrefix, vaulttypes.VaultPayoutVerificationCursorPrefix},
 			attrtypes.StoreKey:     {attrtypes.AttributeAddrLookupKeyPrefix, attrtypes.AttributeExpirationKeyPrefix}, //0x03 -derived the secondary index rebuilt on import
 		}
 		AssertEqualStores(tb, app, newApp, app.SimulationManager().StoreDecoders, skipPrefixes)

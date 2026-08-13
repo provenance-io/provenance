@@ -177,7 +177,7 @@ message QueryEstimateSwapInResponse {
 message QueryEstimateSwapOutRequest {
   // vault_address is the bech32 address of the vault to query.
   string vault_address = 1;
-  // shares is the amount of shares to swap out.
+  // shares is the amount of shares to swap out, as a non-negative integer of at most 80 characters.
   string shares = 2;
   // redeem_denom previously selected the payout denom to estimate. The estimate
   // is always in the vault's underlying_asset; if set, this must equal
@@ -235,29 +235,6 @@ message QueryNavValueRequest {
 message QueryNavValueResponse {
   // nav is the internal NAV entry for the requested vault and denom.
   VaultNAV nav = 1 [(gogoproto.nullable) = false];
-}
-
-// Payment is the vault module's view of a Provenance exchange-module payment. It
-// mirrors the exchange Payment, exposing only the fields relevant to the vault's
-// asset settlement workflow.
-message Payment {
-  // source is the account that created the payment and owns the escrowed source_amount.
-  string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // source_amount is the funds the source pays the target. A hold is placed on this
-  // amount in the source account until the payment is accepted, rejected, or cancelled.
-  repeated cosmos.base.v1beta1.Coin source_amount = 2 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-  // target is the account that can accept the payment; for these queries it is the vault.
-  string target = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // target_amount is the funds the target pays the source in exchange for source_amount.
-  repeated cosmos.base.v1beta1.Coin target_amount = 4 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-  // external_id, together with source, uniquely identifies the payment.
-  string external_id = 5;
 }
 
 // QueryVaultPaymentRequest is the request message for the Query/VaultPayment endpoint.
