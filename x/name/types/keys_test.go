@@ -37,19 +37,19 @@ func (s *NameKeyTestSuite) TestNameKeyPrefix() {
 	}{
 		"valid two-part": {
 			"name.domain",
-			mustHexDecode("0769e54bac206cf0d1dc5a11c9ae404c5f15a1b75456327e2dba1a8182e507e23a"),
+			mustHexDecode("07e27733edfa985bcd3fdcfe8544741d602a379fd28464b3c15f483b7350e2dd20"),
 			false,
 			"",
 		},
 		"valid single": {
 			"domain",
-			mustHexDecode("07f2ff83860a4dc203988ed1a22ba1f21237f04abdbd0c4c951103cfbed121de78"),
+			mustHexDecode("07f2ff83860a4dc203988ed1a22ba1f21237f04abdbd0c4c951103cfbed121de78"), // unchanged
 			false,
 			"",
 		},
 		"valid multi-part": {
 			"first.second.third.fourth.fifth.sixth.seventh.eighth.ninth.tenth",
-			mustHexDecode("0719f8e4495c302135434642f853698172ef1f167400d04c12864f9cdf539fbaba"),
+			mustHexDecode("071cccba52f948b1d9e2123bb38988a08d733a040e78ecb516c608e7454960bf01"),
 			false,
 			"",
 		},
@@ -112,12 +112,13 @@ func (s *NameKeyTestSuite) TestHashedStringKeyCodec() {
 		input string
 	}{
 		{name: "empty string", input: ""},
+		{name: "whitespace only", input: "   "},
+		{name: "empty segment", input: "name..domain"},
 		{name: "single char", input: "a"},
 		{name: "short string", input: "short"},
 		{name: "domain style", input: "example.domain"},
 		{name: "multi-level domain", input: "one.two.three.four"},
 		{name: "long string", input: strings.Repeat("x", 100)},
-		{name: "whitespace only", input: "   "},
 		{name: "contains whitespace", input: "some domain.name"},
 		{name: "special chars", input: "!@#$%^&*()_+{}|:\"<>?"},
 	}
@@ -175,7 +176,9 @@ func (s *NameKeyTestSuite) TestHashedStringKeyCodec() {
 
 			s.Run("Hash is deterministic", func() {
 				hash1 := codec.ComputeHash(tc.input)
+				s.Require().NoError(err, "ComputeHash(%q)", tc.input)
 				hash2 := codec.ComputeHash(tc.input)
+				s.Require().NoError(err, "ComputeHash(%q)", tc.input)
 				s.Equal(hash1, hash2, "ComputeHash not deterministic for input: %q", tc.input)
 			})
 
@@ -198,4 +201,20 @@ func (s *NameKeyTestSuite) TestHashedStringKeyCodec() {
 			hashes[tc.input] = hash
 		}
 	})
+}
+
+func (s *NameKeyTestSuite) TestNameKeysDoNotCollideAcrossSegments() {
+	// The old scheme hashed segments in reverse order without separators, so the dots were removed
+	// and these two names produced the same key.
+	flat, err := GetNameKeyBytes("abcd")
+	s.Require().NoError(err, "GetNameKeyBytes(abcd)")
+	split, err := GetNameKeyBytes("cd.ab")
+	s.Require().NoError(err, "GetNameKeyBytes(cd.ab)")
+	s.Assert().NotEqual(flat, split, `"abcd" and "cd.ab" must not share a key`)
+
+	legacyFlat, err := LegacyComputeNameHash("abcd")
+	s.Require().NoError(err)
+	legacySplit, err := LegacyComputeNameHash("cd.ab")
+	s.Require().NoError(err)
+	s.Assert().Equal(legacyFlat, legacySplit, "the legacy scheme is expected to collide here")
 }

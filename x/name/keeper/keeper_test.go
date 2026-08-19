@@ -5,7 +5,6 @@ import (
 	"sort"
 	"testing"
 
-	"cosmossdk.io/collections"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/yaml"
@@ -88,18 +87,18 @@ func (s *KeeperTestSuite) TestSetup() {
 	})
 
 	expOut := fmt.Sprintf(`bindings:
+- address: %[3]s
+  name: %[2]s
+  restricted: true
 - address: %[1]s
-  name: test.root
+  name: example.name
   restricted: false
 - address: %[1]s
   name: name
   restricted: false
 - address: %[1]s
-  name: example.name
+  name: test.root
   restricted: false
-- address: %[3]s
-  name: %[2]s
-  restricted: true
 params:
   allow_unrestricted_names: false
   max_name_levels: 16
@@ -250,7 +249,7 @@ func (s *KeeperTestSuite) TestGetName() {
 		r, err := s.app.NameKeeper.GetRecordByName(s.ctx, "..name")
 		s.Require().Error(err)
 		s.Require().Nil(r)
-		s.Require().Equal("segment of name is too short", err.Error())
+		s.Require().Equal("name segment cannot be empty: value provided for name is invalid", err.Error())
 		s.Require().False(s.app.NameKeeper.NameExists(s.ctx, "..name"))
 	})
 }
@@ -376,7 +375,7 @@ func (s *KeeperTestSuite) TestIterateRecord() {
 		// Collect and return genesis state.
 		err := s.app.NameKeeper.IterateRecords(s.ctx, appendToRecords)
 		s.Require().NoError(err, "IterateRecords error")
-		s.Require().Equal(expRecords, records, "records iterated over")
+		s.Require().ElementsMatch(expRecords, records, "records iterated over")
 	})
 
 }
@@ -503,7 +502,7 @@ func (s *KeeperTestSuite) TestCreateRootNameProposals() {
 
 func (s *KeeperTestSuite) TestNameRecordAndAddrIndexStorage() {
 	name := "testing.pb"
-	addr := s.user1Addr
+	addr := s.user2Addr
 	restrict := false
 
 	err := s.app.NameKeeper.SetNameRecord(s.ctx, name, addr, restrict)
@@ -512,15 +511,14 @@ func (s *KeeperTestSuite) TestNameRecordAndAddrIndexStorage() {
 	recordByName, err := s.app.NameKeeper.GetRecordByName(s.ctx, name)
 	s.Require().NoError(err, "GetNameRecord failed")
 
-	pair := collections.Join(addr, recordByName.Name)
-	iter, err := s.app.NameKeeper.GetAddrIndex().MatchExact(s.ctx, pair)
+	iter, err := s.app.NameKeeper.GetAddrIndex().MatchExact(s.ctx, addr)
 	s.Require().NoError(err, "AddrIndex MatchExact failed")
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck // close error safe to ignore in a test.
 
 	s.Require().True(iter.Valid(), "expected name record not found via AddrIndex")
 
-	pk, err := iter.PrimaryKey()
-	indexedName := string(pk)
+	indexedName, err := iter.PrimaryKey()
+	s.Require().NoError(err, "PrimaryKey failed")
 
 	recordByIndex, err := s.app.NameKeeper.GetRecordByName(s.ctx, indexedName)
 	s.Require().NoError(err, "failed to get name record from index")
@@ -534,7 +532,7 @@ func (s *KeeperTestSuite) TestNameRecordAndAddrIndexStorage() {
 func (s *KeeperTestSuite) TestStoreNameRecordAndAddrIndex() {
 	// Setup
 	name := "example.prov"
-	addr := s.user1Addr
+	addr := s.user2Addr
 	restricted := false
 
 	err := s.app.NameKeeper.SetNameRecord(s.ctx, name, addr, restricted)

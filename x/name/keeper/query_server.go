@@ -25,11 +25,7 @@ func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.Q
 // Resolve returns the address a name resolves to or an error.
 func (k Keeper) Resolve(c context.Context, request *types.QueryResolveRequest) (*types.QueryResolveResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	name, err := k.Normalize(ctx, request.Name)
-	if err != nil {
-		return nil, err
-	}
-	record, err := k.nameRecords.Get(ctx, name)
+	record, err := k.GetRecordByName(ctx, request.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -38,81 +34,33 @@ func (k Keeper) Resolve(c context.Context, request *types.QueryResolveRequest) (
 
 // ReverseLookup returns a paginated list of names owned by the specified address.
 func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLookupRequest) (*types.QueryReverseLookupResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
 	ctx := sdk.UnwrapSDKContext(c)
+
 	accAddr, err := sdk.AccAddressFromBech32(request.Address)
 	if err != nil {
 		return nil, types.ErrInvalidAddress
 	}
 
-	limit := request.Pagination.GetLimit()
-	if limit == 0 {
-		limit = query.DefaultLimit
-	}
-	const maxLimit = 200
-	if limit > maxLimit {
-		limit = maxLimit
-	}
-
-	// Continuation key from previous page
-	var continueAfterName string
-	if len(request.Pagination.GetKey()) > 0 {
-		continueAfterName = string(request.Pagination.GetKey())
-	}
-
-	// Create range for this address
-	refKeyPrefix := collections.PairPrefix[sdk.AccAddress, string](accAddr)
-	prefixRange := collections.NewPrefixedPairRange[
-		collections.Pair[sdk.AccAddress, string],
-		string,
-	](refKeyPrefix)
-
-	iter, err := k.nameRecords.Indexes.AddrIndex.Iterate(ctx, prefixRange)
+	// indexes.Multi satisfies query.Collection, and the primary key of each index entry is
+	// the name, so the names come straight off the index keys — no record read per result.
+	names, pageRes, err := query.CollectionPaginate(
+		ctx,
+		k.nameRecords.Indexes.AddrIndex,
+		request.Pagination,
+		func(key collections.Pair[sdk.AccAddress, string], _ collections.NoValue) (string, error) {
+			return key.K2(), nil
+		},
+		query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](accAddr),
+	)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
-
-	// If we have a continuation key, skip forward past it (inclusive)
-	skipMode := continueAfterName != ""
-
-	var names []string
-	var lastKey string
-
-	for ; iter.Valid(); iter.Next() {
-		pk, err := iter.PrimaryKey()
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-		if skipMode {
-			if pk == continueAfterName {
-				skipMode = false
-				continue
-			}
-			if pk < continueAfterName {
-				continue
-			}
-			skipMode = false
-		}
-		if uint64(len(names)) >= limit {
-			break
-		}
-		record, err := k.nameRecords.Get(ctx, pk)
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-		names = append(names, record.Name)
-		lastKey = pk
+	if names == nil {
+		names = []string{} // so an empty result marshals as [] rather than null
 	}
 
-	var nextKey []byte
-	if iter.Valid() {
-		nextKey = []byte(lastKey)
-	}
-
-	return &types.QueryReverseLookupResponse{
-		Name: names,
-		Pagination: &query.PageResponse{
-			NextKey: nextKey,
-		},
-	}, nil
+	return &types.QueryReverseLookupResponse{Name: names, Pagination: pageRes}, nil
 }
