@@ -93,7 +93,7 @@ func (s *MigrationTestSuite) TestMigration() {
 	s.Require().NoError(err, "failed to normalize name")
 
 	pair := collections.Join(s.user1Addr, normalized)
-	iter, err := newKeeper.GetAddrIndex().MatchExact(s.ctx, pair)
+	iter, err := newKeeper.GetAddrIndex().MatchExact(s.ctx, sdk.AccAddress(pair.K1().String()))
 	s.Require().NoError(err, "failed to get address index iterator")
 	defer iter.Close()
 

@@ -53,14 +53,10 @@ func NewKeeper(
 		sb,
 		types.AddressKeyPrefix,
 		"addr_index",
-		collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
-		collections.StringKey,
-		func(name string, record types.NameRecord) (collections.Pair[sdk.AccAddress, string], error) {
-			addr, err := sdk.AccAddressFromBech32(record.Address)
-			if err != nil {
-				return collections.Pair[sdk.AccAddress, string]{}, err
-			}
-			return collections.Join(addr, name), nil
+		sdk.AccAddressKey,     // reference key: the owner address
+		collections.StringKey, // primary key: the name
+		func(_ string, record types.NameRecord) (sdk.AccAddress, error) {
+			return sdk.AccAddressFromBech32(record.Address)
 		},
 	)
 
@@ -197,17 +193,17 @@ func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddre
 	if err := k.nameRecords.Set(ctx, normalizedName, record); err != nil {
 		return err
 	}
-	nameUpdateEvent := types.NewEventNameUpdate(addr.String(), name, restrict)
+	nameUpdateEvent := types.NewEventNameUpdate(addr.String(), normalizedName, restrict)
 	return ctx.EventManager().EmitTypedEvent(nameUpdateEvent)
 }
 
 // GetRecordByName resolves a record by name.
 func (k Keeper) GetRecordByName(ctx sdk.Context, name string) (record *types.NameRecord, err error) {
-	normalizedName, err := k.Normalize(ctx, name)
+	key, err := types.GetNameKey(name)
 	if err != nil {
 		return nil, err
 	}
-	namerecord, err := k.nameRecords.Get(ctx, normalizedName)
+	namerecord, err := k.nameRecords.Get(ctx, key)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return nil, types.ErrNameNotBound
@@ -219,41 +215,32 @@ func (k Keeper) GetRecordByName(ctx sdk.Context, name string) (record *types.Nam
 
 // NameExists returns true if store contains a record for the given name.
 func (k Keeper) NameExists(ctx sdk.Context, name string) bool {
-	normalizedName, err := k.Normalize(ctx, name)
+	key, err := types.GetNameKey(name)
 	if err != nil {
 		return false
 	}
-	exists, _ := k.nameRecords.Has(ctx, normalizedName)
+	exists, _ := k.nameRecords.Has(ctx, key)
 	return exists
 }
 
 // GetRecordsByAddress looks up all names bound to an address.
 func (k Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (types.NameRecords, error) {
-	var records types.NameRecords
+	records := types.NameRecords{}
 
-	// We create a prefix of the composite index key (address + name) by fixing the address part
-	// with PairPrefix, then build a PrefixedPairRange to efficiently query all entries matching
-	// that address in the multi-index (one-to-many relationship)
-	refKeyPrefix := collections.PairPrefix[sdk.AccAddress, string](address)
-	prefixRange := collections.NewPrefixedPairRange[
-		collections.Pair[sdk.AccAddress, string],
-		string,
-	](refKeyPrefix)
-
-	iter, err := k.nameRecords.Indexes.AddrIndex.Iterate(ctx, prefixRange)
+	iter, err := k.nameRecords.Indexes.AddrIndex.MatchExact(ctx, address)
 	if err != nil {
 		return nil, err
 	}
-	defer iter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
+	defer iter.Close() //nolint:errcheck // close error safe to ignore in this context.
 
 	for ; iter.Valid(); iter.Next() {
 		primaryKey, err := iter.PrimaryKey()
 		if err != nil {
-			continue
+			return nil, fmt.Errorf("could not read an address index entry: %w", err)
 		}
 		record, err := k.nameRecords.Get(ctx, primaryKey)
 		if err != nil {
-			continue
+			return nil, fmt.Errorf("the address index points at a missing record %q: %w", primaryKey, err)
 		}
 		records = append(records, record)
 	}
@@ -262,18 +249,18 @@ func (k Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (ty
 
 // DeleteRecord removes a name record from the kvstore.
 func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
-	normalizedName, err := k.Normalize(ctx, name)
+	key, err := types.GetNameKey(name)
 	if err != nil {
 		return err
 	}
-	record, err := k.nameRecords.Get(ctx, normalizedName)
+	record, err := k.nameRecords.Get(ctx, key)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return types.ErrNameNotBound
 		}
 		return err
 	}
-	if err := k.nameRecords.Remove(ctx, normalizedName); err != nil {
+	if err := k.nameRecords.Remove(ctx, key); err != nil {
 		return err
 	}
 	nameUnboundEvent := types.NewEventNameUnbound(record.Address, name, record.Restricted)
@@ -281,41 +268,37 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 }
 
 func (k Keeper) IterateRecords(ctx sdk.Context, handle func(record types.NameRecord) error) error {
-	err := k.nameRecords.Walk(ctx, nil, func(_ string, record types.NameRecord) (bool, error) {
-		if err := handle(record); err != nil {
-			return true, err
-		}
-		return false, nil
-	})
-
-	return err
+	return k.walkRecords(ctx, handle)
 }
 
-// Normalize returns a name in storage format.
+// Normalize returns the storage format and enforces name limits.
 func (k Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
+	return normalizeWithParams(name, k.GetParams(ctx))
+}
+
+// normalizeWithParams normalizes a name using params read once, avoiding repeated store reads.
+func normalizeWithParams(name string, params types.Params) (string, error) {
 	normalized := types.NormalizeName(name)
 	if !types.IsValidName(normalized) {
 		return "", types.ErrNameInvalid
 	}
-	segCount := uint32(0)
-	for _, segment := range strings.Split(normalized, ".") {
-		segCount++
+	segments := strings.Split(normalized, ".")
+	for _, segment := range segments {
 		segLen := len(segment)
-		isUUID := types.IsValidUUID(segment)
-		if segLen < int(k.GetMinSegmentLength(ctx)) {
+		if segLen < int(params.MinSegmentLength) {
 			return "", types.ErrNameSegmentTooShort
 		}
-		if segLen > int(k.GetMaxSegmentLength(ctx)) && !isUUID {
+		if segLen > int(params.MaxSegmentLength) && !types.IsValidUUID(segment) {
 			return "", types.ErrNameSegmentTooLong
 		}
 	}
-	if segCount > k.GetMaxNameLevels(ctx) {
+	if len(segments) > int(params.MaxNameLevels) {
 		return "", types.ErrNameHasTooManySegments
 	}
 	return normalized, nil
 }
 
-func (k Keeper) GetAddrIndex() *indexes.Multi[collections.Pair[sdk.AccAddress, string], string, types.NameRecord] {
+func (k Keeper) GetAddrIndex() *indexes.Multi[sdk.AccAddress, string, types.NameRecord] {
 	return k.nameRecords.Indexes.AddrIndex
 }
 
@@ -347,4 +330,17 @@ func (k Keeper) CreateRootName(ctx sdk.Context, name, owner string, restricted b
 		}
 	}
 	return nil
+}
+
+// walkRecords visits every name record.
+//
+// It does not pass the key to fn because the key is a hash, not the name.
+// Use record.Name instead.
+func (k Keeper) walkRecords(ctx sdk.Context, fn func(types.NameRecord) error) error {
+	return k.nameRecords.Walk(ctx, nil, func(_ string, record types.NameRecord) (bool, error) {
+		if err := fn(record); err != nil {
+			return true, err
+		}
+		return false, nil
+	})
 }
