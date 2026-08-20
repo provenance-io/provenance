@@ -30,47 +30,75 @@ func NewMigrator(keeper Keeper) Migrator {
 // MigrateKVToCollections2to3 migrates the name module data from the legacy KV store layout
 // to the new collections-based layout (version 2 to version 3).
 func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
-	ctx.Logger().Info("Migrating name module from KV store to collections (v2 to v3)...")
+	logger := m.keeper.Logger(ctx)
+	logger.Info("Migrating the name module from raw KV to collections (v2 to v3)...")
 
+	if err := m.migrateV2Params(ctx); err != nil {
+		return err
+	}
+
+	records, err := m.readV2NameRecords(ctx)
+	if err != nil {
+		return err
+	}
+	logger.Info(fmt.Sprintf("Found %d name record(s) to migrate.", len(records)))
+
+	for _, record := range records {
+		if err = m.keeper.nameRecords.Set(ctx, record.Name, record); err != nil {
+			return fmt.Errorf("could not migrate the name record %q: %w", record.Name, err)
+		}
+	}
+
+	logger.Info(fmt.Sprintf("Done migrating %d name record(s) to collections (v2 to v3).", len(records)))
+	return nil
+}
+
+// readV2NameRecords reads every name record written under the pre-collections layout.
+//
+// It lives in its own function so the deferred Close runs before the caller writes anything,
+// on every path out including the error ones.
+func (m Migrator) readV2NameRecords(ctx sdk.Context) ([]types.NameRecord, error) {
 	store := m.keeper.storeService.OpenKVStore(ctx)
 
-	// Step 1: Load legacy records
-	legacyIter, err := store.Iterator(LegacyNameKeyPrefix, storetypes.PrefixEndBytes(LegacyNameKeyPrefix))
+	iter, err := store.Iterator(LegacyNameKeyPrefix, storetypes.PrefixEndBytes(LegacyNameKeyPrefix))
 	if err != nil {
-		return fmt.Errorf("failed to create legacy iterator: %w", err)
+		return nil, fmt.Errorf("could not iterate the legacy name records: %w", err)
 	}
-	defer legacyIter.Close() //nolint:errcheck // ignoring close error on iterator: not critical for this context.
+	defer iter.Close() //nolint:errcheck // close error safe to ignore in this context.
 
-	var recordsToMigrate []types.NameRecord
-	for ; legacyIter.Valid(); legacyIter.Next() {
-		var record types.NameRecord
-		if err := m.keeper.cdc.Unmarshal(legacyIter.Value(), &record); err != nil {
-			continue // skip bad records silently
+	var records []types.NameRecord
+	for ; iter.Valid(); iter.Next() {
+		record := types.NameRecord{}
+		if err = m.keeper.cdc.Unmarshal(iter.Value(), &record); err != nil {
+			return nil, fmt.Errorf("could not unmarshal the legacy name record at %X: %w", iter.Key(), err)
 		}
-		recordsToMigrate = append(recordsToMigrate, record)
+		records = append(records, record)
+	}
+	return records, nil
+}
+
+// migrateV2Params copies the legacy params entry into the params Item.
+func (m Migrator) migrateV2Params(ctx sdk.Context) error {
+	store := m.keeper.storeService.OpenKVStore(ctx)
+
+	bz, err := store.Get(LegacyNameParamStoreKey)
+	if err != nil {
+		return fmt.Errorf("could not read the legacy params: %w", err)
+	}
+	if bz == nil {
+		return nil
 	}
 
-	// Step 2: Migrate records to collections
-	for _, record := range recordsToMigrate {
-		if err := m.keeper.nameRecords.Set(ctx, record.Name, record); err != nil {
-			return fmt.Errorf("failed to migrate record %s: %w", record.Name, err)
-		}
+	// Start with the default params, not a zero-value Params. Proto3 omits false and 0
+	// values, so unmarshalling into a zero-value Params could turn a stored
+	// AllowUnrestrictedNames=false into the default true and change the chain's params
+	// during the upgrade.
+	params := types.DefaultParams()
+	if err = m.keeper.cdc.Unmarshal(bz, &params); err != nil {
+		return fmt.Errorf("could not unmarshal the legacy params: %w", err)
 	}
-
-	// Step 3: Migrate params if they exist
-	if exists, _ := store.Has(LegacyNameParamStoreKey); exists {
-		bz, err := store.Get(LegacyNameParamStoreKey)
-		if err == nil {
-			var params types.Params
-			if err := m.keeper.cdc.Unmarshal(bz, &params); err == nil {
-				if err := m.keeper.paramsStore.Set(ctx, params); err != nil {
-					return fmt.Errorf("failed to migrate params: %w", err)
-				}
-			}
-		}
+	if err = m.keeper.paramsStore.Set(ctx, params); err != nil {
+		return fmt.Errorf("could not write the params: %w", err)
 	}
-
-	ctx.Logger().Info(fmt.Sprintf("Successfully migrated %d name records to collections", len(recordsToMigrate)))
-	ctx.Logger().Info("Name module migration to collections (v2 to v3) completed successfully.")
 	return nil
 }
