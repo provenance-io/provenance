@@ -1,31 +1,4 @@
-## [v1.30.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.30.0-rc2) 2026-08-13
-
-Provenance Blockchain version `v1.30.0` contains some exciting new features, improvements and bug fixes.
-
-### Improvements
-
-* Detect vault principal accounts, which are marker accounts, and exclude them from force transfers [PR 2804](https://github.com/provenance-io/provenance/pull/2804).
-* Remove the marker all-supply permissions bypass [PR 2807](https://github.com/provenance-io/provenance/pull/2807).
-* Set the flatfees for some vault messages [PR 2815](https://github.com/provenance-io/provenance/pull/2815).
-
-### Bug Fixes
-
-* Honor `require_deposit_access` when withdrawing to or depositing into an unrestricted marker account [PR 2809](https://github.com/provenance-io/provenance/pull/2809).
-
-### Dependencies
-
-* `docker/login-action` bumped to 4.6.0 (from 4.5.2) [PR 2802](https://github.com/provenance-io/provenance/pull/2802).
-* `github.com/provlabs/vault` bumped to v1.2.4 (from v1.2.3) [PR 2811](https://github.com/provenance-io/provenance/pull/2811).
-* `github/codeql-action` bumped to 4.37.6 (from 4.37.3) [PR 2806](https://github.com/provenance-io/provenance/pull/2806).
-
-### Full Commit History
-
-* https://github.com/provenance-io/provenance/compare/v1.30.0-rc1...v1.30.0-rc2
-* https://github.com/provenance-io/provenance/compare/v1.29.0...v1.30.0-rc2
-
----
-
-## [v1.30.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.30.0-rc1) 2026-07-31
+## [v1.30.0](https://github.com/provenance-io/provenance/releases/tag/v1.30.0) 2026-08-20
 
 Provenance Blockchain version `v1.30.0` contains some exciting new features, improvements and bug fixes.
 
@@ -39,6 +12,9 @@ Provenance Blockchain version `v1.30.0` contains some exciting new features, imp
 * Reduce race test runtime by excluding long-running simulation tests from race builds [#2738](https://github.com/provenance-io/provenance/issues/2738).
 * Add the forsythia upgrade and remove older upgrades [PR 2780](https://github.com/provenance-io/provenance/pull/2780).
 * Short circuit at the lookup step when deleting expired events [PR 2789](https://github.com/provenance-io/provenance/pull/2789).
+* Detect vault principal accounts, which are marker accounts, and exclude them from force transfers [PR 2804](https://github.com/provenance-io/provenance/pull/2804).
+* Remove the marker all-supply permissions bypass [PR 2807](https://github.com/provenance-io/provenance/pull/2807).
+* Set the flatfees for some vault messages [PR 2815](https://github.com/provenance-io/provenance/pull/2815).
 
 ### Bug Fixes
 
@@ -46,6 +22,7 @@ Provenance Blockchain version `v1.30.0` contains some exciting new features, imp
 * Enforce the unrestricted denom regex on markers created by the asset module [PR 2784](https://github.com/provenance-io/provenance/pull/2784).
 * Propagate the AllowList when updating a MarkerTransferAuthorization [PR 2786](https://github.com/provenance-io/provenance/pull/2786).
 * Verify smart contract signers in metadata's AddNetAssetValues endpoint [PR 2787](https://github.com/provenance-io/provenance/pull/2787).
+* Honor `require_deposit_access` when withdrawing to or depositing into an unrestricted marker account [PR 2809](https://github.com/provenance-io/provenance/pull/2809).
 
 ### Deprecated
 
@@ -66,7 +43,7 @@ Provenance Blockchain version `v1.30.0` contains some exciting new features, imp
 * `codecov/codecov-action` bumped to 7 (from 6) [PR 2756](https://github.com/provenance-io/provenance/pull/2756).
 * `dev.gaijin.team/go/exhaustruct/v4` added at v4.0.0 [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `dev.gaijin.team/go/golib` added at v0.6.0 [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
-* `docker/login-action` bumped to 4.5.2 (from 4) [PR 2797](https://github.com/provenance-io/provenance/pull/2797).
+* `docker/login-action` bumped to 4.6.0 (from 4) ([PR 2797](https://github.com/provenance-io/provenance/pull/2797), [PR 2802](https://github.com/provenance-io/provenance/pull/2802)).
 * `github.com/4meepo/tagalign` bumped to v1.4.3 (from v1.3.4) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/Abirdcfly/dupword` bumped to v0.1.7 (from v0.1.1) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/AdminBenni/iota-mixing` added at v1.0.0 [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
@@ -187,7 +164,7 @@ Provenance Blockchain version `v1.30.0` contains some exciting new features, imp
 * `github.com/prometheus/client_golang` bumped to v1.24.1 (from v1.23.2) [PR 2795](https://github.com/provenance-io/provenance/pull/2795).
 * `github.com/prometheus/common` bumped to v0.70.1 (from v0.67.5) [PR 2795](https://github.com/provenance-io/provenance/pull/2795).
 * `github.com/prometheus/procfs` bumped to v0.21.1 (from v0.19.2) [PR 2795](https://github.com/provenance-io/provenance/pull/2795).
-* `github.com/provlabs/vault` bumped to v1.2.3 (from v1.1.0) ([PR 2779](https://github.com/provenance-io/provenance/pull/2779), [PR 2790](https://github.com/provenance-io/provenance/pull/2790)).
+* `github.com/provlabs/vault` bumped to v1.2.4 (from v1.1.0) ([PR 2779](https://github.com/provenance-io/provenance/pull/2779), [PR 2790](https://github.com/provenance-io/provenance/pull/2790), [PR 2811](https://github.com/provenance-io/provenance/pull/2811)).
 * `github.com/quasilyte/go-ruleguard/dsl` bumped to v0.3.23 (from v0.3.22) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/quasilyte/go-ruleguard` bumped to v0.4.5 (from v0.4.3-0.20240823090925-0fe6f58b47b1) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/raeperd/recvcheck` added at v0.2.0 [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
@@ -219,7 +196,7 @@ Provenance Blockchain version `v1.30.0` contains some exciting new features, imp
 * `github.com/uudashr/iface` added at v1.4.2 [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/xen0n/gosmopolitan` bumped to v1.3.0 (from v1.2.2) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/xo/terminfo` added at v0.0.0-20220910002029-abceb7e1c41e [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
-* `github/codeql-action` bumped to 4.37.3 (from 4) [PR 2798](https://github.com/provenance-io/provenance/pull/2798).
+* `github/codeql-action` bumped to 4.37.6 (from 4) ([PR 2798](https://github.com/provenance-io/provenance/pull/2798), [PR 2806](https://github.com/provenance-io/provenance/pull/2806)).
 * `golang.org/x/crypto` bumped to v0.54.0 (from v0.50.0) ([PR 2759](https://github.com/provenance-io/provenance/pull/2759), [PR 2776](https://github.com/provenance-io/provenance/pull/2776), [PR 2775](https://github.com/provenance-io/provenance/pull/2775), [PR 2795](https://github.com/provenance-io/provenance/pull/2795)).
 * `golang.org/x/exp/typeparams` bumped to v0.0.0-20260209203927-2842357ff358 (from v0.0.0-20240314144324-c7f7c6466f7f) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `golang.org/x/exp` bumped to v0.0.0-20250620022241-b7579e27df2b (from v0.0.0-20250305212735-054e65f0b394) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
@@ -253,5 +230,5 @@ Provenance Blockchain version `v1.30.0` contains some exciting new features, imp
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.29.0...v1.30.0-rc1
+* https://github.com/provenance-io/provenance/compare/v1.29.0...v1.30.0
 
