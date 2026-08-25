@@ -34,6 +34,13 @@ var (
 	NameParamStoreKey = collections.NewPrefix(0x09)
 )
 
+// Legacy prefixes - OLD values moved here for migration
+var (
+	LegacyNameKeyPrefix     = []byte{0x03}
+	LegacyAddressKeyPrefix  = []byte{0x05}
+	LegacyNameParamStoreKey = []byte{0x06}
+)
+
 // NameRecordIndexes defines indexes for name records
 type NameRecordIndexes struct {
 	AddrIndex *indexes.Multi[sdk.AccAddress, string, NameRecord]
