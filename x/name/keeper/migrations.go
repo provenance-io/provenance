@@ -15,13 +15,6 @@ type Migrator struct {
 	keeper Keeper
 }
 
-// Legacy prefixes - OLD values moved here for migration
-var (
-	LegacyNameKeyPrefix     = []byte{0x03}
-	LegacyAddressKeyPrefix  = []byte{0x05}
-	LegacyNameParamStoreKey = []byte{0x06}
-)
-
 // NewMigrator returns a new Migrator.
 func NewMigrator(keeper Keeper) Migrator {
 	return Migrator{keeper: keeper}
@@ -60,7 +53,7 @@ func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
 func (m Migrator) readV2NameRecords(ctx sdk.Context) ([]types.NameRecord, error) {
 	store := m.keeper.storeService.OpenKVStore(ctx)
 
-	iter, err := store.Iterator(LegacyNameKeyPrefix, storetypes.PrefixEndBytes(LegacyNameKeyPrefix))
+	iter, err := store.Iterator(types.LegacyNameKeyPrefix, storetypes.PrefixEndBytes(types.LegacyNameKeyPrefix))
 	if err != nil {
 		return nil, fmt.Errorf("could not iterate the legacy name records: %w", err)
 	}
@@ -81,7 +74,7 @@ func (m Migrator) readV2NameRecords(ctx sdk.Context) ([]types.NameRecord, error)
 func (m Migrator) migrateV2Params(ctx sdk.Context) error {
 	store := m.keeper.storeService.OpenKVStore(ctx)
 
-	bz, err := store.Get(LegacyNameParamStoreKey)
+	bz, err := store.Get(types.LegacyNameParamStoreKey)
 	if err != nil {
 		return fmt.Errorf("could not read the legacy params: %w", err)
 	}
