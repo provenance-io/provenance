@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"crypto/sha256"
 	"fmt"
+	"strings"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -127,4 +129,31 @@ func (m Migrator) deleteLegacyData(ctx sdk.Context) error {
 		return fmt.Errorf("could not delete the legacy params: %w", err)
 	}
 	return nil
+}
+
+// LegacyComputeNameHash reproduces the old name-key hash by hashing segments in reverse order.
+//
+// Deprecated: used only by the 3->4 migration and its tests. Use ComputeNameHash instead.
+func LegacyComputeNameHash(name string) ([]byte, error) {
+	comps := strings.Split(name, ".")
+	hsh := sha256.New()
+	for i := len(comps) - 1; i >= 0; i-- {
+		comp := strings.TrimSpace(comps[i])
+		if len(comp) == 0 {
+			return nil, fmt.Errorf("name segment cannot be empty: %w", types.ErrNameInvalid)
+		}
+		if _, err := hsh.Write([]byte(comp)); err != nil {
+			return nil, err
+		}
+	}
+	return hsh.Sum(nil), nil
+}
+
+// LegacyGetNameKeyBytes returns the full store key a name occupied before the 3->4 migration.
+func LegacyGetNameKeyBytes(name string) ([]byte, error) {
+	hash, err := LegacyComputeNameHash(name)
+	if err != nil {
+		return nil, err
+	}
+	return append(append([]byte{}, types.NameKeyPrefix...), hash...), nil
 }

@@ -50,7 +50,7 @@ func (s *MigrationTestSuite) TestMigration() {
 	record := types.NewNameRecord(name, s.user1Addr, true)
 
 	// Seed the legacy name record under the pre-migration key format.
-	nameKey, err := types.LegacyGetNameKeyBytes(name)
+	nameKey, err := keeper.LegacyGetNameKeyBytes(name)
 	s.Require().NoError(err, "failed to get legacy name key bytes")
 	recordBz, err := s.cdc.Marshal(&record)
 	s.Require().NoError(err, "failed to marshal name record")
