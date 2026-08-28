@@ -42,6 +42,10 @@ func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
 		}
 	}
 
+	if err := m.deleteLegacyData(ctx); err != nil {
+		return err
+	}
+
 	logger.Info(fmt.Sprintf("Done migrating %d name record(s) to collections (v2 to v3).", len(records)))
 	return nil
 }
@@ -92,6 +96,35 @@ func (m Migrator) migrateV2Params(ctx sdk.Context) error {
 	}
 	if err = m.keeper.paramsStore.Set(ctx, params); err != nil {
 		return fmt.Errorf("could not write the params: %w", err)
+	}
+	return nil
+}
+
+// deleteLegacyData removes all entries from the pre-collections layout:
+// name records, the address index, and the legacy params entry copied by migrateV2Params.
+func (m Migrator) deleteLegacyData(ctx sdk.Context) error {
+	kvStore := m.keeper.storeService.OpenKVStore(ctx)
+
+	for _, prefix := range [][]byte{types.LegacyNameKeyPrefix, types.LegacyAddressKeyPrefix} {
+		iter, err := kvStore.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
+		if err != nil {
+			return fmt.Errorf("could not iterate legacy prefix %X: %w", prefix, err)
+		}
+		var keys [][]byte
+		for ; iter.Valid(); iter.Next() {
+			keys = append(keys, append([]byte{}, iter.Key()...))
+		}
+		defer iter.Close() //nolint:errcheck // close error safe to ignore in this context.
+
+		for _, key := range keys {
+			if err := kvStore.Delete(key); err != nil {
+				return fmt.Errorf("could not delete legacy key %X: %w", key, err)
+			}
+		}
+	}
+
+	if err := kvStore.Delete(types.LegacyNameParamStoreKey); err != nil {
+		return fmt.Errorf("could not delete the legacy params: %w", err)
 	}
 	return nil
 }

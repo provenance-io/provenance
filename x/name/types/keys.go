@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/collections"
-	callcodec "cosmossdk.io/collections/codec"
+	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/collections/indexes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,7 +53,7 @@ func (i NameRecordIndexes) IndexesList() []collections.Index[string, NameRecord]
 // HashedStringKeyCodec keys a name record by the sha256 of its segments.
 type HashedStringKeyCodec struct{}
 
-var _ callcodec.KeyCodec[string] = HashedStringKeyCodec{}
+var _ collcodec.KeyCodec[string] = HashedStringKeyCodec{}
 
 func (c HashedStringKeyCodec) Encode(buffer []byte, key string) (int, error) {
 	hash := c.ComputeHash(key)
@@ -96,6 +96,7 @@ func (c HashedStringKeyCodec) DecodeNonTerminal(buffer []byte) (int, string, err
 	}
 	return sha256.Size, base64.StdEncoding.EncodeToString(buffer[:sha256.Size]), nil
 }
+
 func (c HashedStringKeyCodec) DecodeJSON(b []byte) (string, error) {
 	var s string
 	err := json.Unmarshal(b, &s)
@@ -107,7 +108,7 @@ func (c HashedStringKeyCodec) SizeNonTerminal(_ string) int {
 }
 
 func (c HashedStringKeyCodec) ComputeHash(name string) []byte {
-	sum := sha256.Sum256([]byte(trimNameSegments(name)))
+	sum := sha256.Sum256([]byte(NormalizeName(name)))
 	return sum[:]
 }
 
@@ -120,39 +121,9 @@ func ComputeNameHash(name string) ([]byte, error) {
 	return HashedStringKeyCodec{}.ComputeHash(name), nil
 }
 
-// trimNameSegments removes whitespace around each segment so " a . b " and "a.b"
-// produce the same key.
-func trimNameSegments(name string) string {
-	segments := strings.Split(name, ".")
-	for i, segment := range segments {
-		segments[i] = strings.TrimSpace(segment)
-	}
-	return strings.Join(segments, ".")
-}
-
 // ValidateAddress validates an account address
 func ValidateAddress(addr sdk.AccAddress) error {
 	return sdk.VerifyAddressFormat(addr)
-}
-
-// GetNameKeyBytes returns the name key in the same format as before (0x03 + sha256(name))
-func GetNameKeyBytes(name string) ([]byte, error) {
-	hash, err := ComputeNameHash(name)
-	if err != nil {
-		return nil, err
-	}
-	return append(append([]byte{}, NameKeyPrefix...), hash...), nil
-}
-
-// GetNameKey returns a name in storage form by trimming and lower-casing each segment.
-func GetNameKey(name string) (string, error) {
-	normalized := NormalizeName(name)
-	for _, segment := range strings.Split(normalized, ".") {
-		if len(segment) == 0 {
-			return "", fmt.Errorf("name segment cannot be empty: %w", ErrNameInvalid)
-		}
-	}
-	return normalized, nil
 }
 
 // LegacyComputeNameHash reproduces the old name-key hash by hashing segments in reverse order.
