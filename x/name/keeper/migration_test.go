@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -41,39 +40,25 @@ func (s *MigrationTestSuite) SetupTest() {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	s.cdc = codec.NewProtoCodec(interfaceRegistry)
 
-	store := s.ctx.KVStore(storeKey)
-
-	params := types.DefaultParams()
-	store.Set(types.NameParamStoreKey, s.cdc.MustMarshal(&params))
-
-	name := "test.provenance"
-	nameKey, err := types.GetNameKeyBytes(name)
-	s.Require().NoError(err)
-
-	record := types.NameRecord{
-		Name:       name,
-		Address:    s.user1,
-		Restricted: true,
-	}
-	store.Set(nameKey, s.cdc.MustMarshal(&record))
-
 }
 
 func (s *MigrationTestSuite) TestMigration() {
 	storeKey := s.store.(*storetypes.KVStoreKey)
+	oldStore := s.ctx.KVStore(storeKey)
 
-	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
-	s.user1 = s.user1Addr.String()
 	name := "test.provenance"
 	record := types.NewNameRecord(name, s.user1Addr, true)
 
-	oldStore := s.ctx.KVStore(storeKey)
-	nameKey, err := types.GetNameKeyBytes(name)
-	s.Require().NoError(err, "failed to get name key bytes")
-
+	// Seed the legacy name record under the pre-migration key format.
+	nameKey, err := types.LegacyGetNameKeyBytes(name)
+	s.Require().NoError(err, "failed to get legacy name key bytes")
 	recordBz, err := s.cdc.Marshal(&record)
 	s.Require().NoError(err, "failed to marshal name record")
 	oldStore.Set(nameKey, recordBz)
+
+	// Seed legacy params too, so the params migration is actually exercised.
+	legacyParams := types.DefaultParams()
+	oldStore.Set(types.LegacyNameParamStoreKey, s.cdc.MustMarshal(&legacyParams))
 
 	newKeeper := keeper.NewKeeper(s.cdc, runtime.NewKVStoreService(storeKey))
 	migrator := keeper.NewMigrator(newKeeper)
@@ -89,11 +74,7 @@ func (s *MigrationTestSuite) TestMigration() {
 	s.Require().Equal(name, migratedRecord.Name, "migrated record name mismatch")
 	s.Require().Equal(s.user1Addr.String(), migratedRecord.Address, "migrated record address mismatch")
 
-	normalized, err := newKeeper.Normalize(s.ctx, name)
-	s.Require().NoError(err, "failed to normalize name")
-
-	pair := collections.Join(s.user1Addr, normalized)
-	iter, err := newKeeper.GetAddrIndex().MatchExact(s.ctx, sdk.AccAddress(pair.K1().String()))
+	iter, err := newKeeper.GetAddrIndex().MatchExact(s.ctx, s.user1Addr)
 	s.Require().NoError(err, "failed to get address index iterator")
 	defer iter.Close()
 
