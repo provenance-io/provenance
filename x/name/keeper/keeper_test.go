@@ -249,7 +249,7 @@ func (s *KeeperTestSuite) TestGetName() {
 		r, err := s.app.NameKeeper.GetRecordByName(s.ctx, "..name")
 		s.Require().Error(err)
 		s.Require().Nil(r)
-		s.Require().Equal("name segment cannot be empty: value provided for name is invalid", err.Error())
+		s.Require().Equal("segment of name is too short", err.Error())
 		s.Require().False(s.app.NameKeeper.NameExists(s.ctx, "..name"))
 	})
 }

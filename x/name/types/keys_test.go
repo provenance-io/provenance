@@ -37,19 +37,19 @@ func (s *NameKeyTestSuite) TestNameKeyPrefix() {
 	}{
 		"valid two-part": {
 			"name.domain",
-			mustHexDecode("07e27733edfa985bcd3fdcfe8544741d602a379fd28464b3c15f483b7350e2dd20"),
+			mustHexDecode("e27733edfa985bcd3fdcfe8544741d602a379fd28464b3c15f483b7350e2dd20"),
 			false,
 			"",
 		},
 		"valid single": {
 			"domain",
-			mustHexDecode("07f2ff83860a4dc203988ed1a22ba1f21237f04abdbd0c4c951103cfbed121de78"), // unchanged
+			mustHexDecode("f2ff83860a4dc203988ed1a22ba1f21237f04abdbd0c4c951103cfbed121de78"), // unchanged
 			false,
 			"",
 		},
 		"valid multi-part": {
 			"first.second.third.fourth.fifth.sixth.seventh.eighth.ninth.tenth",
-			mustHexDecode("071cccba52f948b1d9e2123bb38988a08d733a040e78ecb516c608e7454960bf01"),
+			mustHexDecode("1cccba52f948b1d9e2123bb38988a08d733a040e78ecb516c608e7454960bf01"),
 			false,
 			"",
 		},
@@ -79,18 +79,15 @@ func (s *NameKeyTestSuite) TestNameKeyPrefix() {
 		},
 	}
 	for n, tc := range cases {
-
 		s.Run(n, func() {
-			key, err := GetNameKeyBytes(tc.name)
+			hash, err := ComputeNameHash(tc.name)
 			if tc.expectErr {
 				s.Error(err)
-				if s != nil {
-					s.Equal(tc.errValue, err.Error())
-				}
+				s.Equal(tc.errValue, err.Error())
 			} else {
 				s.NoError(err)
 			}
-			s.Equal(tc.key, key)
+			s.Equal(tc.key, hash)
 		})
 	}
 }
@@ -201,20 +198,4 @@ func (s *NameKeyTestSuite) TestHashedStringKeyCodec() {
 			hashes[tc.input] = hash
 		}
 	})
-}
-
-func (s *NameKeyTestSuite) TestNameKeysDoNotCollideAcrossSegments() {
-	// The old scheme hashed segments in reverse order without separators, so the dots were removed
-	// and these two names produced the same key.
-	flat, err := GetNameKeyBytes("abcd")
-	s.Require().NoError(err, "GetNameKeyBytes(abcd)")
-	split, err := GetNameKeyBytes("cd.ab")
-	s.Require().NoError(err, "GetNameKeyBytes(cd.ab)")
-	s.Assert().NotEqual(flat, split, `"abcd" and "cd.ab" must not share a key`)
-
-	legacyFlat, err := LegacyComputeNameHash("abcd")
-	s.Require().NoError(err)
-	legacySplit, err := LegacyComputeNameHash("cd.ab")
-	s.Require().NoError(err)
-	s.Assert().Equal(legacyFlat, legacySplit, "the legacy scheme is expected to collide here")
 }

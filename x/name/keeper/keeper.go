@@ -199,11 +199,11 @@ func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddre
 
 // GetRecordByName resolves a record by name.
 func (k Keeper) GetRecordByName(ctx sdk.Context, name string) (record *types.NameRecord, err error) {
-	key, err := types.GetNameKey(name)
+	normalizedName, err := k.Normalize(ctx, name)
 	if err != nil {
 		return nil, err
 	}
-	namerecord, err := k.nameRecords.Get(ctx, key)
+	namerecord, err := k.nameRecords.Get(ctx, normalizedName)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return nil, types.ErrNameNotBound
@@ -215,11 +215,11 @@ func (k Keeper) GetRecordByName(ctx sdk.Context, name string) (record *types.Nam
 
 // NameExists returns true if store contains a record for the given name.
 func (k Keeper) NameExists(ctx sdk.Context, name string) bool {
-	key, err := types.GetNameKey(name)
+	normalizedName, err := k.Normalize(ctx, name)
 	if err != nil {
 		return false
 	}
-	exists, _ := k.nameRecords.Has(ctx, key)
+	exists, _ := k.nameRecords.Has(ctx, normalizedName)
 	return exists
 }
 
@@ -249,18 +249,18 @@ func (k Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (ty
 
 // DeleteRecord removes a name record from the kvstore.
 func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
-	key, err := types.GetNameKey(name)
+	normalizedName, err := k.Normalize(ctx, name)
 	if err != nil {
 		return err
 	}
-	record, err := k.nameRecords.Get(ctx, key)
+	record, err := k.nameRecords.Get(ctx, normalizedName)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return types.ErrNameNotBound
 		}
 		return err
 	}
-	if err := k.nameRecords.Remove(ctx, key); err != nil {
+	if err := k.nameRecords.Remove(ctx, normalizedName); err != nil {
 		return err
 	}
 	nameUnboundEvent := types.NewEventNameUnbound(record.Address, name, record.Restricted)
