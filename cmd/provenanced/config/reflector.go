@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	stdmaps "maps"
 	"reflect"
 	"sort"
 	"strconv"
@@ -476,9 +477,7 @@ func (m FieldValueMap) SetToNil(key string) {
 // If the same key exists in both maps, the value from the one provided will overwrite the one in this map.
 func (m FieldValueMap) AddEntriesFrom(maps ...FieldValueMap) {
 	for _, m2 := range maps {
-		for k, v := range m2 {
-			m[k] = v
-		}
+		stdmaps.Copy(m, m2)
 	}
 }
 
