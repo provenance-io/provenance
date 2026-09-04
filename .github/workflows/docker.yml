@@ -138,6 +138,7 @@ jobs:
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
+          overwrite: true
 
   docker:
     needs: docker-build
@@ -251,6 +252,7 @@ jobs:
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
+          overwrite: true
 
   ghcr-publish:
     needs: ghcr-build
