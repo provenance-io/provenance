@@ -102,6 +102,7 @@ jobs:
             type=ref,event=tag
 
       - uses: docker/login-action@v4.6.0
+        if: github.event_name != 'pull_request'
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -212,6 +213,7 @@ jobs:
             org.opencontainers.image.licenses=Apache-2.0
 
       - uses: docker/login-action@v4.6.0
+        if: github.event_name != 'pull_request'
         with:
           registry: ghcr.io
           username: 129784868+provenanceio-bot@users.noreply.github.com
@@ -275,10 +277,6 @@ jobs:
             type=edge
             type=ref,event=pr
             type=ref,event=tag
-          labels: |
-            org.opencontainers.image.source=https://github.com/provenance-io/provenance
-            org.opencontainers.image.description=Provenance Blockchain Node
-            org.opencontainers.image.licenses=Apache-2.0
 
       - uses: docker/login-action@v4.6.0
         with:
