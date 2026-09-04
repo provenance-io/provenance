@@ -120,17 +120,17 @@ jobs:
             VERSION=${{ steps.meta.outputs.version }}
           platforms: ${{ matrix.platform }}
           file: docker/blockchain/Dockerfile
-          outputs: ${{ format('type=image,name={0},push-by-digest=true,name-canonical=true,push=true', env.DOCKER_IMAGE) }} # TEMP-TEST: force push-by-digest on PR, revert before merge
+          outputs: ${{ github.event_name == 'pull_request' && 'type=cacheonly' || format('type=image,name={0},push-by-digest=true,name-canonical=true,push=true', env.DOCKER_IMAGE) }}
 
       - name: Export digest
-        if: true # TEMP-TEST: force run on PR, revert before merge
+        if: github.event_name != 'pull_request'
         run: |
           mkdir -p /tmp/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"
 
       - name: Upload digest
-        if: true # TEMP-TEST: force run on PR, revert before merge
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: docker-digests-${{ env.PLATFORM_PAIR }}
@@ -140,7 +140,7 @@ jobs:
 
   docker:
     needs: docker-build
-    if: true # TEMP-TEST: force run on PR, revert before merge
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Download digests
@@ -232,17 +232,17 @@ jobs:
           platforms: ${{ matrix.platform }}
           file: docker/blockchain/Dockerfile
           labels: ${{ steps.meta.outputs.labels }}
-          outputs: ${{ format('type=image,name={0},push-by-digest=true,name-canonical=true,push=true', env.GHCR_IMAGE) }} # TEMP-TEST: force push-by-digest on PR, revert before merge
+          outputs: ${{ github.event_name == 'pull_request' && 'type=cacheonly' || format('type=image,name={0},push-by-digest=true,name-canonical=true,push=true', env.GHCR_IMAGE) }}
 
       - name: Export digest
-        if: true # TEMP-TEST: force run on PR, revert before merge
+        if: github.event_name != 'pull_request'
         run: |
           mkdir -p /tmp/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"
 
       - name: Upload digest
-        if: true # TEMP-TEST: force run on PR, revert before merge
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: ghcr-digests-${{ env.PLATFORM_PAIR }}
@@ -252,7 +252,7 @@ jobs:
 
   ghcr-publish:
     needs: ghcr-build
-    if: true # TEMP-TEST: force run on PR, revert before merge
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
