@@ -54,7 +54,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # lock to "linux/amd64" only for now since cross compilation is throwing errors
-      - uses: strangelove-ventures/heighliner-build-action@main
+      - uses: amygdala-labs/heighliner-build-action@main
         with:
           heighliner-tag: v1.7.5
           chain: provenance
