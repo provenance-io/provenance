@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -17,26 +17,22 @@ func (k Keeper) GetSession(ctx sdk.Context, id types.MetadataAddress) (session t
 	if !id.IsSessionAddress() {
 		return session, false
 	}
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(id.Bytes())
-	if b == nil {
+	val, err := k.sessionCollections.Get(ctx, mdKey(id))
+	if err != nil {
 		return types.Session{}, false
 	}
-	k.cdc.MustUnmarshal(b, &session)
-	return session, true
+	return val, true
 }
 
 // SetSession stores a session in the module kv store.
 func (k Keeper) SetSession(ctx sdk.Context, session types.Session) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshal(&session)
-
 	var event proto.Message = types.NewEventSessionCreated(session.SessionId)
-	if store.Has(session.SessionId) {
+	if has, _ := k.sessionCollections.Has(ctx, mdKey(session.SessionId)); has {
 		event = types.NewEventSessionUpdated(session.SessionId)
 	}
-
-	store.Set(session.SessionId, b)
+	if err := k.sessionCollections.Set(ctx, mdKey(session.SessionId), session); err != nil {
+		panic(err)
+	}
 	k.EmitEvent(ctx, event)
 }
 
@@ -45,13 +41,13 @@ func (k Keeper) RemoveSession(ctx sdk.Context, id types.MetadataAddress) {
 	if !id.IsSessionAddress() {
 		panic(fmt.Errorf("invalid address, address must be for a session"))
 	}
-	store := ctx.KVStore(k.storeKey)
-
-	if !store.Has(id) || k.sessionHasRecords(ctx, id) {
+	has, _ := k.sessionCollections.Has(ctx, mdKey(id))
+	if !has || k.sessionHasRecords(ctx, id) {
 		return
 	}
-
-	store.Delete(id)
+	if err := k.sessionCollections.Remove(ctx, mdKey(id)); err != nil {
+		panic(err)
+	}
 	k.EmitEvent(ctx, types.NewEventSessionDeleted(id))
 }
 
@@ -81,24 +77,14 @@ func (k Keeper) sessionHasRecords(ctx sdk.Context, id types.MetadataAddress) boo
 // If the scopeID is an empty MetadataAddress, all sessions will be processed.
 // Otherwise, just the sessions for the given scopeID will be processed.
 func (k Keeper) IterateSessions(ctx sdk.Context, scopeID types.MetadataAddress, handler func(types.Session) (stop bool)) error {
-	store := ctx.KVStore(k.storeKey)
-	prefix, err := scopeID.ScopeSessionIteratorPrefix()
-	if err != nil {
-		return err
+	walkFn := func(_ []byte, session types.Session) (stop bool, err error) {
+		return handler(session), nil
 	}
-	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
-
-	for ; it.Valid(); it.Next() {
-		var session types.Session
-		err = k.cdc.Unmarshal(it.Value(), &session)
-		if err != nil {
-			k.Logger(ctx).Error("could not unmarshal session", "address", it.Key(), "error", err)
-		} else if handler(session) {
-			break
-		}
+	if len(scopeID) > 1 {
+		rng := new(collections.Range[[]byte]).Prefix(scopeID[1:]) // 16-byte scope UUID
+		return k.sessionCollections.Walk(ctx, rng, walkFn)
 	}
-	return nil
+	return k.sessionCollections.Walk(ctx, nil, walkFn) // literal nil → whole collection
 }
 
 // ValidateWriteSession checks the current session and the proposed session to determine if the proposed changes are valid
