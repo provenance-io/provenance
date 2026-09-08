@@ -56,7 +56,8 @@ jobs:
       # lock to "linux/amd64" only for now since cross compilation is throwing errors
       - uses: amygdala-labs/heighliner-build-action@main
         with:
-          heighliner-tag: v1.7.5
+          heighliner-owner: amygdala-labs
+          heighliner-tag: v1.7.6
           chain: provenance
           local: true
           tag: ${{ steps.meta.outputs.version }}
