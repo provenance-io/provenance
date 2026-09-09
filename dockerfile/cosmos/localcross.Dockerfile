@@ -13,6 +13,8 @@
 # in github.com/amygdala-labs/heighliner's builder/builder.go) before falling back
 # to its embedded copy. The "dockerfile" directory name is hardcoded in heighliner
 # itself, not configurable via the action's inputs, so it can't be moved or renamed.
+#
+# TODO: https://github.com/provenance-io/provenance/issues/2835 Check if this file can be deleted.
 ARG BASE_VERSION
 FROM --platform=$BUILDPLATFORM golang:${BASE_VERSION} AS build-env
 
