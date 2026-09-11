@@ -270,12 +270,12 @@ func (s *IntegrationTestSuite) TestReverseLookupCommand() {
 		{
 			"query name, json output",
 			[]string{s.accountAddr.String(), fmt.Sprintf("--%s=json", cmtcli.OutputFlag)},
-			"{\"name\":[\"example.attribute\",\"attribute\"],\"pagination\":{\"next_key\":null,\"total\":\"0\"}}",
+			"{\"name\":[\"attribute\",\"example.attribute\"],\"pagination\":{\"next_key\":null,\"total\":\"0\"}}",
 		},
 		{
 			"query name, text output",
 			[]string{s.accountAddr.String(), fmt.Sprintf("--%s=text", cmtcli.OutputFlag)},
-			"name:\n- example.attribute\n- attribute\npagination:\n  next_key: null\n  total: \"0\"",
+			"name:\n- attribute\n- example.attribute\npagination:\n  next_key: null\n  total: \"0\"",
 		},
 		{
 			"query name that does not exist, text output",
