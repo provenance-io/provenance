@@ -29,6 +29,7 @@ type MarkerAccountI interface {
 	Clone() *MarkerAccount
 
 	Validate() error
+	ValidateWithAccessControl() error
 
 	GetDenom() string
 	GetManager() sdk.AccAddress
@@ -44,6 +45,8 @@ type MarkerAccountI interface {
 	GrantAccess(AccessGrantI) error
 	RevokeAccess(sdk.AccAddress) error
 	GetAccessList() []AccessGrant
+	SetAccessList([]AccessGrant)
+	ClearAccessList()
 
 	HasAccess(string, Access) bool
 	ValidateHasAccess(string, Access) error
@@ -220,12 +223,7 @@ func (ma MarkerAccount) Validate() error {
 	if ma.Supply.IsNegative() {
 		return fmt.Errorf("total supply must be greater than or equal to zero")
 	}
-	if ma.Status < StatusActive && ma.Manager == "" && len(ma.AddressListForPermission(Access_Admin)) == 0 {
-		return fmt.Errorf("a manager is required if there are no accounts with ACCESS_ADMIN and marker is not ACTIVE")
-	}
-	if ma.Status == StatusFinalized && len(ma.AddressListForPermission(Access_Mint)) == 0 && ma.Supply.IsZero() {
-		return fmt.Errorf("cannot create a marker with zero total supply and no authorization for minting more")
-	}
+
 	// unlikely as this is set using a Coin which prohibits this value.
 	if strings.TrimSpace(ma.Denom) == "" {
 		return fmt.Errorf("marker denom cannot be empty")
@@ -469,6 +467,18 @@ func (ma *MarkerAccount) GetAccessList() []AccessGrant {
 	return ma.AccessControl
 }
 
+// SetAccessList replaces the marker's in-memory AccessControl field.
+func (ma *MarkerAccount) SetAccessList(accessList []AccessGrant) {
+	ma.AccessControl = accessList
+}
+
+// ClearAccessList removes all access grants from the marker's in-memory AccessControl field.
+// It does not touch the dedicated permission store — persisting that is the keeper's job
+// (see SetMarker).
+func (ma *MarkerAccount) ClearAccessList() {
+	ma.AccessControl = nil
+}
+
 // MarkerTypeFromString returns a MarkerType from a string. It returns an error
 // if the string is invalid.
 func MarkerTypeFromString(str string) (MarkerType, error) {
@@ -537,4 +547,19 @@ func (mnav *NetAssetValue) Validate() error {
 	}
 
 	return nil
+}
+
+// ValidateWithAccessControl runs Validate, plus the additional invariants that depend on
+// AccessControl being fully and correctly populated: a manager or ACCESS_ADMIN grantee must
+// exist when the marker isn't Active, and a zero-supply Finalized marker must have an
+// ACCESS_MINT grantee. Only call this when AccessControl is known to be complete — e.g. right
+// after building or mutating it, before persisting.
+func (ma MarkerAccount) ValidateWithAccessControl() error {
+	if ma.Status < StatusActive && ma.Manager == "" && len(ma.AddressListForPermission(Access_Admin)) == 0 {
+		return fmt.Errorf("a manager is required if there are no accounts with ACCESS_ADMIN and marker is not ACTIVE")
+	}
+	if ma.Status == StatusFinalized && len(ma.AddressListForPermission(Access_Mint)) == 0 && ma.Supply.IsZero() {
+		return fmt.Errorf("cannot create a marker with zero total supply and no authorization for minting more")
+	}
+	return ma.Validate()
 }
