@@ -507,7 +507,8 @@ func (s *IntegrationCLITestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationCLITestSuite) generateAccountsWithKeyrings(number int) {
-	s.keyringAccounts, s.keyring = testutil.GenerateTestKeyring(s.T(), number, s.cfg.Codec)
+	s.keyring = testutil.NewTestKeyring(s.T(), s.cfg.Codec)
+	s.keyringAccounts = testutil.GenerateTestAccountsInKeyring(s.T(), s.keyring, number)
 }
 
 func ownerPartyList(addresses ...string) []metadatatypes.Party {
