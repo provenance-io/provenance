@@ -781,6 +781,7 @@
   
 - [provenance/marker/v1/accessgrant.proto](#provenance_marker_v1_accessgrant-proto)
     - [AccessGrant](#provenance-marker-v1-AccessGrant)
+    - [MarkerPermissions](#provenance-marker-v1-MarkerPermissions)
   
     - [Access](#provenance-marker-v1-Access)
   
@@ -11608,6 +11609,23 @@ AccessGrant associates a collection of permissions with an address for delegated
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
+| `permissions` | [Access](#provenance-marker-v1-Access) | repeated |  |
+
+
+
+
+
+
+<a name="provenance-marker-v1-MarkerPermissions"></a>
+
+### MarkerPermissions
+MarkerPermissions is the stored value for a single address' permissions on a
+marker. The marker and grantee addresses are encoded in the store key, so only
+the permission list is stored here.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
 | `permissions` | [Access](#provenance-marker-v1-Access) | repeated |  |
 
 
