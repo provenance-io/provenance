@@ -1,6 +1,11 @@
 package keeper
 
 import (
+	"errors"
+	"fmt"
+
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/name/types"
@@ -8,21 +13,21 @@ import (
 
 // GetParams returns the total set of name parameters with fallback to default values.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	params = types.DefaultParams() // Assuming DefaultParams initializes all defaults
-
-	bz := store.Get(types.NameParamStoreKey) // General key for all parameters
-	if bz != nil {
-		k.cdc.MustUnmarshal(bz, &params) // Deserialize parameters from bytes
+	params, err := k.paramsStore.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.DefaultParams()
+		}
+		panic(fmt.Errorf("failed to get name module params: %w", err))
 	}
 	return params
 }
 
 // SetParams sets the name parameters to the store.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&params)
-	store.Set(types.NameParamStoreKey, bz)
+	if err := k.paramsStore.Set(ctx, params); err != nil {
+		k.Logger(ctx).Error("failed to set params", "error", err)
+	}
 }
 
 // GetMaxNameLevels returns the current maximum number of name segments allowed.
