@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	vaulttypes "github.com/provlabs/vault/types"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -42,7 +42,7 @@ type appUpgrade struct {
 // Entries should be in chronological/alphabetical order, earliest first.
 // I.e. Brand-new flowers should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
-	"forsythia-rc1": { // Upgrade for v1.30.0-rc1
+	"geranium-rc1": { // Upgrade for v1.31.0-rc1
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -56,13 +56,17 @@ var upgrades = map[string]appUpgrade{
 			removeInactiveValidatorDelegations(ctx, app)
 
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+
+			if err = setContractStoreBundleFees(ctx, app); err != nil {
 				return nil, err
 			}
 
 			return vm, nil
 		},
 	},
-	"forsythia-rc2": { // Upgrade for v1.30.0-rc2
+	"geranium": { // Upgrade for v1.31.0
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -79,29 +83,12 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
-			setFees(ctx, app)
-
-			return vm, nil
-		},
-	},
-	"forsythia": { // Upgrade for v1.30.0
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
+			if err = setContractStoreBundleFees(ctx, app); err != nil {
 				return nil, err
 			}
 
-			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
-				return nil, err
-			}
-
-			removeInactiveValidatorDelegations(ctx, app)
-
-			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
-				return nil, err
-			}
-
-			setFees(ctx, app)
+			// geranium only
+			addFlatFeesOracleAddress(ctx, app, "pb1v5cdk7pt6l7f2lete654kvkk3qhzq0nsk35dw0")
 
 			return vm, nil
 		},
@@ -331,39 +318,41 @@ var (
 	_ = unlockVestingAccounts
 )
 
-func setFees(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Setting fees")
-
-	newMsgFee := func(msgType sdk.Msg, musdAmt int64) flatfeestypes.MsgFee {
-		return flatfeestypes.MsgFee{
-			MsgTypeUrl: sdk.MsgTypeURL(msgType),
-			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", musdAmt)),
-		}
-	}
+// setContractStoreBundleFees sets the flat fees for MsgStoreAndInstantiateContract and
+// MsgStoreAndMigrateContract to $100 (100,000 musd) each.
+func setContractStoreBundleFees(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Setting MsgStoreAndInstantiateContract and MsgStoreAndMigrateContract flat fees.")
 
 	fees := []flatfeestypes.MsgFee{
-		newMsgFee(&vaulttypes.MsgCreateVaultRequest{}, 3000),
-		newMsgFee(&vaulttypes.MsgExpeditePendingSwapOutRequest{}, 2000),
-		newMsgFee(&vaulttypes.MsgSwapOutRequest{}, 500),
-		newMsgFee(&vaulttypes.MsgRepriceVaultRequest{}, 500),
-		newMsgFee(&vaulttypes.MsgSwapInRequest{}, 100),
-		newMsgFee(&vaulttypes.MsgAcceptAssetRequest{}, 100),
-		newMsgFee(&vaulttypes.MsgRejectAssetRequest{}, 50),
-		newMsgFee(&vaulttypes.MsgUpdateVaultNAVRequest{}, 50),
-		newMsgFee(&vaulttypes.MsgRemoveVaultNAVRequest{}, 50),
-		newMsgFee(&vaulttypes.MsgDepositPrincipalFundsRequest{}, 50),
-		newMsgFee(&vaulttypes.MsgWithdrawPrincipalFundsRequest{}, 50),
-		newMsgFee(&vaulttypes.MsgDepositInterestFundsRequest{}, 50),
-		newMsgFee(&vaulttypes.MsgWithdrawInterestFundsRequest{}, 50),
-		newMsgFee(&vaulttypes.MsgUpdateParamsRequest{}, 0),
+		{
+			MsgTypeUrl: sdk.MsgTypeURL(&wasmtypes.MsgStoreAndInstantiateContract{}),
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 100000)), // $100, same as MsgStoreCode.
+		},
+		{
+			MsgTypeUrl: sdk.MsgTypeURL(&wasmtypes.MsgStoreAndMigrateContract{}),
+			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 100000)), // $100, same as MsgStoreCode.
+		},
 	}
 
 	for _, fee := range fees {
-		err := app.FlatFeesKeeper.SetMsgFee(ctx, fee)
-		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("Failed to set fee for MsgFee %s", fee.MsgTypeUrl))
+		if err := fee.Validate(); err != nil {
+			return fmt.Errorf("invalid msg fee for %q: %w", fee.MsgTypeUrl, err)
+		}
+		if err := app.FlatFeesKeeper.SetMsgFee(ctx, fee); err != nil {
+			return fmt.Errorf("failed to set msg fee for %q: %w", fee.MsgTypeUrl, err)
 		}
 	}
 
-	ctx.Logger().Info("Done setting fees")
+	ctx.Logger().Info("Done setting contract store-bundle flat fees.")
+	return nil
+}
+
+// addFlatFeesOracleAddress adds the given address to the x/flatfees oracle address list.
+func addFlatFeesOracleAddress(ctx sdk.Context, app *App, address string) {
+	ctx.Logger().Info("Adding flatfees oracle address.", "address", address)
+	if err := app.FlatFeesKeeper.AddOracleAddress(ctx, address); err != nil {
+		ctx.Logger().Error("Could not add flatfees oracle address.", "address", address, "error", err)
+		return
+	}
+	ctx.Logger().Info("Done adding flatfees oracle address.", "address", address)
 }
