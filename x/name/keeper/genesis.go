@@ -11,7 +11,9 @@ import (
 
 // InitGenesis creates the initial genesis state for the name module.
 func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
-	k.SetParams(ctx, data.Params)
+	if err := k.SetParams(ctx, data.Params); err != nil {
+		panic(err)
+	}
 	for _, record := range data.Bindings {
 		addr, err := sdk.AccAddressFromBech32(record.Address)
 		if err != nil {

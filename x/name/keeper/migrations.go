@@ -12,6 +12,13 @@ import (
 	types "github.com/provenance-io/provenance/x/name/types"
 )
 
+// The pre-collections (v2) store layout.
+var (
+	legacyNameKeyPrefix     = []byte{0x03}
+	legacyAddressKeyPrefix  = []byte{0x05}
+	legacyNameParamStoreKey = []byte{0x06}
+)
+
 // Migrator is a struct for handling in-place store migrations.
 type Migrator struct {
 	keeper Keeper
@@ -59,7 +66,7 @@ func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
 func (m Migrator) readV2NameRecords(ctx sdk.Context) ([]types.NameRecord, error) {
 	store := m.keeper.storeService.OpenKVStore(ctx)
 
-	iter, err := store.Iterator(types.LegacyNameKeyPrefix, storetypes.PrefixEndBytes(types.LegacyNameKeyPrefix))
+	iter, err := store.Iterator(legacyNameKeyPrefix, storetypes.PrefixEndBytes(legacyNameKeyPrefix)) // CHANGED (#11)
 	if err != nil {
 		return nil, fmt.Errorf("could not iterate the legacy name records: %w", err)
 	}
@@ -80,7 +87,7 @@ func (m Migrator) readV2NameRecords(ctx sdk.Context) ([]types.NameRecord, error)
 func (m Migrator) migrateV2Params(ctx sdk.Context) error {
 	store := m.keeper.storeService.OpenKVStore(ctx)
 
-	bz, err := store.Get(types.LegacyNameParamStoreKey)
+	bz, err := store.Get(legacyNameParamStoreKey) // CHANGED (#11)
 	if err != nil {
 		return fmt.Errorf("could not read the legacy params: %w", err)
 	}
@@ -88,11 +95,10 @@ func (m Migrator) migrateV2Params(ctx sdk.Context) error {
 		return nil
 	}
 
-	// Start with the default params, not a zero-value Params. Proto3 omits false and 0
-	// values, so unmarshalling into a zero-value Params could turn a stored
-	// AllowUnrestrictedNames=false into the default true and change the chain's params
-	// during the upgrade.
-	params := types.DefaultParams()
+	// CHANGED (#13): Start with a zero-value Params, not the defaults. Proto3 doesn't encode false or 0,
+	// so a field missing from the stored bytes was stored as its zero value. Starting from the defaults
+	// would turn a stored AllowUnrestrictedNames=false into true during the upgrade.
+	var params types.Params
 	if err = m.keeper.cdc.Unmarshal(bz, &params); err != nil {
 		return fmt.Errorf("could not unmarshal the legacy params: %w", err)
 	}
@@ -107,7 +113,7 @@ func (m Migrator) migrateV2Params(ctx sdk.Context) error {
 func (m Migrator) deleteLegacyData(ctx sdk.Context) error {
 	kvStore := m.keeper.storeService.OpenKVStore(ctx)
 
-	for _, prefix := range [][]byte{types.LegacyNameKeyPrefix, types.LegacyAddressKeyPrefix} {
+	for _, prefix := range [][]byte{legacyNameKeyPrefix, legacyAddressKeyPrefix} { // CHANGED (#11)
 		iter, err := kvStore.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 		if err != nil {
 			return fmt.Errorf("could not iterate legacy prefix %X: %w", prefix, err)
@@ -116,16 +122,19 @@ func (m Migrator) deleteLegacyData(ctx sdk.Context) error {
 		for ; iter.Valid(); iter.Next() {
 			keys = append(keys, append([]byte{}, iter.Key()...))
 		}
-		defer iter.Close() //nolint:errcheck // close error safe to ignore in this context.
+		// CHANGED (#9): Close right away (not deferred) so the iterator isn't open while deleting.
+		if err = iter.Close(); err != nil {
+			return fmt.Errorf("could not close the iterator for legacy prefix %X: %w", prefix, err)
+		}
 
 		for _, key := range keys {
-			if err := kvStore.Delete(key); err != nil {
+			if err = kvStore.Delete(key); err != nil {
 				return fmt.Errorf("could not delete legacy key %X: %w", key, err)
 			}
 		}
 	}
 
-	if err := kvStore.Delete(types.LegacyNameParamStoreKey); err != nil {
+	if err := kvStore.Delete(legacyNameParamStoreKey); err != nil { // CHANGED (#11)
 		return fmt.Errorf("could not delete the legacy params: %w", err)
 	}
 	return nil
@@ -149,11 +158,11 @@ func LegacyComputeNameHash(name string) ([]byte, error) {
 	return hsh.Sum(nil), nil
 }
 
-// LegacyGetNameKeyBytes returns the full store key a name occupied before the 3->4 migration.
+// LegacyGetNameKeyBytes returns the full store key a name occupied before the 2->3 migration.
 func LegacyGetNameKeyBytes(name string) ([]byte, error) {
 	hash, err := LegacyComputeNameHash(name)
 	if err != nil {
 		return nil, err
 	}
-	return append(append([]byte{}, types.NameKeyPrefix...), hash...), nil
+	return append(append([]byte{}, legacyNameKeyPrefix...), hash...), nil // CHANGED (#10): was types.NameKeyPrefix (0x07)
 }
