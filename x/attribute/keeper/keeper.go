@@ -555,32 +555,43 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 	store := ctx.KVStore(k.storeKey)
 	expirationKeys := k.getExpirationKeys(ctx, store, limit)
 	for _, expirationKey := range expirationKeys {
+		// Delete the expiration lookup key no matter what happens.
+		store.Delete(expirationKey)
+
+		if len(expirationKey) < 9 {
+			// GetAddrAttributeKeyFromExpireKey panics if the key is too short. We protect against that here because
+			// this is usually run during the begin blocker (i.e. outside a tx) which doesn't have panic recovery.
+			// In other words, a panic here would cause a halt, which we don't want.
+			continue
+		}
 		attrKey := types.GetAddrAttributeKeyFromExpireKey(expirationKey)
 		bz := store.Get(attrKey)
-		if bz != nil {
-			var attribute types.Attribute
-			if err := k.cdc.Unmarshal(bz, &attribute); err == nil {
-				// Double check that the attribute is expired. In some rare cases, it might be possible for there to be
-				// an expiration key entry that doesn't match the attribute's current expiration. In such a case,
-				// we defer to the expiration date in the attribute record.
-				if isExpired(ctx, attribute) {
-					// delete attribute from store
-					store.Delete(attrKey)
-					// dec name to address lookup table count
-					k.DecAttrNameAddressLookup(ctx, attribute.Name, attribute.GetAddressBytes())
-
-					deleteExpirationEvent := types.NewEventAttributeExpired(attribute)
-					if err = ctx.EventManager().EmitTypedEvent(deleteExpirationEvent); err != nil {
-						ctx.Logger().Error(fmt.Sprintf("failed to emit typed event %v", err))
-					}
-				}
-			} else {
-				ctx.Logger().Error(fmt.Sprintf("unable to unmarshal attribute to delete key: %v error: %v", attrKey, err))
-			}
+		if bz == nil {
+			// Already does not exist, move on.
+			continue
 		}
 
-		// delete the expiration lookup key
-		store.Delete(expirationKey)
+		var attribute types.Attribute
+		if err := k.cdc.Unmarshal(bz, &attribute); err != nil {
+			ctx.Logger().Error(fmt.Sprintf("unable to unmarshal attribute to delete with key: %v error: %v", attrKey, err))
+			continue
+		}
+
+		// Double check that the attribute is expired. In some rare cases, it might be possible for there to be
+		// an expiration key entry that doesn't match the attribute's current expiration. In such a case,
+		// we defer to the expiration date in the attribute record.
+		if !isExpired(ctx, attribute) {
+			continue
+		}
+
+		// Delete the attribute from the store.
+		store.Delete(attrKey)
+		// Dec name to address lookup table count.
+		k.DecAttrNameAddressLookup(ctx, attribute.Name, attribute.GetAddressBytes())
+
+		if err := ctx.EventManager().EmitTypedEvent(types.NewEventAttributeExpired(attribute)); err != nil {
+			ctx.Logger().Error(fmt.Sprintf("failed to emit attribute expired typed event %v", err))
+		}
 	}
 	return len(expirationKeys)
 }
