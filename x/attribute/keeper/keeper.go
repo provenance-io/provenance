@@ -600,7 +600,7 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 // If the provided limit is not zero, the result is limited to that number of entries.
 func (k Keeper) getExpirationKeys(ctx sdk.Context, store storetypes.KVStore, limit int) [][]byte {
 	iterator := store.Iterator(types.AttributeExpirationKeyPrefix,
-		storetypes.InclusiveEndBytes(types.GetAttributeExpireTimePrefix(ctx.BlockTime())))
+		storetypes.PrefixEndBytes(types.GetAttributeExpireTimePrefix(ctx.BlockTime())))
 	defer iterator.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
 
 	expirationKeys := make([][]byte, 0)
