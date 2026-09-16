@@ -1,14 +1,16 @@
 package keeper_test
 
 import (
+	"testing"
+
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/provenance-io/provenance/x/name/keeper"
 	"github.com/provenance-io/provenance/x/name/types"
 	"github.com/stretchr/testify/suite"
@@ -18,77 +20,104 @@ type MigrationTestSuite struct {
 	suite.Suite
 
 	ctx       sdk.Context
-	store     storetypes.StoreKey
+	storeKey  *storetypes.KVStoreKey
 	cdc       codec.BinaryCodec
-	pubkey1   cryptotypes.PubKey
-	user1     string
 	user1Addr sdk.AccAddress
 }
 
+// NEW (#12): Without this, none of the tests in this suite run.
+func TestMigrationTestSuite(t *testing.T) {
+	suite.Run(t, new(MigrationTestSuite))
+}
+
 func (s *MigrationTestSuite) SetupTest() {
-	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
-	tKey := storetypes.NewTransientStoreKey("transient_test")
-	s.store = storeKey
-	s.ctx = testutil.DefaultContext(storeKey, tKey)
+	s.storeKey = storetypes.NewKVStoreKey(types.StoreKey)
+	s.ctx = testutil.DefaultContext(s.storeKey, storetypes.NewTransientStoreKey("transient_test"))
+	s.cdc = codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	s.user1Addr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+}
 
-	// Initialize pubkey and address
-	privKey := secp256k1.GenPrivKey()
-	s.pubkey1 = privKey.PubKey()
-	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
-	s.user1 = s.user1Addr.String()
+// seedLegacyRecord writes a name record and its address index entry using the pre-collections (v2) layout.
+func (s *MigrationTestSuite) seedLegacyRecord(record types.NameRecord) {
+	store := s.ctx.KVStore(s.storeKey)
+	bz := s.cdc.MustMarshal(&record)
 
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	s.cdc = codec.NewProtoCodec(interfaceRegistry)
+	nameKey, err := keeper.LegacyGetNameKeyBytes(record.Name)
+	s.Require().NoError(err, "LegacyGetNameKeyBytes(%q)", record.Name)
+	store.Set(nameKey, bz)
 
+	addr, err := sdk.AccAddressFromBech32(record.Address)
+	s.Require().NoError(err, "AccAddressFromBech32(%q)", record.Address)
+	addrKey := append(append([]byte{}, keeper.LegacyAddressKeyPrefix...), address.MustLengthPrefix(addr)...)
+	store.Set(addrKey, bz)
+}
+
+// seedLegacyParams writes the params using the pre-collections (v2) layout.
+func (s *MigrationTestSuite) seedLegacyParams(params types.Params) {
+	s.ctx.KVStore(s.storeKey).Set(keeper.LegacyNameParamStoreKey, s.cdc.MustMarshal(&params))
+}
+
+// migrate creates a keeper on the test store and runs the 2->3 migration.
+func (s *MigrationTestSuite) migrate() keeper.Keeper {
+	k := keeper.NewKeeper(s.cdc, runtime.NewKVStoreService(s.storeKey))
+	s.Require().NoError(keeper.NewMigrator(k).MigrateKVToCollections2to3(s.ctx), "MigrateKVToCollections2to3")
+	return k
+}
+
+// requireNoLegacyData asserts that nothing is left in the pre-collections (v2) layout.
+func (s *MigrationTestSuite) requireNoLegacyData() {
+	store := s.ctx.KVStore(s.storeKey)
+	for _, prefix := range [][]byte{keeper.LegacyNameKeyPrefix, keeper.LegacyAddressKeyPrefix} {
+		iter := storetypes.KVStorePrefixIterator(store, prefix)
+		hasData := iter.Valid()
+		s.Require().NoError(iter.Close(), "closing the iterator for prefix %X", prefix)
+		s.Require().False(hasData, "legacy prefix %X still has entries", prefix)
+	}
+	s.Require().False(store.Has(keeper.LegacyNameParamStoreKey), "the legacy params entry still exists")
 }
 
 func (s *MigrationTestSuite) TestMigration() {
-	storeKey := s.store.(*storetypes.KVStoreKey)
-	oldStore := s.ctx.KVStore(storeKey)
-
-	name := "test.provenance"
-	record := types.NewNameRecord(name, s.user1Addr, true)
-
-	// Seed the legacy name record under the pre-migration key format.
-	nameKey, err := keeper.LegacyGetNameKeyBytes(name)
-	s.Require().NoError(err, "failed to get legacy name key bytes")
-	recordBz, err := s.cdc.Marshal(&record)
-	s.Require().NoError(err, "failed to marshal name record")
-	oldStore.Set(nameKey, recordBz)
-
-	// Seed legacy params too, so the params migration is actually exercised.
+	records := []types.NameRecord{
+		types.NewNameRecord("provenance", s.user1Addr, true),
+		types.NewNameRecord("test.provenance", s.user1Addr, false),
+	}
+	for _, record := range records {
+		s.seedLegacyRecord(record)
+	}
 	legacyParams := types.DefaultParams()
-	oldStore.Set(types.LegacyNameParamStoreKey, s.cdc.MustMarshal(&legacyParams))
+	s.seedLegacyParams(legacyParams)
 
-	newKeeper := keeper.NewKeeper(s.cdc, runtime.NewKVStoreService(storeKey))
-	migrator := keeper.NewMigrator(newKeeper)
+	k := s.migrate()
 
-	err = migrator.MigrateKVToCollections2to3(s.ctx)
-	s.Require().NoError(err, "migration failed")
+	s.Require().Equal(legacyParams, k.GetParams(s.ctx), "params after migration")
+	for _, exp := range records {
+		got, err := k.GetRecordByName(s.ctx, exp.Name)
+		s.Require().NoError(err, "GetRecordByName(%q)", exp.Name)
+		s.Require().Equal(exp, *got, "record %q after migration", exp.Name)
+	}
 
-	params := newKeeper.GetParams(s.ctx)
-	s.Require().Equal(types.DefaultParams(), params, "params mismatch after migration")
+	byAddr, err := k.GetRecordsByAddress(s.ctx, s.user1Addr)
+	s.Require().NoError(err, "GetRecordsByAddress")
+	s.Require().ElementsMatch(records, byAddr, "records by address after migration")
 
-	migratedRecord, err := newKeeper.GetRecordByName(s.ctx, name)
-	s.Require().NoError(err, "failed to get migrated name record")
-	s.Require().Equal(name, migratedRecord.Name, "migrated record name mismatch")
-	s.Require().Equal(s.user1Addr.String(), migratedRecord.Address, "migrated record address mismatch")
+	s.requireNoLegacyData()
+}
 
-	iter, err := newKeeper.GetAddrIndex().MatchExact(s.ctx, s.user1Addr)
-	s.Require().NoError(err, "failed to get address index iterator")
-	defer iter.Close()
+// Covers review comment #13: starting from DefaultParams would turn a stored false into true.
+func (s *MigrationTestSuite) TestMigrationKeepsAllowUnrestrictedNamesFalse() {
+	legacyParams := types.DefaultParams()
+	legacyParams.AllowUnrestrictedNames = false
+	s.seedLegacyParams(legacyParams)
 
-	s.Require().True(iter.Valid(), "address index iterator should be valid")
+	k := s.migrate()
 
-	primaryKey, err := iter.PrimaryKey()
-	s.Require().NoError(err, "failed to get primary key from iterator")
+	s.Require().Equal(legacyParams, k.GetParams(s.ctx), "params after migration")
+	s.requireNoLegacyData()
+}
 
-	indexRecord, err := newKeeper.GetRecordByName(s.ctx, primaryKey)
-	s.Require().NoError(err, "failed to get record by primary key")
-	s.Require().Equal(migratedRecord, indexRecord, "migrated record and index record do not match")
+func (s *MigrationTestSuite) TestMigrationEmptyStore() {
+	k := s.migrate()
 
-	res, err := newKeeper.ReverseLookup(s.ctx, &types.QueryReverseLookupRequest{Address: s.user1})
-	s.Require().NoError(err, "reverse lookup query failed")
-	s.Require().Len(res.Name, 1, "unexpected number of names in reverse lookup")
-	s.Require().Equal(name, res.Name[0], "reverse lookup returned wrong name")
+	s.Require().Equal(types.DefaultParams(), k.GetParams(s.ctx), "params after migrating an empty store")
+	s.requireNoLegacyData()
 }

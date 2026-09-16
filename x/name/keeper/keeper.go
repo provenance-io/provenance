@@ -149,7 +149,7 @@ func (k Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress,
 	}
 	exists, err := k.nameRecords.Has(ctx, normalizedName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not check whether name %q is bound: %w", normalizedName, err)
 	}
 	if exists {
 		return types.ErrNameAlreadyBound
@@ -160,7 +160,7 @@ func (k Keeper) SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress,
 	}
 
 	if err := k.nameRecords.Set(ctx, normalizedName, record); err != nil {
-		return err
+		return fmt.Errorf("could not bind name %q to %s: %w", normalizedName, addr, err)
 	}
 
 	nameBoundEvent := types.NewEventNameBound(addr.String(), normalizedName, restrict)
@@ -178,7 +178,7 @@ func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddre
 	}
 	exists, err := k.nameRecords.Has(ctx, normalizedName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not check whether name %q is bound: %w", normalizedName, err)
 	}
 	if !exists {
 		return types.ErrNameNotBound
@@ -191,7 +191,7 @@ func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddre
 	}
 	// Update the record.
 	if err := k.nameRecords.Set(ctx, normalizedName, record); err != nil {
-		return err
+		return fmt.Errorf("could not update name record %q: %w", normalizedName, err)
 	}
 	nameUpdateEvent := types.NewEventNameUpdate(addr.String(), normalizedName, restrict)
 	return ctx.EventManager().EmitTypedEvent(nameUpdateEvent)
@@ -208,7 +208,7 @@ func (k Keeper) GetRecordByName(ctx sdk.Context, name string) (record *types.Nam
 		if errors.Is(err, collections.ErrNotFound) {
 			return nil, types.ErrNameNotBound
 		}
-		return nil, err
+		return nil, fmt.Errorf("could not get name record %q: %w", normalizedName, err)
 	}
 	return &namerecord, nil
 }
@@ -258,10 +258,10 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 		if errors.Is(err, collections.ErrNotFound) {
 			return types.ErrNameNotBound
 		}
-		return err
+		return fmt.Errorf("could not get name record %q: %w", normalizedName, err)
 	}
 	if err := k.nameRecords.Remove(ctx, normalizedName); err != nil {
-		return err
+		return fmt.Errorf("could not delete name record %q: %w", normalizedName, err)
 	}
 	nameUnboundEvent := types.NewEventNameUnbound(record.Address, name, record.Restricted)
 	return ctx.EventManager().EmitTypedEvent(nameUnboundEvent)
