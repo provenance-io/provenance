@@ -806,6 +806,106 @@ func (s *KeeperTestSuite) runGetAllAttributesTests(funcName string, attrGetter f
 	}
 }
 
+func (s *KeeperTestSuite) TestFindMissingAttributes() {
+	target := s.user1Addr
+
+	// Use an earlier block time for setup so that attributes with an expiration of "expired"
+	// (which is before s.ctx's block time) can still be set (their expiration just needs to be
+	// after the block time at the time they're set).
+	before := s.ctx.WithBlockTime(s.startBlockTime.Add(-1 * time.Hour))
+	expired := s.startBlockTime.Add(-1 * time.Minute)
+
+	names := []string{"aaa.bbb", "ccc.bbb", "ddd.eee", "fff.ggg", "old.bbb", "old.zzz", "lll.mmm"}
+	for _, name := range names {
+		s.Require().NoError(s.app.NameKeeper.SetNameRecord(before, name, s.user1Addr, false), "SetNameRecord %q", name)
+	}
+
+	setAttr := func(name, value string, expirationDate *time.Time) {
+		attr := types.NewAttribute(name, target.String(), types.AttributeType_String, []byte(value), expirationDate, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(before, attr, s.user1Addr), "SetAttribute %q = %q", name, value)
+	}
+
+	setAttr("aaa.bbb", "v1", nil)           // matches exact "aaa.bbb" and wildcard "*.bbb"
+	setAttr("ccc.bbb", "v1", nil)           // also matches wildcard "*.bbb"
+	setAttr("ddd.eee", "v1", nil)           // matches wildcard "*.eee"
+	setAttr("fff.ggg", "v1", nil)           // exact-only control, no matching wildcard used below
+	setAttr("old.bbb", "v1", &expired)      // expired; would otherwise match "old.bbb" and "*.bbb"
+	setAttr("old.zzz", "v1", &expired)      // expired; the only attribute with a ".zzz" suffix
+	setAttr("lll.mmm", "expired", &expired) // expired entry under a name that also has an active one
+	setAttr("lll.mmm", "active", nil)       // active entry, same name as the expired one above
+
+	tests := []struct {
+		name     string
+		addr     sdk.AccAddress
+		reqAttrs []string
+		expected []string
+	}{
+		{name: "no required attributes", addr: target, reqAttrs: nil, expected: nil},
+		{name: "single exact match", addr: target, reqAttrs: []string{"aaa.bbb"}, expected: nil},
+		{name: "single exact no match", addr: target, reqAttrs: []string{"zzz.zzz"}, expected: []string{"zzz.zzz"}},
+		{name: "single wildcard match", addr: target, reqAttrs: []string{"*.bbb"}, expected: nil},
+		{name: "single wildcard no match", addr: target, reqAttrs: []string{"*.zzz"}, expected: []string{"*.zzz"}},
+		{name: "expired exact attribute is missing", addr: target, reqAttrs: []string{"old.bbb"}, expected: []string{"old.bbb"}},
+		{name: "wildcard whose only match is expired", addr: target, reqAttrs: []string{"*.zzz"}, expected: []string{"*.zzz"}},
+		{
+			name:     "exact match with an expired entry and an active entry under the same name",
+			addr:     target,
+			reqAttrs: []string{"lll.mmm"},
+			expected: nil,
+		},
+		{
+			name:     "mixed exact and wildcard, all satisfied",
+			addr:     target,
+			reqAttrs: []string{"aaa.bbb", "*.bbb", "fff.ggg"},
+			expected: nil,
+		},
+		{
+			name:     "mixed exact and wildcard, exact not satisfied",
+			addr:     target,
+			reqAttrs: []string{"*.bbb", "zzz.zzz"},
+			expected: []string{"zzz.zzz"},
+		},
+		{
+			name:     "multiple wildcards, all satisfied",
+			addr:     target,
+			reqAttrs: []string{"*.bbb", "*.eee"},
+			expected: nil,
+		},
+		{
+			name:     "multiple wildcards, one unsatisfied",
+			addr:     target,
+			reqAttrs: []string{"*.bbb", "*.zzz"},
+			expected: []string{"*.zzz"},
+		},
+		{
+			name:     "duplicate entries, all satisfied",
+			addr:     target,
+			reqAttrs: []string{"aaa.bbb", "aaa.bbb", "*.bbb", "*.bbb"},
+			expected: nil,
+		},
+		{
+			name:     "duplicate entries, all missing",
+			addr:     target,
+			reqAttrs: []string{"zzz.zzz", "zzz.zzz"},
+			expected: []string{"zzz.zzz", "zzz.zzz"},
+		},
+		{
+			name:     "address with no attributes at all",
+			addr:     s.user2Addr,
+			reqAttrs: []string{"aaa.bbb", "*.bbb"},
+			expected: []string{"aaa.bbb", "*.bbb"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			missing, err := s.app.AttributeKeeper.FindMissingAttributes(s.ctx, tc.addr, tc.reqAttrs)
+			s.Require().NoError(err, "FindMissingAttributes error")
+			s.Assert().Equal(tc.expected, missing, "FindMissingAttributes result")
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestIncAndDecAddNameAddressLookup() {
 	attr := types.Attribute{
 		Name:          "example.attribute",
