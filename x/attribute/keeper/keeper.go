@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"strings"
-	"time"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -561,14 +560,19 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 		if bz != nil {
 			var attribute types.Attribute
 			if err := k.cdc.Unmarshal(bz, &attribute); err == nil {
-				// delete attribute from store
-				store.Delete(attrKey)
-				// dec name to address lookup table count
-				k.DecAttrNameAddressLookup(ctx, attribute.Name, attribute.GetAddressBytes())
+				// Double check that the attribute is expired. In some rare cases, it might be possible for there to be
+				// an expiration key entry that doesn't match the attribute's current expiration. In such a case,
+				// we defer to the expiration date in the attribute record.
+				if isExpired(ctx, attribute) {
+					// delete attribute from store
+					store.Delete(attrKey)
+					// dec name to address lookup table count
+					k.DecAttrNameAddressLookup(ctx, attribute.Name, attribute.GetAddressBytes())
 
-				deleteExpirationEvent := types.NewEventAttributeExpired(attribute)
-				if err = ctx.EventManager().EmitTypedEvent(deleteExpirationEvent); err != nil {
-					ctx.Logger().Error(fmt.Sprintf("failed to emit typed event %v", err))
+					deleteExpirationEvent := types.NewEventAttributeExpired(attribute)
+					if err = ctx.EventManager().EmitTypedEvent(deleteExpirationEvent); err != nil {
+						ctx.Logger().Error(fmt.Sprintf("failed to emit typed event %v", err))
+					}
 				}
 			} else {
 				ctx.Logger().Error(fmt.Sprintf("unable to unmarshal attribute to delete key: %v error: %v", attrKey, err))
@@ -584,10 +588,8 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 // getExpirationKeys gets all the keys of the attributes that are expired and should be deleted.
 // If the provided limit is not zero, the result is limited to that number of entries.
 func (k Keeper) getExpirationKeys(ctx sdk.Context, store storetypes.KVStore, limit int) [][]byte {
-	// The ending for iterators is exclusive. So we need to add a second to the
-	// blocktime to include entries that expire exactly on the block time.
-	endDateTime := ctx.BlockTime().Truncate(time.Second).Add(time.Second)
-	iterator := store.Iterator(types.AttributeExpirationKeyPrefix, types.GetAttributeExpireTimePrefix(endDateTime))
+	iterator := store.Iterator(types.AttributeExpirationKeyPrefix,
+		storetypes.InclusiveEndBytes(types.GetAttributeExpireTimePrefix(ctx.BlockTime())))
 	defer iterator.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
 
 	expirationKeys := make([][]byte, 0)
