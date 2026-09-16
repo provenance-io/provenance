@@ -207,6 +207,48 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 
 }
 
+func (s *KeeperTestSuite) TestSetAttributeReplacesOldExpirationLookup() {
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	future1 := s.startBlockTime.Add(1 * time.Hour)
+	future2 := s.startBlockTime.Add(2 * time.Hour)
+
+	s.Run("changing the expiration date deletes the old expiration key and adds the new one", func() {
+		value := []byte("attr-val-1")
+		attrV1 := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, &future1, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrV1, s.user1Addr), "SetAttribute with future1 expiration")
+		s.Require().NotNil(store.Get(types.AttributeExpireKey(attrV1)), "expiration key for future1 should exist after first SetAttribute")
+
+		attrV2 := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, &future2, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrV2, s.user1Addr), "SetAttribute with future2 expiration")
+
+		s.Assert().Nil(store.Get(types.AttributeExpireKey(attrV1)), "expiration key for future1 should be deleted after SetAttribute with future2")
+		s.Assert().NotNil(store.Get(types.AttributeExpireKey(attrV2)), "expiration key for future2 should exist after SetAttribute with future2")
+	})
+
+	s.Run("removing the expiration date deletes the old expiration key", func() {
+		value := []byte("attr-val-2")
+		attrWithExp := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, &future1, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrWithExp, s.user1Addr), "SetAttribute with expiration")
+		s.Require().NotNil(store.Get(types.AttributeExpireKey(attrWithExp)), "expiration key should exist after first SetAttribute")
+
+		attrNoExp := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, nil, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrNoExp, s.user1Addr), "SetAttribute without expiration")
+
+		s.Assert().Nil(store.Get(types.AttributeExpireKey(attrWithExp)), "expiration key should be deleted after SetAttribute without expiration")
+	})
+
+	s.Run("adding an expiration date to a previously unexpiring attribute adds a new key", func() {
+		value := []byte("attr-val-3")
+		attrNoExp := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, nil, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrNoExp, s.user1Addr), "SetAttribute without expiration")
+
+		attrWithExp := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, &future1, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrWithExp, s.user1Addr), "SetAttribute with expiration")
+
+		s.Assert().NotNil(store.Get(types.AttributeExpireKey(attrWithExp)), "expiration key should exist after SetAttribute with expiration")
+	})
+}
+
 func (s *KeeperTestSuite) TestUpdateAttribute() {
 	attr := types.Attribute{
 		Name:          "example.attribute",
