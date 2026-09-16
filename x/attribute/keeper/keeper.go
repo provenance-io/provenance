@@ -177,10 +177,18 @@ func (k Keeper) SetAttribute(
 	key := types.AddrAttributeKey(attr.GetAddressBytes(), attr)
 
 	store := ctx.KVStore(k.storeKey)
-	isNew := !store.Has(key)
+	oldBz := store.Get(key)
+	isNew := len(oldBz) == 0
 	store.Set(key, bz)
 	if isNew {
 		k.IncAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+	} else {
+		var oldAttr types.Attribute
+		// Not being able to read the existing record should not prevent overwriting it.
+		// So if there's an error from Unmarshal, we ignore it and possibly leave an orphaned expiration entry.
+		if err = k.cdc.Unmarshal(oldBz, &oldAttr); err == nil {
+			k.deleteAttributeExpireLookup(store, oldAttr)
+		}
 	}
 	k.addAttributeExpireLookup(store, attr)
 
