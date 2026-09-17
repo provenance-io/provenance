@@ -116,6 +116,7 @@ func (k Keeper) GetAttributes(ctx sdk.Context, addr string, name string) ([]type
 // FindMissingAttributes returns the subset of reqAttrs for which addr does not have a matching,
 // unexpired attribute. Each of the provided reqAttrs can be either a full/exact name, or a name
 // that start with a wildcard "*." that matches any attribute with a name with the same suffix.
+// It's assumed that the provided reqAttrs have each been normalized.
 func (k Keeper) FindMissingAttributes(ctx sdk.Context, addr []byte, reqAttrs []string) ([]string, error) {
 	if len(reqAttrs) == 0 {
 		return nil, nil
