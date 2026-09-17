@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -19,7 +18,7 @@ type AccountKeeper interface {
 }
 
 type AttributeKeeper interface {
-	GetAllAttributesAddr(ctx sdk.Context, addr []byte) ([]attrtypes.Attribute, error)
+	FindMissingAttributes(ctx sdk.Context, addr []byte, reqAttrs []string) ([]string, error)
 }
 
 type BankKeeper interface {
