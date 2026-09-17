@@ -12,7 +12,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/internal/provutils"
-	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
@@ -165,76 +164,78 @@ var _ exchange.AttributeKeeper = (*MockAttributeKeeper)(nil)
 
 // MockAttributeKeeper satisfies the exchange.AttributeKeeper interface but just records the calls and allows dictation of results.
 type MockAttributeKeeper struct {
-	Calls                          AttributeCalls
-	GetAllAttributesAddrResultsMap map[string]*GetAllAttributesAddrResult
+	Calls                           AttributeCalls
+	FindMissingAttributesResultsMap map[string]*FindMissingAttributesResult
 }
 
 // AttributeCalls contains all the calls that the mock attribute keeper makes.
 type AttributeCalls struct {
-	GetAllAttributesAddr [][]byte
+	FindMissingAttributes []*FindMissingAttributesCall
 }
 
-// GetAllAttributesAddrResult contains the result args to return for a GetAllAttributesAddr call.
-type GetAllAttributesAddrResult struct {
-	attrs []attrtypes.Attribute
-	err   error
+type FindMissingAttributesCall struct {
+	addr     []byte
+	reqAttrs []string
+}
+
+type FindMissingAttributesResult struct {
+	missing []string
+	err     error
 }
 
 // NewMockAttributeKeeper creates a new empty MockAttributeKeeper.
 // Follow it up with WithGetAllAttributesAddrResult to dictate results.
 func NewMockAttributeKeeper() *MockAttributeKeeper {
 	return &MockAttributeKeeper{
-		GetAllAttributesAddrResultsMap: make(map[string]*GetAllAttributesAddrResult),
+		FindMissingAttributesResultsMap: make(map[string]*FindMissingAttributesResult),
 	}
 }
 
-// WithGetAllAttributesAddrResult sets up the provided address to return the given attrs
-// and error from calls to GetAllAttributesAddr. An empty string means no error.
+// WithFindMissingAttributesResult sets up the provided address to return the given missing attrs and error from
+// call to FindMissingAttributesResult. An empty string means no error.
 // This method both updates the receiver and returns it.
-func (k *MockAttributeKeeper) WithGetAllAttributesAddrResult(addr []byte, attrNames []string, errStr string) *MockAttributeKeeper {
-	var attrs []attrtypes.Attribute
-	if attrNames != nil {
-		attrs = make([]attrtypes.Attribute, len(attrNames))
-		for i, name := range attrNames {
-			attrs[i] = attrtypes.Attribute{
-				Name:          name,
-				Value:         []byte("this is the " + name + " value"),
-				AttributeType: attrtypes.AttributeType_String,
-				Address:       sdk.AccAddress(addr).String(),
-			}
-		}
-	}
-	k.GetAllAttributesAddrResultsMap[string(addr)] = NewGetAllAttributesAddrResult(attrs, errStr)
+func (k *MockAttributeKeeper) WithFindMissingAttributesResult(addr []byte, missing []string, errStr string) *MockAttributeKeeper {
+	k.FindMissingAttributesResultsMap[string(addr)] = NewFindMissingAttributesResult(missing, errStr)
 	return k
 }
 
-func (k *MockAttributeKeeper) GetAllAttributesAddr(_ sdk.Context, addr []byte) ([]attrtypes.Attribute, error) {
-	k.Calls.GetAllAttributesAddr = append(k.Calls.GetAllAttributesAddr, addr)
-	if rv, found := k.GetAllAttributesAddrResultsMap[string(addr)]; found {
-		return rv.attrs, rv.err
+func (k *MockAttributeKeeper) FindMissingAttributes(_ sdk.Context, addr []byte, reqAttrs []string) ([]string, error) {
+	k.Calls.FindMissingAttributes = append(k.Calls.FindMissingAttributes, NewFindMissingAttributesCall(addr, reqAttrs))
+	if rv, found := k.FindMissingAttributesResultsMap[string(addr)]; found {
+		return rv.missing, rv.err
 	}
 	return nil, nil
 }
 
 // assertGetAllAttributesAddrCalls asserts that a mock keeper's Calls.GetAllAttributesAddr match the provided expected calls.
-func (s *TestSuite) assertGetAllAttributesAddrCalls(mk *MockAttributeKeeper, expected [][]byte, msg string, args ...interface{}) bool {
+func (s *TestSuite) assertFindMissingAttributesCalls(mk *MockAttributeKeeper, expected []*FindMissingAttributesCall, msg string, args ...interface{}) bool {
 	s.T().Helper()
-	return assertEqualSlice(s, expected, mk.Calls.GetAllAttributesAddr,
-		func(addr []byte) string {
-			return s.getAddrName(addr)
+	return assertEqualSlice(s, expected, mk.Calls.FindMissingAttributes,
+		func(call *FindMissingAttributesCall) string {
+			return s.getAddrName(call.addr) + ": " + fmt.Sprintf("%q", call.reqAttrs)
 		},
-		msg+" GetAllAttributesAddr calls", args...)
+		msg+" FindMissingAttributes calls", args...)
 }
 
 // assertAttributeKeeperCalls asserts that all the calls made to a mock account keeper match the provided expected calls.
 func (s *TestSuite) assertAttributeKeeperCalls(mk *MockAttributeKeeper, expected AttributeCalls, msg string, args ...interface{}) bool {
 	s.T().Helper()
-	return s.assertGetAllAttributesAddrCalls(mk, expected.GetAllAttributesAddr, msg, args...)
+	return s.assertFindMissingAttributesCalls(mk, expected.FindMissingAttributes, msg, args...)
 }
 
-// NewGetAllAttributesAddrResult creates a new GetAllAttributesAddrResult from the provided stuff.
-func NewGetAllAttributesAddrResult(attrs []attrtypes.Attribute, errStr string) *GetAllAttributesAddrResult {
-	rv := &GetAllAttributesAddrResult{attrs: attrs}
+func NewAttributeCalls(fmaCalls ...*FindMissingAttributesCall) AttributeCalls {
+	return AttributeCalls{
+		FindMissingAttributes: fmaCalls,
+	}
+}
+
+func NewFindMissingAttributesCall(addr []byte, reqAttrs []string) *FindMissingAttributesCall {
+	return &FindMissingAttributesCall{addr: addr, reqAttrs: reqAttrs}
+}
+
+// NewFindMissingAttributesResult creates a new FindMissingAttributesResult from the provided stuff.
+func NewFindMissingAttributesResult(missing []string, errStr string) *FindMissingAttributesResult {
+	rv := &FindMissingAttributesResult{missing: missing}
 	if len(errStr) > 0 {
 		rv.err = errors.New(errStr)
 	}
