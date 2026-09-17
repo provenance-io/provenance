@@ -1,7 +1,5 @@
 package keeper
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
-
 // This file is available only to unit tests and exposes private things
 // so that they can be used in unit tests.
 var (
@@ -12,11 +10,3 @@ var (
 	// LegacyNameParamStoreKey is a TEST ONLY exposure of legacyNameParamStoreKey.
 	LegacyNameParamStoreKey = legacyNameParamStoreKey
 )
-
-// AddRecord is a TEST ONLY exposure of addRecord.
-func (k Keeper) AddRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict, isModifiable bool) error {
-	if isModifiable {
-		return k.UpdateNameRecord(ctx, name, addr, restrict)
-	}
-	return k.SetNameRecord(ctx, name, addr, restrict)
-}

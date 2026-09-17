@@ -208,7 +208,7 @@ func (s msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 	}
 
 	if err := s.SetParams(ctx, msg.Params); err != nil {
-		panic(err)
+		return nil, err
 	}
 	if err := ctx.EventManager().EmitTypedEvent(types.NewEventNameParamsUpdated(
 		msg.Params.AllowUnrestrictedNames,
