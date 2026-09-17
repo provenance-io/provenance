@@ -17,7 +17,6 @@ import (
 	simapp "github.com/provenance-io/provenance/app"
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 	attrTypes "github.com/provenance-io/provenance/x/attribute/types"
-	"github.com/provenance-io/provenance/x/marker/keeper"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -292,11 +291,11 @@ func TestSendRestrictionFn(t *testing.T) {
 		},
 		{
 			name:       "error getting attrs",
-			attrKeeper: NewWrappedAttrKeeper().WithGetAllAttributesAddrErrs("crazy injected attr error"),
+			attrKeeper: NewWrappedAttrKeeper().WithFindMissingAttributesErrs("crazy injected attr error"),
 			from:       addrOther,
 			to:         addrWithAttrs,
 			amt:        cz(c(1, rDenom3Attrs)),
-			expErr:     "could not get attributes for " + addrWithAttrsStr + ": crazy injected attr error",
+			expErr:     "error finding missing attributes for " + addrWithAttrs.String() + " (" + rDenom3Attrs + "): crazy injected attr error",
 		},
 		{
 			name:   "restricted marker with empty required attributes and no transfer rights",
@@ -1123,83 +1122,6 @@ func TestNormalizeRequiredAttributes(t *testing.T) {
 				require.NoError(t, err, "NormalizeRequiredAttributes error")
 				require.Equal(t, tc.expectedNormalized, result, "NormalizeRequiredAttributes result")
 			}
-		})
-	}
-}
-
-func TestMatchAttribute(t *testing.T) {
-	testCases := []struct {
-		name           string
-		reqAttr        string
-		attr           string
-		expectedResult bool
-	}{
-		{
-			name:           "should succeed - wildcard on single name",
-			reqAttr:        "*.provenance.io",
-			attr:           "test.provenance.io",
-			expectedResult: true,
-		},
-		{
-			name:           "should succeed - wildcard on multiple names",
-			reqAttr:        "*.provenance.io",
-			attr:           "test.test.test.provenance.io",
-			expectedResult: true,
-		},
-		{
-			name:           "should succeed - literal match",
-			reqAttr:        "test.provenance.io",
-			attr:           "test.provenance.io",
-			expectedResult: true,
-		},
-		{
-			name:           "should fail - wildcard match",
-			reqAttr:        "*.provenance.io",
-			attr:           "test.provenance.com",
-			expectedResult: false,
-		},
-		{
-			name:           "should fail - literal match",
-			reqAttr:        "test.provenance.io",
-			attr:           "test.provenance.com",
-			expectedResult: false,
-		},
-		{
-			name:           "should fail - empty required attr",
-			reqAttr:        "",
-			attr:           "test.provenance.com",
-			expectedResult: false,
-		},
-		{
-			name:           "should fail - empty required attr and attr",
-			reqAttr:        "",
-			attr:           "",
-			expectedResult: false,
-		},
-		{
-			name:           "should fail - extra ending",
-			reqAttr:        "test.provenance.io",
-			attr:           "test.provenance.iox",
-			expectedResult: false,
-		},
-		{
-			name:           "should fail - wildcard extra ending",
-			reqAttr:        "*.provenance.io",
-			attr:           "test.provenance.iox",
-			expectedResult: false,
-		},
-		{
-			name:           "should fail - wildcard extra beginning",
-			reqAttr:        "*.provenance.io",
-			attr:           "test.xprovenance.io",
-			expectedResult: false,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			result := keeper.MatchAttribute(tc.reqAttr, tc.attr)
-			require.Equal(t, tc.expectedResult, result, "MatchAttribute")
 		})
 	}
 }

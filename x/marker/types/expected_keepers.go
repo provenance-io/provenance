@@ -10,8 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
-
-	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 )
 
 // AccountKeeper defines the auth/account functionality needed by the marker keeper.
@@ -64,7 +62,7 @@ type FeeGrantKeeper interface {
 // AttrKeeper defines the attribute functionality needed by the marker module.
 type AttrKeeper interface {
 	GetMaxValueLength(ctx sdk.Context) uint32
-	GetAllAttributesAddr(ctx sdk.Context, addr []byte) ([]attrtypes.Attribute, error)
+	FindMissingAttributes(ctx sdk.Context, addr []byte, reqAttrs []string) ([]string, error)
 	GetAccountData(ctx sdk.Context, addr string) (string, error)
 	SetAccountData(ctx sdk.Context, addr string, value string) error
 }
