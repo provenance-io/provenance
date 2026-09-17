@@ -148,7 +148,7 @@ func (k Keeper) FindMissingAttributes(ctx sdk.Context, addr []byte, reqAttrs []s
 		for ; it.Valid() && remaining > 0; it.Next() {
 			attr := types.Attribute{}
 			if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
-				it.Close() //nolint:errcheck // close error safe to ignore in this context.
+				it.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
 				return nil, fmt.Errorf("failed to unmarshal attribute: %w", err)
 			}
 			if isExpired(ctx, attr) {
@@ -167,7 +167,7 @@ func (k Keeper) FindMissingAttributes(ctx sdk.Context, addr []byte, reqAttrs []s
 				}
 			}
 		}
-		it.Close() //nolint:errcheck // close error safe to ignore in this context.
+		it.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
 	}
 
 	// Look up any exact names that weren't already found above (or that we never scanned for above).
@@ -180,7 +180,7 @@ func (k Keeper) FindMissingAttributes(ctx sdk.Context, addr []byte, reqAttrs []s
 		for ; nameIt.Valid(); nameIt.Next() {
 			attr := types.Attribute{}
 			if err := k.cdc.Unmarshal(nameIt.Value(), &attr); err != nil {
-				nameIt.Close() //nolint:errcheck // close error safe to ignore in this context.
+				nameIt.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
 				return nil, fmt.Errorf("could not unmarshal attribute: %w", err)
 			}
 			if !isExpired(ctx, attr) {
@@ -188,7 +188,7 @@ func (k Keeper) FindMissingAttributes(ctx sdk.Context, addr []byte, reqAttrs []s
 				break
 			}
 		}
-		nameIt.Close() //nolint:errcheck // close error safe to ignore in this context.
+		nameIt.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
 		found[exact] = has
 	}
 
