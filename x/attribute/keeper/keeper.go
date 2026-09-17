@@ -137,12 +137,14 @@ func (k Keeper) FindMissingAttributes(ctx sdk.Context, addr []byte, reqAttrs []s
 		}
 	}
 
+	store := ctx.KVStore(k.storeKey)
+
 	// If there are any wildcards, do a single pass over all of addr's attributes, checking each one
 	// against both the wildcards and the exact names, stopping once all wildcards have been found.
 	// Checking the exact names in here too means we might not need to look for them individually below.
 	if len(wildcards) > 0 {
 		remaining := len(wildcards)
-		it := storetypes.KVStorePrefixIterator(ctx.KVStore(k.storeKey), types.AddrAttributesKeyPrefix(addr))
+		it := storetypes.KVStorePrefixIterator(store, types.AddrAttributesKeyPrefix(addr))
 		for ; it.Valid() && remaining > 0; it.Next() {
 			attr := types.Attribute{}
 			if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
@@ -174,7 +176,7 @@ func (k Keeper) FindMissingAttributes(ctx sdk.Context, addr []byte, reqAttrs []s
 			continue
 		}
 		has := false
-		nameIt := storetypes.KVStorePrefixIterator(ctx.KVStore(k.storeKey), types.AddrAttributesNameKeyPrefix(addr, exact))
+		nameIt := storetypes.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(addr, exact))
 		for ; nameIt.Valid(); nameIt.Next() {
 			attr := types.Attribute{}
 			if err := k.cdc.Unmarshal(nameIt.Value(), &attr); err != nil {
