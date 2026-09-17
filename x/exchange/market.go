@@ -662,43 +662,6 @@ func IsValidReqAttr(reqAttr string) bool {
 	return nametypes.IsValidName(reqAttr)
 }
 
-// FindUnmatchedReqAttrs returns all required attributes that don't have a match in the provided account attributes.
-// This assumes that reqAttrs and accAttrs have all been normalized.
-func FindUnmatchedReqAttrs(reqAttrs, accAttrs []string) []string {
-	var rv []string
-	for _, reqAttr := range reqAttrs {
-		if !HasReqAttrMatch(reqAttr, accAttrs) {
-			rv = append(rv, reqAttr)
-		}
-	}
-	return rv
-}
-
-// HasReqAttrMatch returns true if one (or more) accAttrs is a match for the provided required attribute.
-// This assumes that reqAttr and accAttrs have all been normalized.
-func HasReqAttrMatch(reqAttr string, accAttrs []string) bool {
-	for _, accAttr := range accAttrs {
-		if IsReqAttrMatch(reqAttr, accAttr) {
-			return true
-		}
-	}
-	return false
-}
-
-// IsReqAttrMatch returns true if the provide account attribute is a match for the given required attribute.
-// This assumes that reqAttr and accAttr have both been normalized.
-func IsReqAttrMatch(reqAttr, accAttr string) bool {
-	if len(reqAttr) == 0 || len(accAttr) == 0 {
-		return false
-	}
-	if strings.HasPrefix(reqAttr, "*.") {
-		// reqAttr[1:] is used here (instead of [2:]) because we need that . to be
-		// part of the match. Otherwise "*.b.a" would match "c.b.a" as well as "c.evilb.a".
-		return strings.HasSuffix(accAttr, reqAttr[1:])
-	}
-	return reqAttr == accAttr
-}
-
 // ValidateBips returns an error if the provided bips value is bad. The name is part of the error message.
 func ValidateBips(name string, bips uint32) error {
 	if bips > MaxBips {
