@@ -45,7 +45,6 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.ctx = s.app.BaseApp.NewContext(true)
 	s.app.AccountKeeper.Params.Set(s.ctx, authtypes.DefaultParams())
 	s.app.BankKeeper.SetParams(s.ctx, banktypes.DefaultParams())
-	s.app.NameKeeper.SetParams(s.ctx, nametypes.DefaultParams())
 	s.Require().NoError(s.app.NameKeeper.SetParams(s.ctx, nametypes.DefaultParams()), "NameKeeper.SetParams")
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
