@@ -815,7 +815,7 @@ func (s *KeeperTestSuite) TestFindMissingAttributes() {
 	before := s.ctx.WithBlockTime(s.startBlockTime.Add(-1 * time.Hour))
 	expired := s.startBlockTime.Add(-1 * time.Minute)
 
-	names := []string{"aaa.bbb", "ccc.bbb", "ddd.eee", "fff.ggg", "old.bbb", "old.zzz", "lll.mmm"}
+	names := []string{"aaa.bbb", "ccc.bbb", "ddd.eee", "fff.ggg", "old.bbb", "old.zzz", "lll.mmm", "evilfoo"}
 	for _, name := range names {
 		s.Require().NoError(s.app.NameKeeper.SetNameRecord(before, name, s.user1Addr, false), "SetNameRecord %q", name)
 	}
@@ -833,6 +833,7 @@ func (s *KeeperTestSuite) TestFindMissingAttributes() {
 	setAttr("old.zzz", "v1", &expired)      // expired; the only attribute with a ".zzz" suffix
 	setAttr("lll.mmm", "expired", &expired) // expired entry under a name that also has an active one
 	setAttr("lll.mmm", "active", nil)       // active entry, same name as the expired one above
+	setAttr("evilfoo", "v1", nil)           // ends with "foo" but has no "." before it; must not match "*.foo"
 
 	tests := []struct {
 		name     string
@@ -847,6 +848,12 @@ func (s *KeeperTestSuite) TestFindMissingAttributes() {
 		{name: "single wildcard no match", addr: target, reqAttrs: []string{"*.zzz"}, expected: []string{"*.zzz"}},
 		{name: "expired exact attribute is missing", addr: target, reqAttrs: []string{"old.bbb"}, expected: []string{"old.bbb"}},
 		{name: "wildcard whose only match is expired", addr: target, reqAttrs: []string{"*.zzz"}, expected: []string{"*.zzz"}},
+		{
+			name:     "wildcard requires a dot boundary, not just a matching suffix",
+			addr:     target,
+			reqAttrs: []string{"*.foo"},
+			expected: []string{"*.foo"},
+		},
 		{
 			name:     "exact match with an expired entry and an active entry under the same name",
 			addr:     target,
