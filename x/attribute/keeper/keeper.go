@@ -117,6 +117,10 @@ func (k Keeper) GetAttributes(ctx sdk.Context, addr string, name string) ([]type
 // unexpired attribute. Each of the provided reqAttrs can be either a full/exact name, or a name
 // that start with a wildcard "*." that matches any attribute with a name with the same suffix.
 func (k Keeper) FindMissingAttributes(ctx sdk.Context, addr []byte, reqAttrs []string) ([]string, error) {
+	if len(reqAttrs) == 0 {
+		return nil, nil
+	}
+
 	found := make(map[string]bool, len(reqAttrs))
 	var exacts []string
 	var wildcards []string
