@@ -207,6 +207,48 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 
 }
 
+func (s *KeeperTestSuite) TestSetAttributeReplacesOldExpirationLookup() {
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	future1 := s.startBlockTime.Add(1 * time.Hour)
+	future2 := s.startBlockTime.Add(2 * time.Hour)
+
+	s.Run("changing the expiration date deletes the old expiration key and adds the new one", func() {
+		value := []byte("attr-val-1")
+		attrV1 := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, &future1, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrV1, s.user1Addr), "SetAttribute with future1 expiration")
+		s.Require().NotNil(store.Get(types.AttributeExpireKey(attrV1)), "expiration key for future1 should exist after first SetAttribute")
+
+		attrV2 := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, &future2, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrV2, s.user1Addr), "SetAttribute with future2 expiration")
+
+		s.Assert().Nil(store.Get(types.AttributeExpireKey(attrV1)), "expiration key for future1 should be deleted after SetAttribute with future2")
+		s.Assert().NotNil(store.Get(types.AttributeExpireKey(attrV2)), "expiration key for future2 should exist after SetAttribute with future2")
+	})
+
+	s.Run("removing the expiration date deletes the old expiration key", func() {
+		value := []byte("attr-val-2")
+		attrWithExp := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, &future1, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrWithExp, s.user1Addr), "SetAttribute with expiration")
+		s.Require().NotNil(store.Get(types.AttributeExpireKey(attrWithExp)), "expiration key should exist after first SetAttribute")
+
+		attrNoExp := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, nil, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrNoExp, s.user1Addr), "SetAttribute without expiration")
+
+		s.Assert().Nil(store.Get(types.AttributeExpireKey(attrWithExp)), "expiration key should be deleted after SetAttribute without expiration")
+	})
+
+	s.Run("adding an expiration date to a previously unexpiring attribute adds a new key", func() {
+		value := []byte("attr-val-3")
+		attrNoExp := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, nil, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrNoExp, s.user1Addr), "SetAttribute without expiration")
+
+		attrWithExp := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, &future1, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrWithExp, s.user1Addr), "SetAttribute with expiration")
+
+		s.Assert().NotNil(store.Get(types.AttributeExpireKey(attrWithExp)), "expiration key should exist after SetAttribute with expiration")
+	})
+}
+
 func (s *KeeperTestSuite) TestUpdateAttribute() {
 	attr := types.Attribute{
 		Name:          "example.attribute",
@@ -1194,6 +1236,30 @@ func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
 	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr5)), "store.Get attr5 AttributeExpireKey")
 	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr5.Name, attr5.GetAddressBytes())), "store.Get attr5 AttributeNameAddrKeyPrefix")
 
+	// attr6 has a real, current expiration date in the future, so it should not be deleted.
+	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "six.expire.testing", s.user1Addr, false), "SetNameRecord six.expire.testing")
+	attr6 := types.NewAttribute("six.expire.testing", s.user1, types.AttributeType_String, []byte("test6"), nil, "")
+	attr6.ExpirationDate = &future
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr6, s.user1Addr), "SetAttribute attr6")
+	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr6)), "store.Get attr6 AttributeExpireKey")
+	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr6.Name, attr6.GetAddressBytes())), "store.Get attr6 AttributeNameAddrKeyPrefix")
+
+	// Simulate an orphaned expiration-lookup entry for attr6: one that references attr6's address, name,
+	// and value hash (the parts GetAddrAttributeKeyFromExpireKey uses to find the attribute record), but
+	// with a past expiration time instead of attr6's real (future) one. This mirrors what SetAttribute's
+	// doc comment says can happen if it fails to unmarshal an existing record while overwriting it. This
+	// stale lookup entry should be deleted, but attr6 itself must not be, since it isn't actually expired.
+	attr6ExpireKeySuffix := types.AttributeExpireKey(attr6)[9:]
+	orphanedExpireKey := append(types.GetAttributeExpireTimePrefix(past), attr6ExpireKeySuffix...)
+	store.Set(orphanedExpireKey, []byte{})
+	s.Require().NotNil(store.Get(orphanedExpireKey), "store.Get orphanedExpireKey before DeleteExpiredAttributes")
+
+	// A too-short entry under the expiration key prefix should be deleted and skipped without panicking
+	// (GetAddrAttributeKeyFromExpireKey would otherwise panic trying to slice past the end of the key).
+	shortKey := append([]byte(nil), types.AttributeExpirationKeyPrefix...)
+	store.Set(shortKey, []byte{})
+	s.Require().NotNil(store.Get(shortKey), "store.Get shortKey before DeleteExpiredAttributes")
+
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager()).WithBlockTime(s.startBlockTime)
 	s.app.AttributeKeeper.DeleteExpiredAttributes(s.ctx, 0)
 
@@ -1217,6 +1283,19 @@ func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
 	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr4.Name, attr4.GetAddressBytes())), "store.Get attr4 AttributeNameAddrKeyPrefix")
 	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr5)), "store.Get attr5 AttributeExpireKey")
 	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr5.Name, attr5.GetAddressBytes())), "store.Get attr5 AttributeNameAddrKeyPrefix")
+
+	// attr6 was not actually expired, so it should survive even though a stale expiration-lookup entry
+	// pointed at it. Its own (non-expired) expiration entry should be untouched.
+	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr6)), "store.Get attr6 AttributeExpireKey")
+	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr6.Name, attr6.GetAddressBytes())), "store.Get attr6 AttributeNameAddrKeyPrefix")
+	s.Assert().Nil(store.Get(orphanedExpireKey), "store.Get orphanedExpireKey: stale entry should have been removed")
+
+	// The malformed short entry should be removed without having caused a panic.
+	s.Assert().Nil(store.Get(shortKey), "store.Get shortKey: malformed entry should have been removed")
+
+	// Only attr1, attr2, and attr3 were actually expired and deleted, so only 3 events should have fired -
+	// the orphaned lookup for attr6 and the malformed short entry must not have produced any of their own.
+	s.Assert().Len(s.ctx.EventManager().Events(), 3, "number of events emitted by DeleteExpiredAttributes")
 }
 
 func (s *KeeperTestSuite) TestGetAccountData() {
