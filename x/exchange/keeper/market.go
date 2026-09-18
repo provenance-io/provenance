@@ -1254,19 +1254,8 @@ func updateReqAttrsCommitment(store storetypes.KVStore, marketID uint32, toRemov
 
 // acctHasReqAttrs returns true if either reqAttrs is empty or the provide address has all of them on their account.
 func (k Keeper) acctHasReqAttrs(ctx sdk.Context, addr sdk.AccAddress, reqAttrs []string) bool {
-	if len(reqAttrs) == 0 {
-		return true
-	}
-	attrs, err := k.attrKeeper.GetAllAttributesAddr(ctx, addr)
-	if err != nil {
-		return false
-	}
-	accAttrs := make([]string, len(attrs))
-	for i, attr := range attrs {
-		accAttrs[i] = attr.Name
-	}
-	missing := exchange.FindUnmatchedReqAttrs(reqAttrs, accAttrs)
-	return len(missing) == 0
+	missing, err := k.attrKeeper.FindMissingAttributes(ctx, addr, reqAttrs)
+	return err == nil && len(missing) == 0
 }
 
 // GetReqAttrsAsk gets the attributes required to create an ask order.

@@ -169,6 +169,7 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 		expErr      string
 		expHoldCall bool
 		expAttrCall bool
+		expReqAttrs []string
 		expEvent    bool
 		expAmount   sdk.Coins
 	}{
@@ -218,11 +219,13 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 					ReqAttrCreateCommitment:  []string{"com.can.do"},
 				})
 			},
+			attrKeeper:  NewMockAttributeKeeper().WithFindMissingAttributesResult(s.addr1, []string{"com.can.do"}, ""),
 			marketID:    7,
 			addr:        s.addr1,
 			amount:      s.coins("71banana"),
 			expErr:      "account " + s.addr1.String() + " is not allowed to create commitments in market 7",
 			expAttrCall: true,
+			expReqAttrs: []string{"com.can.do"},
 		},
 		{
 			name: "empty state: error adding hold",
@@ -240,6 +243,7 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 			amount:      s.coins("23apple"),
 			expErr:      "injected testing error",
 			expHoldCall: true,
+			expAttrCall: true,
 		},
 		{
 			name: "empty state: new commitment",
@@ -255,6 +259,7 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 			addr:        s.addr3,
 			amount:      s.coins("23apple"),
 			expHoldCall: true,
+			expAttrCall: true,
 			expEvent:    true,
 			expAmount:   s.coins("23apple"),
 		},
@@ -269,12 +274,12 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 					ReqAttrCreateCommitment:  []string{"com.can.do"},
 				})
 			},
-			attrKeeper:  NewMockAttributeKeeper().WithGetAllAttributesAddrResult(s.addr4, []string{"com.can.do"}, ""),
 			marketID:    4,
 			addr:        s.addr4,
 			amount:      s.coins("15peach"),
 			expHoldCall: true,
 			expAttrCall: true,
+			expReqAttrs: []string{"com.can.do"},
 			expEvent:    true,
 			expAmount:   s.coins("15peach"),
 		},
@@ -294,6 +299,7 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 			addr:        s.addr3,
 			amount:      s.coins("100apple"),
 			expHoldCall: true,
+			expAttrCall: true,
 			expEvent:    true,
 			expAmount:   s.coins("123apple"),
 		},
@@ -332,11 +338,13 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("22apple"))
 				keeper.SetCommitmentAmount(store, 2, s.addr4, s.coins("24apple"))
 			},
+			attrKeeper:  NewMockAttributeKeeper().WithFindMissingAttributesResult(s.addr4, []string{"just.some.com.okay"}, ""),
 			marketID:    2,
 			addr:        s.addr4,
 			amount:      s.coins("77banana"),
 			expErr:      "account " + s.addr4.String() + " is not allowed to create commitments in market 2",
 			expAttrCall: true,
+			expReqAttrs: []string{"just.some.com.okay"},
 			expAmount:   s.coins("24apple"),
 		},
 		{
@@ -348,6 +356,7 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 			amount:      s.coins("100apple"),
 			expErr:      "injected testing error",
 			expHoldCall: true,
+			expAttrCall: true,
 			expAmount:   s.coins("22apple"),
 		},
 		{
@@ -357,6 +366,7 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 			addr:        s.addr3,
 			amount:      s.coins("23apple"),
 			expHoldCall: true,
+			expAttrCall: true,
 			expEvent:    true,
 			expAmount:   s.coins("23apple"),
 		},
@@ -367,20 +377,31 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 			addr:        s.addr2,
 			amount:      s.coins("100apple"),
 			expHoldCall: true,
+			expAttrCall: true,
 			expEvent:    true,
 			expAmount:   s.coins("122apple"),
 		},
 		{
 			name:        "existing commitments: additional commitment with req attr",
 			setup:       existingSetup("magic.com.creator"),
-			attrKeeper:  NewMockAttributeKeeper().WithGetAllAttributesAddrResult(s.addr2, []string{"magic.com.creator"}, ""),
 			marketID:    2,
 			addr:        s.addr2,
 			amount:      s.coins("100apple"),
 			expHoldCall: true,
 			expAttrCall: true,
+			expReqAttrs: []string{"magic.com.creator"},
 			expEvent:    true,
 			expAmount:   s.coins("122apple"),
+		},
+		{
+			name:        "existing commitments: error checking req attr",
+			setup:       existingSetup(),
+			attrKeeper:  NewMockAttributeKeeper().WithFindMissingAttributesResult(s.addr3, nil, "injected attr error"),
+			marketID:    2,
+			addr:        s.addr3,
+			amount:      s.coins("23apple"),
+			expAttrCall: true,
+			expErr:      "account " + s.addr3.String() + " is not allowed to create commitments in market 2",
 		},
 	}
 
@@ -392,7 +413,7 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 			}
 			var expAttrCalls AttributeCalls
 			if tc.expAttrCall {
-				expAttrCalls.GetAllAttributesAddr = append(expAttrCalls.GetAllAttributesAddr, tc.addr)
+				expAttrCalls.FindMissingAttributes = append(expAttrCalls.FindMissingAttributes, NewFindMissingAttributesCall(tc.addr, tc.expReqAttrs))
 			}
 
 			var expEvents sdk.Events

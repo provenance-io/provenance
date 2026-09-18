@@ -112,6 +112,94 @@ func (k Keeper) GetAttributes(ctx sdk.Context, addr string, name string) ([]type
 	return k.prefixScan(ctx, types.AddrStrAttributesNameKeyPrefix(addr, name), pred)
 }
 
+// FindMissingAttributes returns the subset of reqAttrs for which addr does not have a matching,
+// unexpired attribute. Each of the provided reqAttrs can be either a full/exact name, or a name
+// that start with a wildcard "*." that matches any attribute with a name with the same suffix.
+// It's assumed that the provided reqAttrs have each been normalized.
+func (k Keeper) FindMissingAttributes(ctx sdk.Context, addr []byte, reqAttrs []string) ([]string, error) {
+	if len(reqAttrs) == 0 {
+		return nil, nil
+	}
+
+	found := make(map[string]bool, len(reqAttrs))
+	var exacts []string
+	var wildcards []string
+	for _, reqAttr := range reqAttrs {
+		if _, seen := found[reqAttr]; seen {
+			continue
+		}
+		found[reqAttr] = false
+		if strings.HasPrefix(reqAttr, "*.") {
+			wildcards = append(wildcards, reqAttr)
+		} else {
+			exacts = append(exacts, reqAttr)
+		}
+	}
+
+	store := ctx.KVStore(k.storeKey)
+
+	// If there are any wildcards, do a single pass over all of addr's attributes, checking each one
+	// against both the wildcards and the exact names, stopping once all wildcards have been found.
+	// Checking the exact names in here too means we might not need to look for them individually below.
+	if len(wildcards) > 0 {
+		remaining := len(wildcards)
+		it := storetypes.KVStorePrefixIterator(store, types.AddrAttributesKeyPrefix(addr))
+		for ; it.Valid() && remaining > 0; it.Next() {
+			attr := types.Attribute{}
+			if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
+				it.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
+				return nil, fmt.Errorf("failed to unmarshal attribute: %w", err)
+			}
+			if isExpired(ctx, attr) {
+				continue
+			}
+			for _, wildcard := range wildcards {
+				// [1:] because we only want to ignore the '*'; the '.' needs to be part of the check.
+				if !found[wildcard] && strings.HasSuffix(attr.Name, wildcard[1:]) {
+					found[wildcard] = true
+					remaining--
+				}
+			}
+			for _, exact := range exacts {
+				if !found[exact] && attr.Name == exact {
+					found[exact] = true
+				}
+			}
+		}
+		it.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
+	}
+
+	// Look up any exact names that weren't already found above (or that we never scanned for above).
+	for _, exact := range exacts {
+		if found[exact] {
+			continue
+		}
+		has := false
+		nameIt := storetypes.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(addr, exact))
+		for ; nameIt.Valid(); nameIt.Next() {
+			attr := types.Attribute{}
+			if err := k.cdc.Unmarshal(nameIt.Value(), &attr); err != nil {
+				nameIt.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
+				return nil, fmt.Errorf("could not unmarshal attribute: %w", err)
+			}
+			if !isExpired(ctx, attr) {
+				has = true
+				break
+			}
+		}
+		nameIt.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
+		found[exact] = has
+	}
+
+	var missing []string
+	for _, reqAttr := range reqAttrs {
+		if !found[reqAttr] {
+			missing = append(missing, reqAttr)
+		}
+	}
+	return missing, nil
+}
+
 // IterateRecords iterates over all the stored attribute records and passes them to a callback function.
 func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) error {
 	// Init an attribute record iterator
