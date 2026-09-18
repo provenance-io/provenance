@@ -1,0 +1,1 @@
+* `github.com/cosmos/cosmos-sdk` bumped to v0.53.8-pio-2 of `github.com/provenance-io/cosmos-sdk` (from v0.53.8-pio-1 of `github.com/provenance-io/cosmos-sdk`) [PR 2839](https://github.com/provenance-io/provenance/pull/2839).
