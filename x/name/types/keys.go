@@ -31,32 +31,46 @@ var (
 
 // GetNameKeyPrefix converts a name into key format.
 func GetNameKeyPrefix(name string) (key []byte, err error) {
-	key = NameKeyPrefix
-	return getNamePrefixByType(name, key)
-}
-
-// internal common code for legacy and current way.
-func getNamePrefixByType(name string, key []byte) ([]byte, error) {
-	var err error
-	if strings.TrimSpace(name) == "" {
-		err = fmt.Errorf("name can not be empty: %w", ErrNameInvalid)
+	comps, err := getNameSegments(name)
+	if err != nil {
 		return nil, err
 	}
-	comps := strings.Split(name, ".")
+	sum := sha256.Sum256([]byte(strings.Join(comps, ".")))
+	key = NameKeyPrefix
+	return append(key, sum[:]...), nil
+}
+
+// GetLegacyNameKeyPrefix converts a name into the key format used by the name module before version 3.
+// Those keys are a hash of just the name segments, so names with different segments, e.g. "leaf.mid.root"
+// and "midleaf.root", can end up sharing a key. It is only still around so that the migration can find them.
+func GetLegacyNameKeyPrefix(name string) (key []byte, err error) {
+	comps, err := getNameSegments(name)
+	if err != nil {
+		return nil, err
+	}
 	hsh := sha256.New()
 	for i := len(comps) - 1; i >= 0; i-- {
-		comp := strings.TrimSpace(comps[i])
-		if len(comp) == 0 {
-			err = fmt.Errorf("name segment cannot be empty: %w", ErrNameInvalid)
-			return nil, err
-		}
-		if _, err = hsh.Write([]byte(comp)); err != nil {
+		if _, err = hsh.Write([]byte(comps[i])); err != nil {
 			return nil, err
 		}
 	}
-	sum := hsh.Sum(nil)
-	key = append(key, sum...)
-	return key, nil
+	key = NameKeyPrefix
+	return append(key, hsh.Sum(nil)...), nil
+}
+
+// getNameSegments splits a name into its space-trimmed segments, returning an error if any of them are empty.
+func getNameSegments(name string) ([]string, error) {
+	if strings.TrimSpace(name) == "" {
+		return nil, fmt.Errorf("name can not be empty: %w", ErrNameInvalid)
+	}
+	comps := strings.Split(name, ".")
+	for i, comp := range comps {
+		comps[i] = strings.TrimSpace(comp)
+		if len(comps[i]) == 0 {
+			return nil, fmt.Errorf("name segment cannot be empty: %w", ErrNameInvalid)
+		}
+	}
+	return comps, nil
 }
 
 // GetAddressKeyPrefix returns a store key for a name record address

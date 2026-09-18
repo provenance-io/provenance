@@ -96,10 +96,10 @@ func (s *KeeperTestSuite) TestSetup() {
   name: test.root
   restricted: false
 - address: %[1]s
-  name: name
+  name: example.name
   restricted: false
 - address: %[1]s
-  name: example.name
+  name: name
   restricted: false
 - address: %[3]s
   name: %[2]s
@@ -259,6 +259,32 @@ func (s *KeeperTestSuite) TestGetName() {
 	})
 }
 
+func (s *KeeperTestSuite) TestNamesWithDifferentSegmentsDoNotShareARecord() {
+	// "midleaf.name" and "leaf.mid.name" are different names made up of the same letters,
+	// so they must each get their own record and resolve only to their own owner.
+	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "midleaf.name", s.user2Addr, false),
+		"SetNameRecord(midleaf.name)")
+	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "leaf.mid.name", s.user1Addr, false),
+		"SetNameRecord(leaf.mid.name)")
+
+	r, err := s.app.NameKeeper.GetRecordByName(s.ctx, "leaf.mid.name")
+	s.Require().NoError(err, "GetRecordByName(leaf.mid.name)")
+	s.Assert().Equal("leaf.mid.name", r.Name, "record name")
+	s.Assert().Equal(s.user1Addr.String(), r.Address, "record address")
+
+	r, err = s.app.NameKeeper.GetRecordByName(s.ctx, "midleaf.name")
+	s.Require().NoError(err, "GetRecordByName(midleaf.name)")
+	s.Assert().Equal("midleaf.name", r.Name, "record name")
+	s.Assert().Equal(s.user2Addr.String(), r.Address, "record address")
+
+	s.Assert().True(s.app.NameKeeper.ResolvesTo(s.ctx, "leaf.mid.name", s.user1Addr), "leaf.mid.name resolves to its owner")
+	s.Assert().False(s.app.NameKeeper.ResolvesTo(s.ctx, "leaf.mid.name", s.user2Addr), "leaf.mid.name resolves to the owner of midleaf.name")
+	s.Assert().False(s.app.NameKeeper.NameExists(s.ctx, "af.midle.name"), "NameExists(af.midle.name)")
+
+	s.Require().NoError(s.app.NameKeeper.DeleteRecord(s.ctx, "midleaf.name"), "DeleteRecord(midleaf.name)")
+	s.Assert().True(s.app.NameKeeper.NameExists(s.ctx, "leaf.mid.name"), "leaf.mid.name still exists after midleaf.name was deleted")
+}
+
 func (s *KeeperTestSuite) TestGetAddress() {
 	s.Run("get names by address", func() {
 		r, err := s.app.NameKeeper.GetRecordsByAddress(s.ctx, s.user1Addr)
@@ -309,10 +335,10 @@ func (s *KeeperTestSuite) TestModifyRecord() {
 		s.Assert().False(isUser2, "ResolvesTo(%q, user2)", jackthecat)
 
 		expUser1Recs := nametypes.NameRecords{
-			{Name: jackthecat, Address: s.user1Addr.String(), Restricted: true},
 			{Name: "test.root", Address: s.user1Addr.String(), Restricted: false},
-			{Name: "name", Address: s.user1Addr.String(), Restricted: false},
+			{Name: jackthecat, Address: s.user1Addr.String(), Restricted: true},
 			{Name: "example.name", Address: s.user1Addr.String(), Restricted: false},
+			{Name: "name", Address: s.user1Addr.String(), Restricted: false},
 		}
 		addr1Recs, err := s.app.NameKeeper.GetRecordsByAddress(s.ctx, s.user1Addr)
 		s.Require().NoError(err, "GetRecordsByAddress(user1)")
@@ -359,8 +385,8 @@ func (s *KeeperTestSuite) TestIterateRecord() {
 	s.Run("iterate name's", func() {
 		expRecords := nametypes.NameRecords{
 			nametypes.NewNameRecord("test.root", s.user1Addr, false),
-			nametypes.NewNameRecord("name", s.user1Addr, false),
 			nametypes.NewNameRecord("example.name", s.user1Addr, false),
+			nametypes.NewNameRecord("name", s.user1Addr, false),
 			nametypes.NewNameRecord(attrtypes.AccountDataName, authtypes.NewModuleAddress(attrtypes.ModuleName), true),
 		}
 		records := nametypes.NameRecords{}

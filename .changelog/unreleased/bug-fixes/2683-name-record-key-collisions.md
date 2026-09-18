@@ -1,0 +1,1 @@
+* Key name records on a hash of the full name so that names made up of the same letters split into different segments, e.g. `midleaf.pb` and `leaf.mid.pb`, no longer share a record [#2683](https://github.com/provenance-io/provenance/issues/2683).
