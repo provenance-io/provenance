@@ -1033,34 +1033,59 @@ var (
 	LogMsgConvertFinishedVestingAccountsToBase = "INF Converting completed vesting accounts into base accounts. module=baseapp"
 )
 
-func (s *UpgradeTestSuite) TestForsythiaRC1() {
+func (s *UpgradeTestSuite) TestGeraniumRC1() {
 	expInLog := []string{
 		LogMsgRunModuleMigrations,
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
+		"INF Setting MsgStoreAndInstantiateContract and MsgStoreAndMigrateContract flat fees. module=baseapp",
+		"INF Done setting contract store-bundle flat fees. module=baseapp",
 	}
-	s.AssertUpgradeHandlerLogs("forsythia-rc1", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("geranium-rc1", expInLog, nil)
 }
 
-func (s *UpgradeTestSuite) TestForsythiaRC2() {
+func (s *UpgradeTestSuite) TestGeranium() {
 	expInLog := []string{
 		LogMsgRunModuleMigrations,
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
-		"INF Setting fees module=baseapp",
+		"INF Setting MsgStoreAndInstantiateContract and MsgStoreAndMigrateContract flat fees. module=baseapp",
+		"INF Done setting contract store-bundle flat fees. module=baseapp",
+		"INF Adding flatfees oracle address. address=pb1v5cdk7pt6l7f2lete654kvkk3qhzq0nsk35dw0 module=baseapp",
 	}
-	s.AssertUpgradeHandlerLogs("forsythia-rc2", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("geranium", expInLog, nil)
 }
 
-func (s *UpgradeTestSuite) TestForsythia() {
-	expInLog := []string{
-		LogMsgRunModuleMigrations,
-		LogMsgPruneIBCExpiredConsensusStates,
-		LogMsgRemoveInactiveValidatorDelegations,
-		LogMsgConvertFinishedVestingAccountsToBase,
-		"INF Setting fees module=baseapp",
+func (s *UpgradeTestSuite) TestAddFlatFeesOracleAddress() {
+	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
+
+	runner := func(address string) func() {
+		return func() { addFlatFeesOracleAddress(s.ctx, s.app, address) }
 	}
-	s.AssertUpgradeHandlerLogs("forsythia", expInLog, nil)
+
+	s.Run("new address", func() {
+		expInLog := []string{
+			fmt.Sprintf("INF Adding flatfees oracle address. address=%s module=baseapp", addr),
+			fmt.Sprintf("INF Done adding flatfees oracle address. address=%s module=baseapp", addr),
+		}
+		s.ExecuteAndAssertLogs(runner(addr), expInLog, nil, true, "addFlatFeesOracleAddress(%q)", addr)
+		s.Assert().True(s.app.FlatFeesKeeper.IsOracleAddress(s.ctx, addr), "IsOracleAddress(%q)", addr)
+	})
+
+	s.Run("address already present", func() {
+		expNotInLog := []string{"Done adding flatfees oracle address."}
+		logOutput, _ := s.ExecuteAndAssertLogs(runner(addr), nil, expNotInLog, true, "addFlatFeesOracleAddress(%q) again", addr)
+		s.Assert().Contains(logOutput, "ERR Could not add flatfees oracle address.", "log output")
+		s.Assert().True(s.app.FlatFeesKeeper.IsOracleAddress(s.ctx, addr), "IsOracleAddress(%q) after duplicate", addr)
+	})
+
+	s.Run("invalid address", func() {
+		bad := "not-a-bech32-address"
+		expNotInLog := []string{"Done adding flatfees oracle address."}
+		logOutput, _ := s.ExecuteAndAssertLogs(runner(bad), nil, expNotInLog, true, "addFlatFeesOracleAddress(%q)", bad)
+		s.Assert().Contains(logOutput, "ERR Could not add flatfees oracle address.", "log output")
+		s.Assert().False(s.app.FlatFeesKeeper.IsOracleAddress(s.ctx, bad), "IsOracleAddress(%q)", bad)
+	})
 }
