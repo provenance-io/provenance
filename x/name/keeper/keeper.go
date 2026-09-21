@@ -199,10 +199,8 @@ func (k Keeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk.AccAddre
 
 // GetRecordByName resolves a record by name.
 func (k Keeper) GetRecordByName(ctx sdk.Context, name string) (record *types.NameRecord, err error) {
-	normalizedName, err := k.Normalize(ctx, name)
-	if err != nil {
-		return nil, err
-	}
+	normalizedName := types.NormalizeName(name)
+
 	namerecord, err := k.nameRecords.Get(ctx, normalizedName)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -215,10 +213,8 @@ func (k Keeper) GetRecordByName(ctx sdk.Context, name string) (record *types.Nam
 
 // NameExists returns true if store contains a record for the given name.
 func (k Keeper) NameExists(ctx sdk.Context, name string) bool {
-	normalizedName, err := k.Normalize(ctx, name)
-	if err != nil {
-		return false
-	}
+	normalizedName := types.NormalizeName(name)
+
 	exists, _ := k.nameRecords.Has(ctx, normalizedName)
 	return exists
 }
@@ -229,7 +225,7 @@ func (k Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (ty
 
 	iter, err := k.nameRecords.Indexes.AddrIndex.MatchExact(ctx, address)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not look up the names bound to %s: %w", address, err)
 	}
 	defer iter.Close() //nolint:errcheck // close error safe to ignore in this context.
 
@@ -249,10 +245,7 @@ func (k Keeper) GetRecordsByAddress(ctx sdk.Context, address sdk.AccAddress) (ty
 
 // DeleteRecord removes a name record from the kvstore.
 func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
-	normalizedName, err := k.Normalize(ctx, name)
-	if err != nil {
-		return err
-	}
+	normalizedName := types.NormalizeName(name)
 	record, err := k.nameRecords.Get(ctx, normalizedName)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
