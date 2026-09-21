@@ -1,0 +1,13 @@
+* `cloud.google.com/go/auth` bumped to v0.20.0 (from v0.18.2) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp` bumped to v1.34.0 (from v1.33.0) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `github.com/felixge/httpsnoop` bumped to v1.1.0 (from v1.0.4) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `github.com/googleapis/enterprise-certificate-proxy` bumped to v0.3.15 (from v0.3.14) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `github.com/googleapis/gax-go/v2` bumped to v2.22.0 (from v2.17.0) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `github.com/spiffe/go-spiffe/v2` bumped to v2.8.1 (from v2.7.0) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc` bumped to v0.67.0 (from v0.63.0) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp` bumped to v0.69.0 (from v0.62.0) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `google.golang.org/api` bumped to v0.278.0 (from v0.271.0) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `google.golang.org/genproto` bumped to v0.0.0-20260319201613-d00831a3d3e7 (from v0.0.0-20260128011058-8636f8732409) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `google.golang.org/genproto/googleapis/api` bumped to v0.0.0-20260706201446-f0a921348800 (from v0.0.0-20260526163538-3dc84a4a5aaa) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `google.golang.org/genproto/googleapis/rpc` bumped to v0.0.0-20260706201446-f0a921348800 (from v0.0.0-20260526163538-3dc84a4a5aaa) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `google.golang.org/grpc` bumped to v1.84.0 (from v1.83.2) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
