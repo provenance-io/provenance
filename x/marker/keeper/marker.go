@@ -172,7 +172,7 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 }
 
 // WithdrawCoins removes the specified coins from the MarkerAccount (both marker denominated coins and coins as assets
-// are supported here)
+// are supported here). If recipient is empty, the coins are moved to the caller's account.
 func (k Keeper) WithdrawCoins(
 	ctx sdk.Context, caller sdk.AccAddress, recipient sdk.AccAddress, denom string, coins sdk.Coins,
 ) error {
