@@ -66,7 +66,7 @@ func (m Migrator) MigrateKVToCollections2to3(ctx sdk.Context) error {
 func (m Migrator) readV2NameRecords(ctx sdk.Context) ([]types.NameRecord, error) {
 	store := m.keeper.storeService.OpenKVStore(ctx)
 
-	iter, err := store.Iterator(legacyNameKeyPrefix, storetypes.PrefixEndBytes(legacyNameKeyPrefix)) // CHANGED (#11)
+	iter, err := store.Iterator(legacyNameKeyPrefix, storetypes.PrefixEndBytes(legacyNameKeyPrefix))
 	if err != nil {
 		return nil, fmt.Errorf("could not iterate the legacy name records: %w", err)
 	}
@@ -87,7 +87,7 @@ func (m Migrator) readV2NameRecords(ctx sdk.Context) ([]types.NameRecord, error)
 func (m Migrator) migrateV2Params(ctx sdk.Context) error {
 	store := m.keeper.storeService.OpenKVStore(ctx)
 
-	bz, err := store.Get(legacyNameParamStoreKey) // CHANGED (#11)
+	bz, err := store.Get(legacyNameParamStoreKey)
 	if err != nil {
 		return fmt.Errorf("could not read the legacy params: %w", err)
 	}
@@ -95,9 +95,7 @@ func (m Migrator) migrateV2Params(ctx sdk.Context) error {
 		return nil
 	}
 
-	// CHANGED (#13): Start with a zero-value Params, not the defaults. Proto3 doesn't encode false or 0,
-	// so a field missing from the stored bytes was stored as its zero value. Starting from the defaults
-	// would turn a stored AllowUnrestrictedNames=false into true during the upgrade.
+	// The codec resets the message before unmarshalling, so the stored values are exactly what we get here.
 	var params types.Params
 	if err = m.keeper.cdc.Unmarshal(bz, &params); err != nil {
 		return fmt.Errorf("could not unmarshal the legacy params: %w", err)
@@ -113,7 +111,7 @@ func (m Migrator) migrateV2Params(ctx sdk.Context) error {
 func (m Migrator) deleteLegacyData(ctx sdk.Context) error {
 	kvStore := m.keeper.storeService.OpenKVStore(ctx)
 
-	for _, prefix := range [][]byte{legacyNameKeyPrefix, legacyAddressKeyPrefix} { // CHANGED (#11)
+	for _, prefix := range [][]byte{legacyNameKeyPrefix, legacyAddressKeyPrefix} {
 		iter, err := kvStore.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 		if err != nil {
 			return fmt.Errorf("could not iterate legacy prefix %X: %w", prefix, err)
@@ -122,7 +120,7 @@ func (m Migrator) deleteLegacyData(ctx sdk.Context) error {
 		for ; iter.Valid(); iter.Next() {
 			keys = append(keys, append([]byte{}, iter.Key()...))
 		}
-		// CHANGED (#9): Close right away (not deferred) so the iterator isn't open while deleting.
+		// Close right away (not deferred) so the iterator isn't open while deleting.
 		if err = iter.Close(); err != nil {
 			return fmt.Errorf("could not close the iterator for legacy prefix %X: %w", prefix, err)
 		}
@@ -134,7 +132,7 @@ func (m Migrator) deleteLegacyData(ctx sdk.Context) error {
 		}
 	}
 
-	if err := kvStore.Delete(legacyNameParamStoreKey); err != nil { // CHANGED (#11)
+	if err := kvStore.Delete(legacyNameParamStoreKey); err != nil {
 		return fmt.Errorf("could not delete the legacy params: %w", err)
 	}
 	return nil
@@ -142,7 +140,7 @@ func (m Migrator) deleteLegacyData(ctx sdk.Context) error {
 
 // LegacyComputeNameHash reproduces the old name-key hash by hashing segments in reverse order.
 //
-// Deprecated: used only by the 3->4 migration and its tests. Use ComputeNameHash instead.
+// Deprecated: used only by the 3->4 migration and its tests.
 func LegacyComputeNameHash(name string) ([]byte, error) {
 	comps := strings.Split(name, ".")
 	hsh := sha256.New()
@@ -164,5 +162,5 @@ func LegacyGetNameKeyBytes(name string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return append(append([]byte{}, legacyNameKeyPrefix...), hash...), nil // CHANGED (#10): was types.NameKeyPrefix (0x07)
+	return append(append([]byte{}, legacyNameKeyPrefix...), hash...), nil
 }

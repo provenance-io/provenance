@@ -25,7 +25,7 @@ type MigrationTestSuite struct {
 	user1Addr sdk.AccAddress
 }
 
-// NEW (#12): Without this, none of the tests in this suite run.
+// Without this, none of the tests in this suite run.
 func TestMigrationTestSuite(t *testing.T) {
 	suite.Run(t, new(MigrationTestSuite))
 }
@@ -100,10 +100,18 @@ func (s *MigrationTestSuite) TestMigration() {
 	s.Require().NoError(err, "GetRecordsByAddress")
 	s.Require().ElementsMatch(records, byAddr, "records by address after migration")
 
+	// the migrated records are stored under their reversed names,
+	// e.g. "test.provenance" is stored at "provenance.test".
+	store := s.ctx.KVStore(s.storeKey)
+	for _, exp := range records {
+		key := append(append([]byte{}, types.NameKeyPrefix...), types.ReverseName(exp.Name)...)
+		s.Require().True(store.Has(key), "store has key %q for name %q", key, exp.Name)
+	}
+
 	s.requireNoLegacyData()
 }
 
-// Covers review comment #13: starting from DefaultParams would turn a stored false into true.
+// starting from DefaultParams would turn a stored false into true.
 func (s *MigrationTestSuite) TestMigrationKeepsAllowUnrestrictedNamesFalse() {
 	legacyParams := types.DefaultParams()
 	legacyParams.AllowUnrestrictedNames = false
