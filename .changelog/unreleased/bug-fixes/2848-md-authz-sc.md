@@ -1,0 +1,1 @@
+* Prevent a smart contract that only holds an `x/authz` grant from one `x/metadata` party from vouching for the signatures of the other parties listed after it [PR 2848](https://github.com/provenance-io/provenance/pull/2848).

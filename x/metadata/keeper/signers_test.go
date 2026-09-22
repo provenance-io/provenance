@@ -408,6 +408,51 @@ func (s *AuthzTestSuite) TestValidateSignersWithParties() {
 			expErr: "",
 		},
 		{
+			// req1 granted authz to sc1, but req2 did not sign and did not grant anything.
+			// sc1 is not a party itself, so being req1's grantee must not let it vouch for req2.
+			name:             "smart contract is authz grantee of one party and lists other party as unsigned trailing signer",
+			reqParties:       ptz(pt("req1", owner, false), pt("req2", generic1, false)),
+			availableParties: ptz(pt("req1", owner, false), pt("req2", generic1, false)),
+			reqRoles:         []types.PartyType{owner, generic1},
+			msg:              normalMsg("sc1", "req2"),
+			authK:            NewMockAuthKeeper().WithGetAccountResults(scGetAccCall("sc1")),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: GrantInfo{Grantee: sdk.AccAddress("sc1"), Granter: sdk.AccAddress("req1"), MsgType: normalMsgType},
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil),
+						Exp:  nil,
+					},
+				},
+			),
+			expErr: "smart contract signer " + accStr("sc1") + " is not authorized",
+		},
+		{
+			name:             "smart contract is authz grantee of one party and other party granted it too",
+			reqParties:       ptz(pt("req1", owner, false), pt("req2", generic1, false)),
+			availableParties: ptz(pt("req1", owner, false), pt("req2", generic1, false)),
+			reqRoles:         []types.PartyType{owner, generic1},
+			msg:              normalMsg("sc1", "req2"),
+			authK:            NewMockAuthKeeper().WithGetAccountResults(scGetAccCall("sc1")),
+			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
+				GetAuthorizationCall{
+					GrantInfo: GrantInfo{Grantee: sdk.AccAddress("sc1"), Granter: sdk.AccAddress("req1"), MsgType: normalMsgType},
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("one", authz.AcceptResponse{Accept: true}, nil),
+						Exp:  nil,
+					},
+				},
+				GetAuthorizationCall{
+					GrantInfo: GrantInfo{Grantee: sdk.AccAddress("sc1"), Granter: sdk.AccAddress("req2"), MsgType: normalMsgType},
+					Result: GetAuthorizationResult{
+						Auth: NewMockAuthorization("two", authz.AcceptResponse{Accept: true}, nil),
+						Exp:  nil,
+					},
+				},
+			),
+			expErr: "",
+		},
+		{
 			name:             "generic party types basic validation",
 			reqParties:       ptz(pt("party1", generic1, false), pt("party2", generic2, true)),
 			availableParties: ptz(pt("party3", generic3, false)),
@@ -5416,7 +5461,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:         addr6.String(),
 			signers:          []sdk.AccAddress{addr5},
 			expAddrs:         []sdk.AccAddress{addr5},
-			expUsedSigners:   types.NewUsedSignersMap().Use(addr5.String()),
+			expUsedSigners:   types.NewUsedSignersMap(), // authz grantee is not "used" in its own right.
 			expIsMarkerCalls: []sdk.AccAddress{addr1, addr2, addr3, addr4},
 		},
 		{
@@ -5447,7 +5492,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:         addr6.String(),
 			signers:          []sdk.AccAddress{addr5, addr1, addr2, addr3, addr4},
 			expAddrs:         []sdk.AccAddress{addr5},
-			expUsedSigners:   types.NewUsedSignersMap().Use(addr5.String()),
+			expUsedSigners:   types.NewUsedSignersMap(), // authz grantee is not "used" in its own right.
 			expIsMarkerCalls: []sdk.AccAddress{addr1, addr2, addr3, addr4},
 		},
 		{
@@ -5512,7 +5557,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:         addr6.String(),
 			signers:          []sdk.AccAddress{addr3},
 			expAddrs:         []sdk.AccAddress{addr3},
-			expUsedSigners:   types.NewUsedSignersMap().Use(addr3.String()),
+			expUsedSigners:   types.NewUsedSignersMap(), // authz grantee is not "used" in its own right.
 			expIsMarkerCalls: []sdk.AccAddress{addr1, addr2},
 		},
 		{
@@ -5543,7 +5588,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:         addr6.String(),
 			signers:          []sdk.AccAddress{addr4, addr3},
 			expAddrs:         []sdk.AccAddress{addr4, addr3},
-			expUsedSigners:   types.NewUsedSignersMap().Use(addr3.String(), addr4.String()),
+			expUsedSigners:   types.NewUsedSignersMap(), // authz grantees are not "used" in their own right.
 			expIsMarkerCalls: []sdk.AccAddress{addr1, addr2},
 		},
 		{
