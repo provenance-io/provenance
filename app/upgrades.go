@@ -43,6 +43,7 @@ type appUpgrade struct {
 // I.e. Brand-new flowers should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
 	"geranium-rc1": { // Upgrade for v1.31.0-rc1
+		Deleted: []string{"quarantine"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -67,6 +68,7 @@ var upgrades = map[string]appUpgrade{
 		},
 	},
 	"geranium": { // Upgrade for v1.31.0
+		Deleted: []string{"quarantine"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
