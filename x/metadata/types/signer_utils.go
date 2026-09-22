@@ -221,11 +221,14 @@ func (p *PartyDetails) IsSameAs(p2 Partier) bool {
 	return SamePartiers(p, p2)
 }
 
-// GetUsedSigners gets a map of bech32 strings to true with a key for each used signer.
+// GetUsedSigners gets a map of bech32 strings to true with a key for each party that signed directly.
+// A party that was fulfilled by an authz grantee is NOT included: the grantee is only acting on behalf
+// of that party, so it does not count as having been used in its own right. This matters for smart
+// contract signers, which are exempt from further authorization checks only when they are a party themselves.
 func GetUsedSigners(parties []*PartyDetails) UsedSignersMap {
 	rv := make(UsedSignersMap)
 	for _, party := range parties {
-		if party.HasSigner() {
+		if party.HasSigner() && party.GetSigner() == party.GetAddress() {
 			rv.Use(party.GetSigner())
 		}
 	}
