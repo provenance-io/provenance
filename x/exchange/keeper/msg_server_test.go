@@ -240,12 +240,6 @@ func (s *TestSuite) requireSetAttr(addr sdk.AccAddress, name string, owner sdk.A
 	s.Require().NoError(err, "SetAttribute(%s, %s)", name, s.getAddrName(owner))
 }
 
-// requireQuarantineOptIn opts an address into quarantine, requiring it to not error.
-func (s *TestSuite) requireQuarantineOptIn(addr sdk.AccAddress) {
-	err := s.app.QuarantineKeeper.SetOptIn(s.ctx, addr)
-	s.Require().NoError(err, "QuarantineKeeper.SetOptIn(%s)", s.getAddrName(addr))
-}
-
 // requireSanctionAddress sanctions an address, requiring it to not error.
 func (s *TestSuite) requireSanctionAddress(addr sdk.AccAddress) {
 	err := s.app.SanctionKeeper.SanctionAddresses(s.ctx, addr)
@@ -1233,7 +1227,7 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 			expInErr: []string{invReqErr, "account " + s.addr1.String() + " is not allowed to create ask orders in market 1"},
 		},
 		{
-			name: "one bid, both quarantined, no markers",
+			name: "one bid, no markers",
 			setup: func() {
 				s.requireFundAccount(s.addr1, "50pear")
 				s.requireFundAccount(s.addr2, "10apple")
@@ -1245,9 +1239,6 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 					MarketId: 3, Buyer: s.addr1.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
 				}))
 				s.requireAddHold(s.addr1, "50pear", 54)
-
-				s.requireQuarantineOptIn(s.addr1)
-				s.requireQuarantineOptIn(s.addr2)
 			},
 			msg: exchange.MsgFillBidsRequest{
 				Seller:      s.addr2.String(),
@@ -1286,7 +1277,7 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 			},
 		},
 		{
-			name: "one bid, both quarantined, with markers",
+			name: "one bid, with markers",
 			setup: func() {
 				s.requireAddFinalizeAndActivateMarker(s.coin("10apple"), s.addr5, "got.it")
 				s.requireAddFinalizeAndActivateMarker(s.coin("50pear"), s.addr5, "got.it")
@@ -1303,9 +1294,6 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 					MarketId: 3, Buyer: s.addr1.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
 				}))
 				s.requireAddHold(s.addr1, "50pear", 54)
-
-				s.requireQuarantineOptIn(s.addr1)
-				s.requireQuarantineOptIn(s.addr2)
 			},
 			msg: exchange.MsgFillBidsRequest{
 				Seller:      s.addr2.String(),
@@ -1723,7 +1711,7 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 			expInErr: []string{invReqErr, "account " + s.addr1.String() + " is not allowed to create bid orders in market 1"},
 		},
 		{
-			name: "one ask, both quarantined, no markers",
+			name: "one ask, no markers",
 			setup: func() {
 				s.requireFundAccount(s.addr1, "50pear")
 				s.requireFundAccount(s.addr2, "10apple")
@@ -1735,9 +1723,6 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 					MarketId: 3, Seller: s.addr2.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
 				}))
 				s.requireAddHold(s.addr2, "10apple", 54)
-
-				s.requireQuarantineOptIn(s.addr1)
-				s.requireQuarantineOptIn(s.addr2)
 			},
 			msg: exchange.MsgFillAsksRequest{
 				Buyer:       s.addr1.String(),
@@ -1776,7 +1761,7 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 			},
 		},
 		{
-			name: "one ask, both quarantined, with markers",
+			name: "one ask, with markers",
 			setup: func() {
 				s.requireAddFinalizeAndActivateMarker(s.coin("10apple"), s.addr5, "got.it")
 				s.requireAddFinalizeAndActivateMarker(s.coin("50pear"), s.addr5, "got.it")
@@ -1793,9 +1778,6 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 					MarketId: 3, Seller: s.addr2.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
 				}))
 				s.requireAddHold(s.addr2, "10apple", 54)
-
-				s.requireQuarantineOptIn(s.addr1)
-				s.requireQuarantineOptIn(s.addr2)
 			},
 			msg: exchange.MsgFillAsksRequest{
 				Buyer:       s.addr1.String(),
@@ -2603,125 +2585,6 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				}),
 
 				// The net-asset-value event (28).
-				s.markerNavSetEvent("18apple", "185pear", 1),
-			},
-		},
-		{
-			name: "all addresses quarantined",
-			setup: func() {
-				s.requireFundAccount(s.addr1, "7apple")
-				s.requireFundAccount(s.addr2, "100pear")
-				s.requireFundAccount(s.addr3, "11apple")
-				s.requireFundAccount(s.addr4, "85pear")
-
-				s.requireCreateMarketUnmocked(exchange.Market{
-					MarketId: 1, AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr5, exchange.Permission_settle)},
-				})
-
-				store := s.getStore()
-				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
-					MarketId: 1, Seller: s.addr1.String(), Assets: s.coin("7apple"), Price: s.coin("75pear"),
-				}))
-				s.requireAddHold(s.addr1, "7apple", 1)
-				s.requireSetOrderInStore(store, exchange.NewOrder(22).WithBid(&exchange.BidOrder{
-					MarketId: 1, Buyer: s.addr2.String(), Assets: s.coin("10apple"), Price: s.coin("100pear"),
-				}))
-				s.requireAddHold(s.addr2, "100pear", 22)
-				s.requireSetOrderInStore(store, exchange.NewOrder(333).WithAsk(&exchange.AskOrder{
-					MarketId: 1, Seller: s.addr3.String(), Assets: s.coin("11apple"), Price: s.coin("105pear"),
-				}))
-				s.requireAddHold(s.addr3, "11apple", 333)
-				s.requireSetOrderInStore(store, exchange.NewOrder(4444).WithBid(&exchange.BidOrder{
-					MarketId: 1, Buyer: s.addr4.String(), Assets: s.coin("8apple"), Price: s.coin("85pear"),
-				}))
-				s.requireAddHold(s.addr4, "85pear", 4444)
-
-				s.requireQuarantineOptIn(s.addr1)
-				s.requireQuarantineOptIn(s.addr2)
-				s.requireQuarantineOptIn(s.addr3)
-				s.requireQuarantineOptIn(s.addr4)
-				s.requireQuarantineOptIn(s.addr5)
-			},
-			msg: exchange.MsgMarketSettleRequest{
-				Admin:       s.addr5.String(),
-				MarketId:    1,
-				AskOrderIds: []uint64{1, 333},
-				BidOrderIds: []uint64{4444, 22},
-			},
-			fArgs: followupArgs{
-				expBals: []expBalances{
-					{
-						addr:    s.addr1,
-						expBal:  []sdk.Coin{s.zeroCoin("apple"), s.coin("77pear")},
-						expHold: s.zeroCoins("apple", "pear"),
-					},
-					{
-						addr:    s.addr2,
-						expBal:  []sdk.Coin{s.coin("10apple"), s.zeroCoin("pear")},
-						expHold: s.zeroCoins("apple", "pear"),
-					},
-					{
-						addr:    s.addr3,
-						expBal:  []sdk.Coin{s.zeroCoin("apple"), s.coin("108pear")},
-						expHold: s.zeroCoins("apple", "pear"),
-					},
-					{
-						addr:    s.addr4,
-						expBal:  []sdk.Coin{s.coin("8apple"), s.zeroCoin("pear")},
-						expHold: s.zeroCoins("apple", "pear"),
-					},
-				},
-			},
-			expEvents: sdk.Events{
-				// Hold releases
-				s.eventHoldReleased(s.addr1, "7apple"),
-				s.eventHoldReleased(s.addr3, "11apple"),
-				s.eventHoldReleased(s.addr4, "85pear"),
-				s.eventHoldReleased(s.addr2, "100pear"),
-
-				// Asset transfers
-				s.eventCoinSpent(s.addr1, "7apple"),
-				s.eventCoinReceived(s.addr4, "7apple"),
-				s.eventTransfer(s.addr4, s.addr1, "7apple"),
-				s.eventMessageSender(s.addr1),
-
-				s.eventCoinSpent(s.addr3, "11apple"),
-				s.eventMessageSender(s.addr3),
-				s.eventCoinReceived(s.addr4, "1apple"),
-				s.eventCoinReceived(s.addr2, "10apple"),
-				s.eventTransfer(s.addr4, s.addr3, "1apple"),
-				s.eventTransfer(s.addr2, s.addr3, "10apple"),
-
-				// Price transfers
-				s.eventCoinSpent(s.addr4, "85pear"),
-				s.eventMessageSender(s.addr4),
-				s.eventCoinReceived(s.addr1, "75pear"),
-				s.eventCoinReceived(s.addr3, "10pear"),
-				s.eventTransfer(s.addr1, s.addr4, "75pear"),
-				s.eventTransfer(s.addr3, s.addr4, "10pear"),
-
-				s.eventCoinSpent(s.addr2, "100pear"),
-				s.eventMessageSender(s.addr2),
-				s.eventCoinReceived(s.addr3, "98pear"),
-				s.eventCoinReceived(s.addr1, "2pear"),
-				s.eventTransfer(s.addr3, s.addr2, "98pear"),
-				s.eventTransfer(s.addr1, s.addr2, "2pear"),
-
-				// Orders filled
-				s.untypeEvent(&exchange.EventOrderFilled{
-					OrderId: 1, Assets: "7apple", Price: "77pear", MarketId: 1,
-				}),
-				s.untypeEvent(&exchange.EventOrderFilled{
-					OrderId: 333, Assets: "11apple", Price: "108pear", MarketId: 1,
-				}),
-				s.untypeEvent(&exchange.EventOrderFilled{
-					OrderId: 4444, Assets: "8apple", Price: "85pear", MarketId: 1,
-				}),
-				s.untypeEvent(&exchange.EventOrderFilled{
-					OrderId: 22, Assets: "10apple", Price: "100pear", MarketId: 1,
-				}),
-
-				// The net-asset-value event.
 				s.markerNavSetEvent("18apple", "185pear", 1),
 			},
 		},

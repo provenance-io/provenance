@@ -7686,7 +7686,6 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 		expErr       string
 		expBlockCall bool
 		expSendCall  bool
-		expQBypass   bool
 	}{
 		{
 			name:        "invalid admin",
@@ -7716,7 +7715,6 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 			expErr:       "failed to withdraw 55oops from market 1: woopsie-daisy: an error story",
 			expBlockCall: true,
 			expSendCall:  true,
-			expQBypass:   false,
 		},
 		{
 			name:         "market 8: error from SendCoins",
@@ -7728,7 +7726,6 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 			expErr:       "failed to withdraw 77awwww,3hurts from market 8: ouch-ouch-ouch: a sequel error story",
 			expBlockCall: true,
 			expSendCall:  true,
-			expQBypass:   false,
 		},
 		{
 			name:         "market 1: okay to other",
@@ -7738,7 +7735,6 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 			withdrawnBy:  s.adminAddr.String(),
 			expBlockCall: true,
 			expSendCall:  true,
-			expQBypass:   false,
 		},
 		{
 			name:         "market 8: okay to self",
@@ -7748,7 +7744,6 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 			withdrawnBy:  s.addr5.String(),
 			expBlockCall: true,
 			expSendCall:  true,
-			expQBypass:   true,
 		},
 	}
 
@@ -7762,11 +7757,10 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 				admin, err := sdk.AccAddressFromBech32(tc.withdrawnBy)
 				s.Require().NoError(err, "AccAddressFromBech32(%q)", tc.withdrawnBy)
 				expCalls.SendCoins = []*SendCoinsArgs{{
-					ctxHasQuarantineBypass: tc.expQBypass,
-					ctxTransferAgent:       admin,
-					fromAddr:               exchange.GetMarketAddress(tc.marketID),
-					toAddr:                 tc.toAddr,
-					amt:                    tc.amount,
+					ctxTransferAgent: admin,
+					fromAddr:         exchange.GetMarketAddress(tc.marketID),
+					toAddr:           tc.toAddr,
+					amt:              tc.amount,
 				}}
 			}
 
