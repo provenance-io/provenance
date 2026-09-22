@@ -34,6 +34,7 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MsgOptIn represents a message for opting in to account quarantine.
+// Deprecated: The quarantine module has been removed.
 type MsgOptIn struct {
 	ToAddress string `protobuf:"bytes,1,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
 }
@@ -116,6 +117,7 @@ func (m *MsgOptInResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgOptInResponse proto.InternalMessageInfo
 
 // MsgOptOut represents a message for opting in to account quarantine.
+// Deprecated: The quarantine module has been removed.
 type MsgOptOut struct {
 	ToAddress string `protobuf:"bytes,1,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
 }
@@ -198,6 +200,7 @@ func (m *MsgOptOutResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgOptOutResponse proto.InternalMessageInfo
 
 // MsgAccept represents a message for accepting quarantined funds.
+// Deprecated: The quarantine module has been removed.
 type MsgAccept struct {
 	// to_address is the address of the quarantined account that is accepting funds.
 	ToAddress string `protobuf:"bytes,1,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
@@ -311,6 +314,7 @@ func (m *MsgAcceptResponse) GetFundsReleased() github_com_cosmos_cosmos_sdk_type
 }
 
 // MsgDecline represents a message for declining quarantined funds.
+// Deprecated: The quarantine module has been removed.
 type MsgDecline struct {
 	// to_address is the address of the quarantined account that is accepting funds.
 	ToAddress string `protobuf:"bytes,1,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
@@ -415,6 +419,7 @@ func (m *MsgDeclineResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgDeclineResponse proto.InternalMessageInfo
 
 // MsgUpdateAutoResponses represents a message for updating quarantine auto-responses for a receiving address.
+// Deprecated: The quarantine module has been removed.
 type MsgUpdateAutoResponses struct {
 	// to_address is the quarantined address that would be accepting or declining funds.
 	ToAddress string `protobuf:"bytes,1,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`

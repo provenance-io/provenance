@@ -1089,6 +1089,7 @@
 
 ### MsgAccept
 MsgAccept represents a message for accepting quarantined funds.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
@@ -1121,6 +1122,7 @@ MsgAcceptResponse defines the Msg/Accept response type.
 
 ### MsgDecline
 MsgDecline represents a message for declining quarantined funds.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
@@ -1148,6 +1150,7 @@ MsgDeclineResponse defines the Msg/Decline response type.
 
 ### MsgOptIn
 MsgOptIn represents a message for opting in to account quarantine.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
@@ -1173,6 +1176,7 @@ MsgOptInResponse defines the Msg/OptIn response type.
 
 ### MsgOptOut
 MsgOptOut represents a message for opting in to account quarantine.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
@@ -1198,6 +1202,7 @@ MsgOptOutResponse defines the Msg/OptOut response type.
 
 ### MsgUpdateAutoResponses
 MsgUpdateAutoResponses represents a message for updating quarantine auto-responses for a receiving address.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
@@ -1457,6 +1462,7 @@ Deprecated: The quarantine module has been removed. All endpoints return Unimple
 
 ### AutoResponseEntry
 AutoResponseEntry defines the auto response to one address from another.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
@@ -1474,6 +1480,7 @@ AutoResponseEntry defines the auto response to one address from another.
 
 ### AutoResponseUpdate
 AutoResponseUpdate defines a quarantine auto response update that should be applied.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
@@ -1490,6 +1497,7 @@ AutoResponseUpdate defines a quarantine auto response update that should be appl
 
 ### QuarantineRecord
 QuarantineRecord defines information regarding quarantined funds that is stored in state.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
@@ -1508,6 +1516,7 @@ QuarantineRecord defines information regarding quarantined funds that is stored 
 
 ### QuarantineRecordSuffixIndex
 QuarantineRecordSuffixIndex defines a list of record suffixes that can be stored in state and used as an index.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
@@ -1523,6 +1532,7 @@ QuarantineRecordSuffixIndex defines a list of record suffixes that can be stored
 
 ### QuarantinedFunds
 QuarantinedFunds defines structure that represents coins that have been quarantined.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
@@ -1543,6 +1553,7 @@ QuarantinedFunds defines structure that represents coins that have been quaranti
 
 ### AutoResponse
 AutoResponse enumerates the quarantine auto-response options.
+Deprecated: The quarantine module has been removed.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
@@ -1570,6 +1581,7 @@ AutoResponse enumerates the quarantine auto-response options.
 
 ### GenesisState
 GenesisState defines the quarantine module's genesis state.
+Deprecated: The quarantine module has been removed.
 
 
 | Field | Type | Label | Description |
