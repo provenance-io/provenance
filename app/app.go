@@ -173,6 +173,7 @@ import (
 	"github.com/provenance-io/provenance/x/name"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
+	"github.com/provenance-io/provenance/x/quarantine"
 	registrykeeper "github.com/provenance-io/provenance/x/registry/keeper"
 	registrymodule "github.com/provenance-io/provenance/x/registry/module"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
@@ -811,6 +812,9 @@ func New(
 	// We removed the params module, but have several gov props with a ParameterChangeProposal in them.
 	paramprops.RegisterLegacyAminoCodec(legacyAmino)
 	paramprops.RegisterInterfaces(interfaceRegistry)
+
+	// We also removed the quarantine module, but need to keep the msg types regsitered.
+	quarantine.RegisterInterfaces(interfaceRegistry)
 
 	// NOTE: upgrade module is required to be prioritized
 	app.mm.SetOrderPreBlockers(
