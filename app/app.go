@@ -813,7 +813,7 @@ func New(
 	paramprops.RegisterLegacyAminoCodec(legacyAmino)
 	paramprops.RegisterInterfaces(interfaceRegistry)
 
-	// We also removed the quarantine module, but need to keep the msg types regsitered.
+	// We also removed the quarantine module, but need to keep the msg types registered.
 	quarantine.RegisterInterfaces(interfaceRegistry)
 
 	// NOTE: upgrade module is required to be prioritized
