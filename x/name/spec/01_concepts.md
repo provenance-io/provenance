@@ -24,9 +24,9 @@ message NameRecord {
 
 ## Normalization
 
-Name records are normalized before being processed for creation or query. Each component of the name must conform to a standard set of rules. The sha256 of the normalized value is used internally for comparision purposes.
+Name records are normalized before being processed for creation or query. Each component of the name must conform to a standard set of rules. Names are stored using their normalized value with the segments in reverse order (see State).
 
-1. Names are always stored and compared using a lower case form or a hash derived from this normalized form.
+1. Names are always stored and compared using their normalized (lower case) form.
 2. Unicode values that are not graphic, lower case, or digits are considered invalid.
 3. A single occurance of the hyphen-minus character is allowed unless the value conforms to a valid UUID.
 

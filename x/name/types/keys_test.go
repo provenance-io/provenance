@@ -1,11 +1,9 @@
 package types
 
 import (
-	"crypto/sha256"
-	"encoding/base64"
+	"bytes"
 	"encoding/hex"
-	"fmt"
-	"strings"
+	"slices"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -28,70 +26,6 @@ func TestNameKeySuite(t *testing.T) {
 	suite.Run(t, s)
 }
 
-func (s *NameKeyTestSuite) TestNameKeyPrefix() {
-	cases := map[string]struct {
-		name      string
-		key       []byte
-		expectErr bool
-		errValue  string
-	}{
-		"valid two-part": {
-			"name.domain",
-			mustHexDecode("e27733edfa985bcd3fdcfe8544741d602a379fd28464b3c15f483b7350e2dd20"),
-			false,
-			"",
-		},
-		"valid single": {
-			"domain",
-			mustHexDecode("f2ff83860a4dc203988ed1a22ba1f21237f04abdbd0c4c951103cfbed121de78"), // unchanged
-			false,
-			"",
-		},
-		"valid multi-part": {
-			"first.second.third.fourth.fifth.sixth.seventh.eighth.ninth.tenth",
-			mustHexDecode("1cccba52f948b1d9e2123bb38988a08d733a040e78ecb516c608e7454960bf01"),
-			false,
-			"",
-		},
-		"invalid empty name": {
-			"",
-			[]byte(nil),
-			true,
-			fmt.Errorf("name segment cannot be empty: %w", ErrNameInvalid).Error(),
-		},
-		"invalid empty name whitespace": {
-			"   ",
-			[]byte(nil),
-			true,
-			fmt.Errorf("name segment cannot be empty: %w", ErrNameInvalid).Error(),
-		},
-		"invalid empty name segment": {
-			"name..empty.segment",
-			[]byte(nil),
-			true,
-			fmt.Errorf("name segment cannot be empty: %w", ErrNameInvalid).Error(),
-		},
-		"invalid empty name segment whitespace": {
-			"name. .empty.segment",
-			[]byte(nil),
-			true,
-			fmt.Errorf("name segment cannot be empty: %w", ErrNameInvalid).Error(),
-		},
-	}
-	for n, tc := range cases {
-		s.Run(n, func() {
-			hash, err := ComputeNameHash(tc.name)
-			if tc.expectErr {
-				s.Error(err)
-				s.Equal(tc.errValue, err.Error())
-			} else {
-				s.NoError(err)
-			}
-			s.Equal(tc.key, hash)
-		})
-	}
-}
-
 func mustHexDecode(h string) []byte {
 	var err error
 	var result []byte
@@ -101,101 +35,126 @@ func mustHexDecode(h string) []byte {
 	return result
 }
 
-func (s *NameKeyTestSuite) TestHashedStringKeyCodec() {
-	codec := HashedStringKeyCodec{}
-
+func (s *NameKeyTestSuite) TestReverseName() {
 	tests := []struct {
-		name  string
-		input string
+		name string
+		exp  string
 	}{
-		{name: "empty string", input: ""},
-		{name: "whitespace only", input: "   "},
-		{name: "empty segment", input: "name..domain"},
-		{name: "single char", input: "a"},
-		{name: "short string", input: "short"},
-		{name: "domain style", input: "example.domain"},
-		{name: "multi-level domain", input: "one.two.three.four"},
-		{name: "long string", input: strings.Repeat("x", 100)},
-		{name: "contains whitespace", input: "some domain.name"},
-		{name: "special chars", input: "!@#$%^&*()_+{}|:\"<>?"},
+		{name: "", exp: ""},
+		{name: "domain", exp: "domain"},
+		{name: "name.domain", exp: "domain.name"},
+		{name: "ab.cd.ef", exp: "ef.cd.ab"},
+		{name: "one.two.three.four.five", exp: "five.four.three.two.one"},
+		{name: "AB.Cd.eF", exp: "ef.cd.ab"},
+		{name: " ab . cd .ef ", exp: "ef.cd.ab"},
+		{name: "name..domain", exp: "domain..name"},
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		s.Run(tc.name, func() {
-			expectedHash := codec.ComputeHash(tc.input)
-			size := codec.Size(tc.input)
-			s.Equal(sha256.Size, size, "Size mismatch for input: %q", tc.input)
+			s.Assert().Equal(tc.exp, ReverseName(tc.name), "ReverseName(%q)", tc.name)
+		})
+	}
+}
 
-			buffer := make([]byte, size)
-			n, err := codec.Encode(buffer, tc.input)
-			s.Require().NoError(err, "Encode error for input: %q", tc.input)
-			s.Equal(size, n, "Encoded size mismatch for input: %q", tc.input)
-			s.Equal(expectedHash, buffer[:n], "Hash mismatch after Encode for input: %q", tc.input)
+func (s *NameKeyTestSuite) TestReversedNameKeyCodec() {
+	codec := ReversedNameKeyCodec{}
 
-			s.Run("Decode", func() {
-				read, out, err := codec.Decode(buffer[:n])
-				s.Require().NoError(err, "Decode error for input: %q", tc.input)
-				s.Equal(n, read, "Decoded read length mismatch for input: %q", tc.input)
-				s.NotEmpty(out, "Decode returned empty string for input: %q", tc.input)
-				s.NotEqual(tc.input, out, "Decode should not return original input for: %q", tc.input)
+	tests := []struct {
+		name    string
+		input   string
+		expKey  string // The expected encoded key bytes (as a string).
+		expName string // The expected result of decoding the key.
+	}{
+		{name: "single segment", input: "domain", expKey: "domain", expName: "domain"},
+		{name: "two segments", input: "name.domain", expKey: "domain.name", expName: "name.domain"},
+		{name: "three segments", input: "ab.cd.ef", expKey: "ef.cd.ab", expName: "ab.cd.ef"},
+		{name: "not normalized", input: " AB.Cd . ef", expKey: "ef.cd.ab", expName: "ab.cd.ef"},
+		{name: "uuid segment", input: "91978ba2-5f35-459a-86a7-feca1b0512e0.pb", expKey: "pb.91978ba2-5f35-459a-86a7-feca1b0512e0", expName: "91978ba2-5f35-459a-86a7-feca1b0512e0.pb"},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Run("Encode/Decode", func() {
+				size := codec.Size(tc.input)
+				s.Require().Equal(len(tc.expKey), size, "Size(%q)", tc.input)
+
+				buffer := make([]byte, size)
+				n, err := codec.Encode(buffer, tc.input)
+				s.Require().NoError(err, "Encode(%q)", tc.input)
+				s.Require().Equal(size, n, "Encode(%q) bytes written", tc.input)
+				s.Assert().Equal(tc.expKey, string(buffer), "Encode(%q) key", tc.input)
+
+				read, name, err := codec.Decode(buffer)
+				s.Require().NoError(err, "Decode(%q)", buffer)
+				s.Assert().Equal(n, read, "Decode(%q) bytes read", buffer)
+				s.Assert().Equal(tc.expName, name, "Decode(%q) name", buffer)
 			})
 
-			s.Run("Encode/Decode NonTerminal", func() {
-				nonTermSize := codec.SizeNonTerminal(tc.input)
-				s.Equal(sha256.Size, nonTermSize, "NonTerminal size mismatch for input: %q", tc.input)
+			s.Run("EncodeNonTerminal/DecodeNonTerminal", func() {
+				size := codec.SizeNonTerminal(tc.input)
+				s.Require().Equal(len(tc.expKey)+1, size, "SizeNonTerminal(%q)", tc.input)
 
-				nonTermBuf := make([]byte, nonTermSize)
-				n2, err := codec.EncodeNonTerminal(nonTermBuf, tc.input)
-				s.Require().NoError(err, "EncodeNonTerminal error for input: %q", tc.input)
-				s.Equal(nonTermSize, n2, "EncodeNonTerminal size mismatch for input: %q", tc.input)
-				s.Equal(expectedHash, nonTermBuf[:n2], "NonTerminal hash mismatch for input: %q", tc.input)
+				buffer := make([]byte, size)
+				n, err := codec.EncodeNonTerminal(buffer, tc.input)
+				s.Require().NoError(err, "EncodeNonTerminal(%q)", tc.input)
+				s.Require().Equal(size, n, "EncodeNonTerminal(%q) bytes written", tc.input)
 
-				read2, out2, err := codec.DecodeNonTerminal(nonTermBuf[:n2])
-				s.Require().NoError(err, "DecodeNonTerminal error for input: %q", tc.input)
-				s.Equal(n2, read2, "DecodeNonTerminal read mismatch for input: %q", tc.input)
-				s.Equal(base64.StdEncoding.EncodeToString(expectedHash), out2, "DecodeNonTerminal base64 mismatch for input: %q", tc.input)
+				// Put something after it to make sure DecodeNonTerminal only reads its part.
+				buffer = append(buffer, []byte("extra")...)
+				read, name, err := codec.DecodeNonTerminal(buffer)
+				s.Require().NoError(err, "DecodeNonTerminal(%q)", buffer)
+				s.Assert().Equal(n, read, "DecodeNonTerminal(%q) bytes read", buffer)
+				s.Assert().Equal(tc.expName, name, "DecodeNonTerminal(%q) name", buffer)
 			})
 
-			s.Run("JSON Encode/Decode", func() {
-				jsonBytes, err := codec.EncodeJSON(tc.input)
-				s.Require().NoError(err, "EncodeJSON error for input: %q", tc.input)
-
-				outJSON, err := codec.DecodeJSON(jsonBytes)
-				s.Require().NoError(err, "DecodeJSON error for input: %q", tc.input)
-				s.Equal(tc.input, outJSON, "JSON round-trip mismatch for input: %q", tc.input)
+			s.Run("JSON", func() {
+				bz, err := codec.EncodeJSON(tc.input)
+				s.Require().NoError(err, "EncodeJSON(%q)", tc.input)
+				name, err := codec.DecodeJSON(bz)
+				s.Require().NoError(err, "DecodeJSON(%q)", bz)
+				s.Assert().Equal(tc.input, name, "DecodeJSON(%q)", bz)
 			})
 
 			s.Run("Stringify and KeyType", func() {
-				s.Equal(tc.input, codec.Stringify(tc.input), "Stringify mismatch for input: %q", tc.input)
-				s.Equal("hashedstring", codec.KeyType(), "KeyType mismatch for input: %q", tc.input)
+				s.Assert().Equal(tc.input, codec.Stringify(tc.input), "Stringify(%q)", tc.input)
+				s.Assert().Equal("reversedname", codec.KeyType(), "KeyType()")
 			})
-
-			s.Run("Hash is deterministic", func() {
-				hash1 := codec.ComputeHash(tc.input)
-				s.Require().NoError(err, "ComputeHash(%q)", tc.input)
-				hash2 := codec.ComputeHash(tc.input)
-				s.Require().NoError(err, "ComputeHash(%q)", tc.input)
-				s.Equal(hash1, hash2, "ComputeHash not deterministic for input: %q", tc.input)
-			})
-
 		})
 	}
+}
 
-	s.Run("Hash uniqueness (no collision)", func() {
-		hashes := map[string][]byte{}
-		seen := map[string]bool{}
+// TestReversedNameKeyOrdering makes sure that a name's sub-names are stored right after it, and share its key prefix.
+func (s *NameKeyTestSuite) TestReversedNameKeyOrdering() {
+	codec := ReversedNameKeyCodec{}
+	encode := func(name string) []byte {
+		buffer := make([]byte, codec.Size(name))
+		_, err := codec.Encode(buffer, name)
+		s.Require().NoError(err, "Encode(%q)", name)
+		return buffer
+	}
 
-		for _, tc := range tests {
-			if strings.TrimSpace(tc.input) == "" {
-				continue
-			}
-			hash := codec.ComputeHash(tc.input)
-			hashStr := base64.StdEncoding.EncodeToString(hash)
+	names := []string{"ab.cd.ef", "gh.ef", "ef", "cdx.ef", "cd.ef", "xy.ab.cd.ef", "cd.gh"}
+	keys := make([][]byte, len(names))
+	for i, name := range names {
+		keys[i] = encode(name)
+	}
+	slices.SortFunc(keys, bytes.Compare)
 
-			s.False(seen[hashStr], "Duplicate hash found for input: %q", tc.input)
-			seen[hashStr] = true
-			hashes[tc.input] = hash
+	actual := make([]string, len(keys))
+	for i, key := range keys {
+		actual[i] = string(key)
+	}
+	expected := []string{"ef", "ef.cd", "ef.cd.ab", "ef.cd.ab.xy", "ef.cdx", "ef.gh", "gh.cd"}
+	s.Assert().Equal(expected, actual, "sorted keys")
+
+	// Everything under cd.ef has a key starting with "ef.cd." (note the trailing dot, so cdx.ef isn't included).
+	childPrefix := append(encode("cd.ef"), '.')
+	var children []string
+	for _, name := range names {
+		if bytes.HasPrefix(encode(name), childPrefix) {
+			children = append(children, name)
 		}
-	})
+	}
+	s.Assert().ElementsMatch([]string{"ab.cd.ef", "xy.ab.cd.ef"}, children, "names under cd.ef")
 }

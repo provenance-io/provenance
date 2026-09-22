@@ -33,7 +33,7 @@ type Keeper struct {
 	storeService store.KVStoreService
 	// Schema definition
 	schema collections.Schema
-	// Primary: name (hashed) -> NameRecord, indexed by addr
+	// Primary: name (keyed with its segments reversed, see ReversedNameKeyCodec) -> NameRecord, indexed by addr.
 	nameRecords *collections.IndexedMap[string, types.NameRecord, types.NameRecordIndexes]
 	// paramsStore manages the module's configurable parameters.
 	paramsStore collections.Item[types.Params]
@@ -69,7 +69,7 @@ func NewKeeper(
 		sb,
 		types.NameKeyPrefix,
 		"name_records",
-		types.HashedStringKeyCodec{},
+		types.ReversedNameKeyCodec{},
 		codec.CollValue[types.NameRecord](cdc),
 		indexes,
 	)
@@ -326,9 +326,6 @@ func (k Keeper) CreateRootName(ctx sdk.Context, name, owner string, restricted b
 }
 
 // walkRecords visits every name record.
-//
-// It does not pass the key to fn because the key is a hash, not the name.
-// Use record.Name instead.
 func (k Keeper) walkRecords(ctx sdk.Context, fn func(types.NameRecord) error) error {
 	return k.nameRecords.Walk(ctx, nil, func(_ string, record types.NameRecord) (bool, error) {
 		if err := fn(record); err != nil {
