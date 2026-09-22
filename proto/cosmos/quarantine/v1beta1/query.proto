@@ -9,7 +9,7 @@ import "google/api/annotations.proto";
 option go_package = "github.com/provenance-io/provenance/x/quarantine";
 
 // Query defines the quarantine gRPC query service.
-// Deprecated: The quarantine module has been removed. All endpoints return Unimplemented.
+// Deprecated: The quarantine module has been removed.
 service Query {
   option deprecated = true;
 
