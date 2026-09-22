@@ -662,6 +662,11 @@ func TestHandlersConsumeMsgs(t *testing.T) {
 
 	// These are all the Msg types that are registered in the interface registry (as a Msg) but don't have a handler.
 	expNoHandlers := []string{
+		"/cosmos.quarantine.v1beta1.MsgAccept",
+		"/cosmos.quarantine.v1beta1.MsgDecline",
+		"/cosmos.quarantine.v1beta1.MsgOptIn",
+		"/cosmos.quarantine.v1beta1.MsgOptOut",
+		"/cosmos.quarantine.v1beta1.MsgUpdateAutoResponses",
 		"/cosmwasm.wasm.v1.MsgIBCCloseChannel",
 		"/cosmwasm.wasm.v1.MsgIBCSend",
 		"/cosmwasm.wasm.v1beta1.MsgExecuteContract",
