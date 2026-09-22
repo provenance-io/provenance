@@ -678,7 +678,7 @@ func New(
 
 	app.IbcHooks.SendPacketPreProcessors = []ibchookstypes.PreSendPacketDataProcessingFn{app.Ics20WasmHooks.GetWasmSendPacketPreProcessor}
 
-	unsanctionableAddrs := make([]sdk.AccAddress, 0, len(maccPerms)+1)
+	unsanctionableAddrs := make([]sdk.AccAddress, 0, len(maccPerms))
 	for mName := range maccPerms {
 		unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(mName))
 	}
