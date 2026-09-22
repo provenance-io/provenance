@@ -368,8 +368,10 @@ func (k Keeper) isWasmAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
 
 // validateSmartContractSigners makes sure that any msg signers that are smart contracts
 // are in the usedSigners map or are authorized by all signers after them.
-// The usedSigners map has bech32 keys and value indicating whether that address was
-// used as a signer in some capacity (e.g. they're a party).
+// The usedSigners map has bech32 keys and value indicating whether that address signed
+// for itself (e.g. they're a party or value owner). An address that only acted as an
+// authz grantee for someone else must not be in this map; otherwise a smart contract
+// holding a grant from one party could vouch for every other party's signature.
 func (k Keeper) validateSmartContractSigners(ctx sdk.Context, usedSigners types.UsedSignersMap, msg types.MetadataMsg) error {
 	// When a smart contract is a signer, they must either be used as a signer
 	// already, or must be authorized by all signers after it.
@@ -491,6 +493,9 @@ func (k Keeper) ValidateScopeValueOwnersSigners(
 		}
 
 		// Not a direct signer, and not a marker. Check with authz for an applicable grant.
+		// The grantee is intentionally not added to usedSigners: it is only acting on behalf
+		// of the existing owner, so a smart contract grantee must still be authorized by any
+		// signers that follow it (see validateSmartContractSigners).
 		grantee, authzErr := k.findAuthzGrantee(ctx, existing, signerAccs, msg)
 		if authzErr != nil {
 			return nil, nil, fmt.Errorf("authz error with existing value owner %q: %w", existingStr, authzErr)
@@ -498,7 +503,6 @@ func (k Keeper) ValidateScopeValueOwnersSigners(
 		if len(grantee) == 0 {
 			return nil, nil, fmt.Errorf("missing signature from existing value owner %q", existingStr)
 		}
-		usedSigners.Use(grantee.String())
 	}
 
 	return signerAccs, usedSigners, nil

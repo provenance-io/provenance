@@ -1206,8 +1206,6 @@ func (s *MsgServerTestSuite) TestMsgWithdrawMarkerRequest() {
 		name          string
 		msg           *types.MsgWithdrawRequest
 		expectedEvent proto.Message
-		expErr        bool
-		expErrMsg     string
 	}{
 		{
 			name:          "should successfully withdraw marker",
@@ -1231,12 +1229,26 @@ func (s *MsgServerTestSuite) TestMsgWithdrawMarkerRequest() {
 			}(),
 			expectedEvent: types.NewEventMarkerWithdraw("100hotdog", hotdogDenom, s.owner1, s.owner1),
 		},
+		{
+			name: "no to-address in msg",
+			msg: &types.MsgWithdrawRequest{
+				Denom:         hotdogDenom,
+				Administrator: s.owner1Addr.String(),
+				ToAddress:     "",
+				Amount:        sdk.NewCoins(sdk.NewInt64Coin(hotdogDenom, 103)),
+			},
+			expectedEvent: types.NewEventMarkerWithdraw("103hotdog", hotdogDenom, s.owner1, s.owner1),
+		},
 	}
 
 	for _, tc := range testcases {
 		s.Run(tc.name, func() {
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-			response, err := s.msgServer.Withdraw(s.ctx, tc.msg)
+			var response *types.MsgWithdrawResponse
+			testFunc := func() {
+				response, err = s.msgServer.Withdraw(s.ctx, tc.msg)
+			}
+			s.Require().NotPanics(testFunc, "msgServer.Withdraw")
 			s.Require().NoError(err, "handler(%T) error", tc.msg)
 			if tc.expectedEvent != nil {
 				result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
