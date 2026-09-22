@@ -72,7 +72,6 @@ Whenever funds are being withdrawn, the transfer agent must have `withdraw` perm
 There are several hard-coded module account addresses that are given special consideration in the marker module's `SendRestrictionFn`:
 
 * `authtypes.FeeCollectorName` - Allows paying fees with restricted coins.
-* `reward` - Allows reward programs to use restricted coins.
 * `gov` - Allows deposits to have restricted coins.
 * `distribution` - Allows collection of delegation rewards in restricted coins.
 * `stakingtypes.BondedPoolName` - Allows delegation of restricted coins.
