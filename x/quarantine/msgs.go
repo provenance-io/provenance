@@ -15,29 +15,29 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateAutoResponses)(nil),
 }
 
-var msgRemoved = fmt.Errorf("the quarantine module has been removed")
+var errMsgRemoved = fmt.Errorf("the quarantine module has been removed")
 
 // ValidateBasic does simple stateless validation of this Msg.
 func (msg MsgOptIn) ValidateBasic() error {
-	return msgRemoved
+	return errMsgRemoved
 }
 
 // ValidateBasic does simple stateless validation of this Msg.
 func (msg MsgOptOut) ValidateBasic() error {
-	return msgRemoved
+	return errMsgRemoved
 }
 
 // ValidateBasic does simple stateless validation of this Msg.
 func (msg MsgAccept) ValidateBasic() error {
-	return msgRemoved
+	return errMsgRemoved
 }
 
 // ValidateBasic does simple stateless validation of this Msg.
 func (msg MsgDecline) ValidateBasic() error {
-	return msgRemoved
+	return errMsgRemoved
 }
 
 // ValidateBasic does simple stateless validation of this Msg.
 func (msg MsgUpdateAutoResponses) ValidateBasic() error {
-	return msgRemoved
+	return errMsgRemoved
 }
