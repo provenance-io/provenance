@@ -35,8 +35,8 @@ HYPHEN-MINUS
 Unicode: U+002D, UTF-8: 2D
 ```
 
-1. Each component of the name is restricted to a length of 2 to 32 characters (inclusive). These limits are configurable in the module [parameters](./05_params.md).
-2. A maximum of 16 components for a name (levels in the heirarchy) is also enforced and configurable in the module parameters.
+4. Each component of the name is restricted to a length of 2 to 32 characters (inclusive). These limits are configurable in the module [parameters](./05_params.md).
+5. A maximum of 16 components for a name (levels in the heirarchy) is also enforced and configurable in the module parameters.
 Leading and trailing spaces are always trimmed off names for consistency during processing and evaluation.
 
 ### Creation of Root Names
