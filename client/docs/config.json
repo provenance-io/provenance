@@ -265,22 +265,6 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/cosmos/quarantine/v1beta1/query.swagger.json",
-      "tags": {
-        "add": [
-          "Quarantine"
-        ]
-      }
-    },
-    {
-      "url": "./tmp-swagger-gen/cosmos/quarantine/v1beta1/tx.swagger.json",
-      "tags": {
-        "add": [
-          "Quarantine"
-        ]
-      }
-    },
-    {
       "url": "./tmp-swagger-gen/provenance/registry/v1/query.swagger.json",
       "tags": {
         "add": [
