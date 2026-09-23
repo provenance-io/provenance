@@ -10,6 +10,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/flatfees/keeper"
@@ -39,6 +40,10 @@ type MockKeeper struct {
 	ValidateAuthorityErrs []string
 	ValidateAuthorityExp  []string
 	ValidateAuthorityArgs []string
+
+	GetCFResult   types.ConversionFactor
+	GetCFExpCalls int
+	GetCFActCalls int
 
 	SetParamsErrs []string
 	SetParamsExp  []types.Params
@@ -83,6 +88,11 @@ func (k *MockKeeper) WithValidateAuthorityErrs(errs ...string) *MockKeeper {
 	return k
 }
 
+func (k *MockKeeper) WithGetCF(cf types.ConversionFactor) *MockKeeper {
+	k.GetCFResult = cf
+	return k
+}
+
 // WithSetParamsErrs adds the provided errs to be returned from SetParams.
 // An empty string indicates no error. This method both updates the receiver and returns it.
 func (k *MockKeeper) WithSetParamsErrs(errs ...string) *MockKeeper {
@@ -115,6 +125,11 @@ func (k *MockKeeper) WithSetConversionFactorErrs(errs ...string) *MockKeeper {
 // This method both updates the receiver and returns it.
 func (k *MockKeeper) WithExpValidateAuthority(authorities ...string) *MockKeeper {
 	k.ValidateAuthorityExp = append(k.ValidateAuthorityExp, authorities...)
+	return k
+}
+
+func (k *MockKeeper) WithExpGetCFCalls(calls int) *MockKeeper {
+	k.GetCFExpCalls = calls
 	return k
 }
 
@@ -226,6 +241,11 @@ func (k *MockKeeper) ValidateAuthority(authority string) error {
 	return err
 }
 
+func (k *MockKeeper) GetConversionFactor(ctx sdk.Context) types.ConversionFactor {
+	k.GetCFActCalls++
+	return k.GetCFResult
+}
+
 func (k *MockKeeper) SetParams(_ sdk.Context, params types.Params) error {
 	k.SetParamsArgs = append(k.SetParamsArgs, params)
 	var err error
@@ -256,6 +276,7 @@ func (k *MockKeeper) SetConversionFactor(_ sdk.Context, conversionFactor types.C
 
 func (k *MockKeeper) AssertCalls(t testing.TB) bool {
 	ok := assert.Equal(t, k.ValidateAuthorityExp, k.ValidateAuthorityArgs, "Calls to ValidateAuthority")
+	ok = assert.Equal(t, k.GetCFExpCalls, k.GetCFActCalls, "Number of calls to GetConversionFactor") && ok
 	if assert.Equal(t, len(k.SetParamsExp), len(k.SetParamsArgs), "Number of calls to SetParams") {
 		for i := range k.SetParamsExp {
 			ok = assertEqualParams(t, k.SetParamsExp[i], k.SetParamsArgs[i], "Call %d to SetParams", i+1) && ok
@@ -384,6 +405,7 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 		req          *types.MsgUpdateConversionFactorRequest
 		isOracleAddr bool
 		expErr       string
+		expNoGet     bool
 		expCall      bool // Automatically true if expErr is empty.
 	}{
 		{
@@ -396,11 +418,63 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 					ConvertedAmount:  sdk.NewInt64Coin("orange", 16),
 				},
 			},
-			expErr: `expected governance authority or an oracle address, got "whatever": expected gov account as only signer for proposal message`,
+			expErr:   `expected governance authority or an oracle address, got "whatever": expected gov account as only signer for proposal message`,
+			expNoGet: true,
+		},
+		{
+			name: "same definition amount denom, different converted amount denom",
+			kpr: NewMockKeeper().WithGetCF(types.ConversionFactor{
+				DefinitionAmount: sdk.NewInt64Coin("yellow", 4),
+				ConvertedAmount:  sdk.NewInt64Coin("brown", 4),
+			}),
+			req: &types.MsgUpdateConversionFactorRequest{
+				Authority: sdk.AccAddress("some_address________").String(),
+				ConversionFactor: types.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("yellow", 4),
+					ConvertedAmount:  sdk.NewInt64Coin("orange", 16),
+				},
+			},
+			isOracleAddr: true,
+			expErr:       "rpc error: code = InvalidArgument desc = invalid conversion factor: provided denoms must match existing denoms",
+		},
+		{
+			name: "different definition amount denom, same converted amount denom",
+			kpr: NewMockKeeper().WithGetCF(types.ConversionFactor{
+				DefinitionAmount: sdk.NewInt64Coin("yellow", 4),
+				ConvertedAmount:  sdk.NewInt64Coin("brown", 4),
+			}),
+			req: &types.MsgUpdateConversionFactorRequest{
+				Authority: sdk.AccAddress("some_address________").String(),
+				ConversionFactor: types.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("green", 4),
+					ConvertedAmount:  sdk.NewInt64Coin("brown", 16),
+				},
+			},
+			isOracleAddr: true,
+			expErr:       "rpc error: code = InvalidArgument desc = invalid conversion factor: provided denoms must match existing denoms",
+		},
+		{
+			name: "both denoms different",
+			kpr: NewMockKeeper().WithGetCF(types.ConversionFactor{
+				DefinitionAmount: sdk.NewInt64Coin("yellow", 4),
+				ConvertedAmount:  sdk.NewInt64Coin("brown", 4),
+			}),
+			req: &types.MsgUpdateConversionFactorRequest{
+				Authority: sdk.AccAddress("some_address________").String(),
+				ConversionFactor: types.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("green", 4),
+					ConvertedAmount:  sdk.NewInt64Coin("orange", 16),
+				},
+			},
+			isOracleAddr: true,
+			expErr:       "rpc error: code = InvalidArgument desc = invalid conversion factor: provided denoms must match existing denoms",
 		},
 		{
 			name: "error setting conversion factor",
-			kpr:  NewMockKeeper().WithSetConversionFactorErrs("notgonnaconvert"),
+			kpr: NewMockKeeper().WithSetConversionFactorErrs("notgonnaconvert").WithGetCF(types.ConversionFactor{
+				DefinitionAmount: sdk.NewInt64Coin("green", 1),
+				ConvertedAmount:  sdk.NewInt64Coin("orange", 1),
+			}),
 			req: &types.MsgUpdateConversionFactorRequest{
 				Authority: sdk.AccAddress("whatever____________").String(),
 				ConversionFactor: types.ConversionFactor{
@@ -416,8 +490,8 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 			req: &types.MsgUpdateConversionFactorRequest{
 				Authority: sdk.AccAddress("some_address________").String(),
 				ConversionFactor: types.ConversionFactor{
-					DefinitionAmount: sdk.NewInt64Coin("pink", 4),
-					ConvertedAmount:  sdk.NewInt64Coin("fuchsia", 16),
+					DefinitionAmount: sdk.NewInt64Coin("musd", 4),
+					ConvertedAmount:  sdk.NewInt64Coin("nhash", 16),
 				},
 			},
 			expCall: true,
@@ -467,6 +541,7 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 				"expected governance authority or an oracle address, got %q: expected gov account as only signer for proposal message",
 				nonOracle,
 			),
+			expNoGet: true,
 		},
 		{
 			name: "governance with error setting conversion factor",
@@ -496,7 +571,8 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 				Authority:        "",
 				ConversionFactor: cf1,
 			},
-			expErr: `expected governance authority or an oracle address, got "": expected gov account as only signer for proposal message`,
+			expErr:   `expected governance authority or an oracle address, got "": expected gov account as only signer for proposal message`,
+			expNoGet: true,
 		},
 	}
 
@@ -505,9 +581,15 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 			if tc.kpr == nil {
 				tc.kpr = NewMockKeeper()
 			}
+			if len(tc.kpr.GetCFResult.DefinitionAmount.Denom) == 0 {
+				tc.kpr = tc.kpr.WithGetCF(types.DefaultParams().ConversionFactor)
+			}
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			tc.kpr = tc.kpr.WithExpValidateAuthority(tc.req.Authority)
 			tc.kpr = tc.kpr.WithExpIsOracleAddress(tc.req.Authority).WithIsOracleAddressResults(tc.isOracleAddr)
+			if !tc.expNoGet {
+				tc.kpr = tc.kpr.WithExpGetCFCalls(1)
+			}
 
 			var expResp, actResp *types.MsgUpdateConversionFactorResponse
 			if len(tc.expErr) == 0 {

@@ -16,6 +16,7 @@ import (
 // MsgKeeper is an interface with all the keeper methods needed for the msg server endpoints.
 type MsgKeeper interface {
 	ValidateAuthority(authority string) error
+	GetConversionFactor(ctx sdk.Context) types.ConversionFactor
 	SetParams(ctx sdk.Context, params types.Params) error
 	SetMsgFee(ctx sdk.Context, msgFee types.MsgFee) error
 	RemoveMsgFee(ctx sdk.Context, msgType string) error
@@ -66,6 +67,12 @@ func (m msgServer) UpdateConversionFactor(goCtx context.Context, req *types.MsgU
 
 	if !isGov && !isOracle {
 		return nil, govtypes.ErrInvalidSigner.Wrapf("expected governance authority or an oracle address, got %q", req.Authority)
+	}
+
+	cf := m.GetConversionFactor(ctx)
+	if cf.DefinitionAmount.Denom != req.ConversionFactor.DefinitionAmount.Denom ||
+		cf.ConvertedAmount.Denom != req.ConversionFactor.ConvertedAmount.Denom {
+		return nil, status.Error(codes.InvalidArgument, "invalid conversion factor: provided denoms must match existing denoms")
 	}
 
 	err := m.SetConversionFactor(ctx, req.ConversionFactor)
