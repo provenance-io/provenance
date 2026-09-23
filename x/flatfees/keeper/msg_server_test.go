@@ -295,11 +295,12 @@ func (k *MockKeeper) AssertCalls(t testing.TB) bool {
 
 func (s *MsgServerTestSuite) TestUpdateParams() {
 	tests := []struct {
-		name    string
-		kpr     *MockKeeper
-		req     *types.MsgUpdateParamsRequest
-		expErr  string
-		expCall bool // Automatically true if expErr is empty.
+		name     string
+		kpr      *MockKeeper
+		req      *types.MsgUpdateParamsRequest
+		expErr   string
+		expNoGet bool
+		expCall  bool // Automatically true if expErr is empty.
 	}{
 		{
 			name: "invalid authority",
@@ -308,7 +309,62 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 				Authority: "invalid",
 				Params:    types.DefaultParams(),
 			},
-			expErr: "injected validate authority error",
+			expErr:   "injected validate authority error",
+			expNoGet: true,
+		},
+		{
+			name: "changed definition amount denom",
+			kpr: NewMockKeeper().WithGetCF(types.ConversionFactor{
+				DefinitionAmount: sdk.NewInt64Coin("pink", 400),
+				ConvertedAmount:  sdk.NewInt64Coin("orange", 761),
+			}),
+			req: &types.MsgUpdateParamsRequest{
+				Authority: authority,
+				Params: types.Params{
+					DefaultCost: sdk.NewInt64Coin("pink", 3_000),
+					ConversionFactor: types.ConversionFactor{
+						DefinitionAmount: sdk.NewInt64Coin("red", 3),
+						ConvertedAmount:  sdk.NewInt64Coin("orange", 1),
+					},
+				},
+			},
+			expErr: "rpc error: code = InvalidArgument desc = invalid conversion factor: provided denoms must match existing denoms",
+		},
+		{
+			name: "changed converted amount denom",
+			kpr: NewMockKeeper().WithGetCF(types.ConversionFactor{
+				DefinitionAmount: sdk.NewInt64Coin("pink", 400),
+				ConvertedAmount:  sdk.NewInt64Coin("orange", 761),
+			}),
+			req: &types.MsgUpdateParamsRequest{
+				Authority: authority,
+				Params: types.Params{
+					DefaultCost: sdk.NewInt64Coin("pink", 3_000),
+					ConversionFactor: types.ConversionFactor{
+						DefinitionAmount: sdk.NewInt64Coin("pink", 3),
+						ConvertedAmount:  sdk.NewInt64Coin("purple", 1),
+					},
+				},
+			},
+			expErr: "rpc error: code = InvalidArgument desc = invalid conversion factor: provided denoms must match existing denoms",
+		},
+		{
+			name: "changed both denoms",
+			kpr: NewMockKeeper().WithGetCF(types.ConversionFactor{
+				DefinitionAmount: sdk.NewInt64Coin("pink", 400),
+				ConvertedAmount:  sdk.NewInt64Coin("orange", 761),
+			}),
+			req: &types.MsgUpdateParamsRequest{
+				Authority: authority,
+				Params: types.Params{
+					DefaultCost: sdk.NewInt64Coin("pink", 3_000),
+					ConversionFactor: types.ConversionFactor{
+						DefinitionAmount: sdk.NewInt64Coin("red", 3),
+						ConvertedAmount:  sdk.NewInt64Coin("purple", 1),
+					},
+				},
+			},
+			expErr: "rpc error: code = InvalidArgument desc = invalid conversion factor: provided denoms must match existing denoms",
 		},
 		{
 			name: "error setting params",
@@ -322,6 +378,10 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 		},
 		{
 			name: "okay: non-defaults",
+			kpr: NewMockKeeper().WithGetCF(types.ConversionFactor{
+				DefinitionAmount: sdk.NewInt64Coin("pink", 400),
+				ConvertedAmount:  sdk.NewInt64Coin("orange", 761),
+			}),
 			req: &types.MsgUpdateParamsRequest{
 				Authority: authority,
 				Params: types.Params{
@@ -347,6 +407,9 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 			if tc.kpr == nil {
 				tc.kpr = NewMockKeeper()
 			}
+			if len(tc.kpr.GetCFResult.DefinitionAmount.Denom) == 0 {
+				tc.kpr = tc.kpr.WithGetCF(types.DefaultParams().ConversionFactor)
+			}
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			tc.kpr = tc.kpr.WithExpValidateAuthority(tc.req.Authority)
 
@@ -354,6 +417,10 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 			if len(tc.expErr) == 0 {
 				expResp = &types.MsgUpdateParamsResponse{}
 				tc.expCall = true
+			}
+
+			if !tc.expNoGet {
+				tc.kpr = tc.kpr.WithExpGetCFCalls(1)
 			}
 
 			if tc.expCall {
@@ -379,7 +446,6 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 			} else {
 				s.Assert().Empty(s.ctx.EventManager().Events(), "UpdateParams(...) events on error")
 			}
-
 		})
 	}
 }

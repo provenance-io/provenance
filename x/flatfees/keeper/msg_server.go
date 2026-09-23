@@ -44,6 +44,12 @@ func (m msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 		return nil, err
 	}
 
+	cf := m.GetConversionFactor(ctx)
+	if cf.DefinitionAmount.Denom != req.Params.ConversionFactor.DefinitionAmount.Denom ||
+		cf.ConvertedAmount.Denom != req.Params.ConversionFactor.ConvertedAmount.Denom {
+		return nil, status.Error(codes.InvalidArgument, "invalid conversion factor: provided denoms must match existing denoms")
+	}
+
 	err := m.SetParams(sdk.UnwrapSDKContext(goCtx), req.Params)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
