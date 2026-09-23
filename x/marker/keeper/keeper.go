@@ -243,6 +243,7 @@ func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) error {
 
 	accessList := marker.GetAccessList()
 	marker.ClearAccessList()
+	defer marker.SetAccessList(accessList)
 
 	k.setMarkerAccount(ctx, marker)
 
@@ -254,8 +255,9 @@ func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) error {
 	return nil
 }
 
-// setMarkerAccount persists just the marker's account fields (no permissions).
-// Only ever called from SetMarker.
+// setMarkerAccount persists the marker account exactly as provided, including any access list
+// still attached to it. Callers must clear the access list first; permissions
+// are stored separately and shouldn't be duplicated in the account.
 func (k Keeper) setMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) {
 	k.authKeeper.SetAccount(ctx, marker)
 	if err := k.markers.Set(ctx, marker.GetAddress(), marker.GetAddress()); err != nil {
