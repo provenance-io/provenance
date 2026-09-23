@@ -37,7 +37,7 @@ func (k Keeper) SetAccess(ctx sdk.Context, markerAddr, addr sdk.AccAddress, perm
 	if len(perms) == 0 {
 		err := k.markerPerms.Remove(ctx, key)
 		if err != nil && !errors.Is(err, collections.ErrNotFound) {
-			return err
+			return fmt.Errorf("could not remove the permissions that %s has on marker %s: %w", addr, markerAddr, err)
 		}
 		return nil
 	}
