@@ -41,7 +41,10 @@ func (k Keeper) SetAccess(ctx sdk.Context, markerAddr, addr sdk.AccAddress, perm
 		}
 		return nil
 	}
-	return k.markerPerms.Set(ctx, key, types.MarkerPermissions{Permissions: perms})
+	if err := k.markerPerms.Set(ctx, key, types.MarkerPermissions{Permissions: perms}); err != nil {
+		return fmt.Errorf("could not set the permissions that %s has on marker %s: %w", addr, markerAddr, err)
+	}
+	return nil
 }
 
 // RevokeAccessEntry removes all permissions addr has on a marker.
@@ -49,6 +52,7 @@ func (k Keeper) RevokeAccessEntry(ctx sdk.Context, markerAddr, addr sdk.AccAddre
 	return k.SetAccess(ctx, markerAddr, addr, nil)
 }
 
+// GetMarkerAccessList rebuilds the full []AccessGrant for a marker from the perms store.
 // GetMarkerAccessList rebuilds the full []AccessGrant for a marker from the perms store.
 func (k Keeper) GetMarkerAccessList(ctx sdk.Context, markerAddr sdk.AccAddress) ([]types.AccessGrant, error) {
 	var grants []types.AccessGrant
@@ -61,13 +65,19 @@ func (k Keeper) GetMarkerAccessList(ctx sdk.Context, markerAddr sdk.AccAddress) 
 			})
 			return false, nil
 		})
-	return grants, err
+	if err != nil {
+		return nil, fmt.Errorf("could not read the permissions on marker %s: %w", markerAddr, err)
+	}
+	return grants, nil
 }
 
 // RemoveAllAccessForMarker deletes every permission entry for a marker.
 func (k Keeper) RemoveAllAccessForMarker(ctx sdk.Context, markerAddr sdk.AccAddress) error {
 	rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.AccAddress](markerAddr)
-	return k.markerPerms.Clear(ctx, rng)
+	if err := k.markerPerms.Clear(ctx, rng); err != nil {
+		return fmt.Errorf("could not remove all the permissions on marker %s: %w", markerAddr, err)
+	}
+	return nil
 }
 
 // AddressesWithAccess returns every address holding the given permission on a marker.
@@ -84,7 +94,10 @@ func (k Keeper) AddressesWithAccess(ctx sdk.Context, markerAddr sdk.AccAddress, 
 			}
 			return false, nil
 		})
-	return addrs, err
+	if err != nil {
+		return nil, fmt.Errorf("could not read the addresses with %s on marker %s: %w", role, markerAddr, err)
+	}
+	return addrs, nil
 }
 
 // GetMarkerWithPerms looks up a marker by address and populates its AccessControl from the
@@ -116,7 +129,7 @@ func (k Keeper) GetMarkerByDenomWithPerms(ctx sdk.Context, denom string) (types.
 func (k Keeper) PopulateMarkerPerms(ctx sdk.Context, ma types.MarkerAccountI) error {
 	grants, err := k.GetMarkerAccessList(ctx, ma.GetAddress())
 	if err != nil {
-		return err
+		return fmt.Errorf("could not populate the permissions on marker %s: %w", ma.GetAddress(), err)
 	}
 	ma.SetAccessList(grants)
 	return nil
@@ -135,15 +148,25 @@ func (k Keeper) ValidateHasAccess(ctx sdk.Context, markerAddr sdk.AccAddress, ad
 	return fmt.Errorf("%s does not have %s on %s marker (%s)", addr, role, denom, markerAddr)
 }
 
+// AtLeastOneHasAccess returns true if any of the provided addresses has the given permission on the marker.
+func (k Keeper) AtLeastOneHasAccess(ctx sdk.Context, markerAddr sdk.AccAddress, addrs []sdk.AccAddress, role types.Access) bool {
+	for _, addr := range addrs {
+		if k.HasAccess(ctx, markerAddr, addr, role) {
+			return true
+		}
+	}
+	return false
+}
+
+// ValidateAtLeastOneHasAccess returns an error if none of the provided addresses has the given permission on the marker.
 func (k Keeper) ValidateAtLeastOneHasAccess(ctx sdk.Context, markerAddr sdk.AccAddress, addrs []sdk.AccAddress, role types.Access) error {
 	if len(addrs) == 1 {
 		return k.ValidateHasAccess(ctx, markerAddr, addrs[0], role)
 	}
-	for _, addr := range addrs {
-		if k.HasAccess(ctx, markerAddr, addr, role) {
-			return nil
-		}
+	if k.AtLeastOneHasAccess(ctx, markerAddr, addrs, role) {
+		return nil
 	}
+	// Only look the marker up (for its denom) once we know we need the error.
 	denom := ""
 	if m, err := k.GetMarker(ctx, markerAddr); err == nil && m != nil {
 		denom = m.GetDenom()

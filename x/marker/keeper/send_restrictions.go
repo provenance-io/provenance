@@ -117,10 +117,8 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 	}
 
 	// If there's an admin that has transfer access, it's not a normal bank send and there's nothing more to do here.
-	if len(admins) > 0 {
-		if err := k.ValidateAtLeastOneHasAccess(ctx, marker.GetAddress(), admins, types.Access_Transfer); err == nil {
-			return nil
-		}
+	if len(admins) > 0 && k.AtLeastOneHasAccess(ctx, marker.GetAddress(), admins, types.Access_Transfer) {
+		return nil
 	}
 
 	// If from address is in the deny list, prevent sending of restricted marker.
