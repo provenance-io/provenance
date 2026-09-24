@@ -16,6 +16,7 @@ import (
 // MsgKeeper is an interface with all the keeper methods needed for the msg server endpoints.
 type MsgKeeper interface {
 	ValidateAuthority(authority string) error
+	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params) error
 	SetMsgFee(ctx sdk.Context, msgFee types.MsgFee) error
 	RemoveMsgFee(ctx sdk.Context, msgType string) error
@@ -43,6 +44,10 @@ func (m msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 		return nil, err
 	}
 
+	if err := types.ValidateParamsChange(m.GetParams(ctx), req.Params); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
 	err := m.SetParams(sdk.UnwrapSDKContext(goCtx), req.Params)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -66,6 +71,10 @@ func (m msgServer) UpdateConversionFactor(goCtx context.Context, req *types.MsgU
 
 	if !isGov && !isOracle {
 		return nil, govtypes.ErrInvalidSigner.Wrapf("expected governance authority or an oracle address, got %q", req.Authority)
+	}
+
+	if err := types.ValidateConversionFactorChange(m.GetParams(ctx).ConversionFactor, req.ConversionFactor); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	err := m.SetConversionFactor(ctx, req.ConversionFactor)

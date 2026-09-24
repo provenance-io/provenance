@@ -115,6 +115,275 @@ func TestParams_Validate(t *testing.T) {
 	}
 }
 
+func TestValidateParamsChange(t *testing.T) {
+	cf := func(da int64, dd string, ca int64, cd string) ConversionFactor {
+		return ConversionFactor{
+			DefinitionAmount: sdk.NewInt64Coin(dd, da),
+			ConvertedAmount:  sdk.NewInt64Coin(cd, ca),
+		}
+	}
+
+	tests := []struct {
+		name    string
+		current Params
+		updated Params
+		expErr  string
+	}{
+		{
+			name:    "default to default",
+			current: DefaultParams(),
+			updated: DefaultParams(),
+		},
+		{
+			name: "increase default cost amount",
+			current: Params{
+				DefaultCost:      sdk.NewInt64Coin("pineapple", 5),
+				ConversionFactor: DefaultParams().ConversionFactor,
+			},
+			updated: Params{
+				DefaultCost:      sdk.NewInt64Coin("pineapple", 11),
+				ConversionFactor: DefaultParams().ConversionFactor,
+			},
+		},
+		{
+			name: "decrease default cost amount",
+			current: Params{
+				DefaultCost:      sdk.NewInt64Coin("plum", 15),
+				ConversionFactor: DefaultParams().ConversionFactor,
+			},
+			updated: Params{
+				DefaultCost:      sdk.NewInt64Coin("plum", 4),
+				ConversionFactor: DefaultParams().ConversionFactor,
+			},
+		},
+		{
+			name: "change default cost denom",
+			current: Params{
+				DefaultCost:      sdk.NewInt64Coin("apple", 10),
+				ConversionFactor: DefaultParams().ConversionFactor,
+			},
+			updated: Params{
+				DefaultCost:      sdk.NewInt64Coin("apricot", 10),
+				ConversionFactor: DefaultParams().ConversionFactor,
+			},
+			expErr: "invalid default cost: provided denom must equal existing denom",
+		},
+		{
+			name: "increase cf definition amount",
+			current: Params{
+				DefaultCost:      DefaultParams().DefaultCost,
+				ConversionFactor: cf(10, "yellow", 15, "green"),
+			},
+			updated: Params{
+				DefaultCost:      DefaultParams().DefaultCost,
+				ConversionFactor: cf(17, "yellow", 15, "green"),
+			},
+		},
+		{
+			name: "decrease cf definition amount",
+			current: Params{
+				DefaultCost:      DefaultParams().DefaultCost,
+				ConversionFactor: cf(23, "yellow", 15, "green"),
+			},
+			updated: Params{
+				DefaultCost:      DefaultParams().DefaultCost,
+				ConversionFactor: cf(12, "yellow", 15, "green"),
+			},
+		},
+		{
+			name: "change cf definition denom",
+			current: Params{
+				DefaultCost:      DefaultParams().DefaultCost,
+				ConversionFactor: cf(13, "yellow", 15, "green"),
+			},
+			updated: Params{
+				DefaultCost:      DefaultParams().DefaultCost,
+				ConversionFactor: cf(13, "brown", 15, "green"),
+			},
+			expErr: "invalid conversion factor: provided denoms must match existing denoms",
+		},
+		{
+			name: "increase cf converted amount",
+			current: Params{
+				DefaultCost:      DefaultParams().DefaultCost,
+				ConversionFactor: cf(13, "pink", 15, "purple"),
+			},
+			updated: Params{
+				DefaultCost:      DefaultParams().DefaultCost,
+				ConversionFactor: cf(13, "pink", 57, "purple"),
+			},
+		},
+		{
+			name: "decrease cf converted amount",
+			current: Params{
+				DefaultCost:      DefaultParams().DefaultCost,
+				ConversionFactor: cf(13, "pink", 15, "purple"),
+			},
+			updated: Params{
+				DefaultCost:      DefaultParams().DefaultCost,
+				ConversionFactor: cf(13, "pink", 8, "purple"),
+			},
+		},
+		{
+			name: "change cf converted denom",
+			current: Params{
+				DefaultCost:      DefaultParams().DefaultCost,
+				ConversionFactor: cf(13, "pink", 15, "purple"),
+			},
+			updated: Params{
+				DefaultCost:      DefaultParams().DefaultCost,
+				ConversionFactor: cf(13, "pink", 15, "plum"),
+			},
+			expErr: "invalid conversion factor: provided denoms must match existing denoms",
+		},
+		{
+			name: "change cf both amounts",
+			current: Params{
+				DefaultCost:      DefaultParams().DefaultCost,
+				ConversionFactor: cf(42, "orange", 43, "blue"),
+			},
+			updated: Params{
+				DefaultCost:      DefaultParams().DefaultCost,
+				ConversionFactor: cf(44, "orange", 45, "blue"),
+			},
+		},
+		{
+			name: "swap cf denoms",
+			current: Params{
+				DefaultCost:      DefaultParams().DefaultCost,
+				ConversionFactor: cf(6, "green", 51, "red"),
+			},
+			updated: Params{
+				DefaultCost:      DefaultParams().DefaultCost,
+				ConversionFactor: cf(6, "red", 51, "green"),
+			},
+			expErr: "invalid conversion factor: provided denoms must match existing denoms",
+		},
+		{
+			name: "change all amounts",
+			current: Params{
+				DefaultCost:      sdk.NewInt64Coin("blue", 15),
+				ConversionFactor: cf(13, "blue", 67, "green"),
+			},
+			updated: Params{
+				DefaultCost:      sdk.NewInt64Coin("blue", 21),
+				ConversionFactor: cf(4, "blue", 79, "green"),
+			},
+			expErr: "",
+		},
+		{
+			name: "change all denoms",
+			current: Params{
+				DefaultCost:      sdk.NewInt64Coin("blue", 15),
+				ConversionFactor: cf(13, "blue", 67, "green"),
+			},
+			updated: Params{
+				DefaultCost:      sdk.NewInt64Coin("orange", 15),
+				ConversionFactor: cf(13, "orange", 67, "yellow"),
+			},
+			expErr: "invalid default cost: provided denom must equal existing denom",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = ValidateParamsChange(tc.current, tc.updated)
+			}
+			require.NotPanics(t, testFunc, "ValidateParamsChange")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateParamsChange error")
+		})
+	}
+}
+
+func TestValidateConversionFactorChange(t *testing.T) {
+	cf := func(da int64, dd string, ca int64, cd string) ConversionFactor {
+		return ConversionFactor{
+			DefinitionAmount: sdk.NewInt64Coin(dd, da),
+			ConvertedAmount:  sdk.NewInt64Coin(cd, ca),
+		}
+	}
+
+	tests := []struct {
+		name    string
+		current ConversionFactor
+		updated ConversionFactor
+		expErr  string
+	}{
+		{
+			name:    "default to default",
+			current: DefaultParams().ConversionFactor,
+			updated: DefaultParams().ConversionFactor,
+		},
+		{
+			name:    "increase definition amount",
+			current: cf(10, "yellow", 15, "green"),
+			updated: cf(17, "yellow", 15, "green"),
+		},
+		{
+			name:    "decrease definition amount",
+			current: cf(23, "yellow", 15, "green"),
+			updated: cf(12, "yellow", 15, "green"),
+		},
+		{
+			name:    "change definition denom",
+			current: cf(13, "yellow", 15, "green"),
+			updated: cf(13, "brown", 15, "green"),
+			expErr:  "invalid conversion factor: provided denoms must match existing denoms",
+		},
+		{
+			name:    "increase converted amount",
+			current: cf(13, "pink", 15, "purple"),
+			updated: cf(13, "pink", 57, "purple"),
+		},
+		{
+			name:    "decrease converted amount",
+			current: cf(13, "pink", 15, "purple"),
+			updated: cf(13, "pink", 8, "purple"),
+		},
+		{
+			name:    "change converted denom",
+			current: cf(13, "pink", 15, "purple"),
+			updated: cf(13, "pink", 15, "plum"),
+			expErr:  "invalid conversion factor: provided denoms must match existing denoms",
+		},
+		{
+			name:    "change both amounts",
+			current: cf(42, "orange", 43, "blue"),
+			updated: cf(44, "orange", 45, "blue"),
+		},
+		{
+			name:    "swap denoms",
+			current: cf(6, "green", 51, "red"),
+			updated: cf(6, "red", 51, "green"),
+			expErr:  "invalid conversion factor: provided denoms must match existing denoms",
+		},
+		{
+			name:    "change both amounts",
+			current: cf(13, "blue", 67, "green"),
+			updated: cf(4, "blue", 79, "green"),
+		},
+		{
+			name:    "change both denoms",
+			current: cf(13, "blue", 67, "green"),
+			updated: cf(13, "orange", 67, "yellow"),
+			expErr:  "invalid conversion factor: provided denoms must match existing denoms",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = ValidateConversionFactorChange(tc.current, tc.updated)
+			}
+			require.NotPanics(t, testFunc, "ValidateConversionFactorChange")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateConversionFactorChange error")
+		})
+	}
+}
+
 func TestParams_DefaultCostCoins(t *testing.T) {
 	coin := func(amt int64, denom string) sdk.Coin {
 		return sdk.Coin{
