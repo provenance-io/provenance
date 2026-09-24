@@ -41,9 +41,9 @@ type MockKeeper struct {
 	ValidateAuthorityExp  []string
 	ValidateAuthorityArgs []string
 
-	GetCFResult   types.ConversionFactor
-	GetCFExpCalls int
-	GetCFActCalls int
+	GetParamsResult   types.Params
+	GetParamsExpCalls int
+	GetParamsActCalls int
 
 	SetParamsErrs []string
 	SetParamsExp  []types.Params
@@ -88,8 +88,8 @@ func (k *MockKeeper) WithValidateAuthorityErrs(errs ...string) *MockKeeper {
 	return k
 }
 
-func (k *MockKeeper) WithGetCF(cf types.ConversionFactor) *MockKeeper {
-	k.GetCFResult = cf
+func (k *MockKeeper) WithGetParams(cf types.Params) *MockKeeper {
+	k.GetParamsResult = cf
 	return k
 }
 
@@ -128,8 +128,8 @@ func (k *MockKeeper) WithExpValidateAuthority(authorities ...string) *MockKeeper
 	return k
 }
 
-func (k *MockKeeper) WithExpGetCFCalls(calls int) *MockKeeper {
-	k.GetCFExpCalls = calls
+func (k *MockKeeper) WithExpGetParamsCalls(calls int) *MockKeeper {
+	k.GetParamsExpCalls = calls
 	return k
 }
 
@@ -241,9 +241,9 @@ func (k *MockKeeper) ValidateAuthority(authority string) error {
 	return err
 }
 
-func (k *MockKeeper) GetConversionFactor(ctx sdk.Context) types.ConversionFactor {
-	k.GetCFActCalls++
-	return k.GetCFResult
+func (k *MockKeeper) GetParams(_ sdk.Context) types.Params {
+	k.GetParamsActCalls++
+	return k.GetParamsResult
 }
 
 func (k *MockKeeper) SetParams(_ sdk.Context, params types.Params) error {
@@ -276,7 +276,7 @@ func (k *MockKeeper) SetConversionFactor(_ sdk.Context, conversionFactor types.C
 
 func (k *MockKeeper) AssertCalls(t testing.TB) bool {
 	ok := assert.Equal(t, k.ValidateAuthorityExp, k.ValidateAuthorityArgs, "Calls to ValidateAuthority")
-	ok = assert.Equal(t, k.GetCFExpCalls, k.GetCFActCalls, "Number of calls to GetConversionFactor") && ok
+	ok = assert.Equal(t, k.GetParamsExpCalls, k.GetParamsActCalls, "Number of calls to GetParams") && ok
 	if assert.Equal(t, len(k.SetParamsExp), len(k.SetParamsArgs), "Number of calls to SetParams") {
 		for i := range k.SetParamsExp {
 			ok = assertEqualParams(t, k.SetParamsExp[i], k.SetParamsArgs[i], "Call %d to SetParams", i+1) && ok
@@ -313,18 +313,42 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 			expNoGet: true,
 		},
 		{
+			name: "changed default cost denom",
+			kpr: NewMockKeeper().WithGetParams(types.Params{
+				DefaultCost: sdk.NewInt64Coin("pink", 3_000),
+				ConversionFactor: types.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("pink", 400),
+					ConvertedAmount:  sdk.NewInt64Coin("orange", 761),
+				},
+			}),
+			req: &types.MsgUpdateParamsRequest{
+				Authority: authority,
+				Params: types.Params{
+					DefaultCost: sdk.NewInt64Coin("blue", 3_000),
+					ConversionFactor: types.ConversionFactor{
+						DefinitionAmount: sdk.NewInt64Coin("pink", 400),
+						ConvertedAmount:  sdk.NewInt64Coin("orange", 761),
+					},
+				},
+			},
+			expErr: "rpc error: code = InvalidArgument desc = invalid default cost: provided denom must equal existing denom",
+		},
+		{
 			name: "changed definition amount denom",
-			kpr: NewMockKeeper().WithGetCF(types.ConversionFactor{
-				DefinitionAmount: sdk.NewInt64Coin("pink", 400),
-				ConvertedAmount:  sdk.NewInt64Coin("orange", 761),
+			kpr: NewMockKeeper().WithGetParams(types.Params{
+				DefaultCost: sdk.NewInt64Coin("pink", 3_000),
+				ConversionFactor: types.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("pink", 400),
+					ConvertedAmount:  sdk.NewInt64Coin("orange", 761),
+				},
 			}),
 			req: &types.MsgUpdateParamsRequest{
 				Authority: authority,
 				Params: types.Params{
 					DefaultCost: sdk.NewInt64Coin("pink", 3_000),
 					ConversionFactor: types.ConversionFactor{
-						DefinitionAmount: sdk.NewInt64Coin("red", 3),
-						ConvertedAmount:  sdk.NewInt64Coin("orange", 1),
+						DefinitionAmount: sdk.NewInt64Coin("red", 400),
+						ConvertedAmount:  sdk.NewInt64Coin("orange", 761),
 					},
 				},
 			},
@@ -332,17 +356,20 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 		},
 		{
 			name: "changed converted amount denom",
-			kpr: NewMockKeeper().WithGetCF(types.ConversionFactor{
-				DefinitionAmount: sdk.NewInt64Coin("pink", 400),
-				ConvertedAmount:  sdk.NewInt64Coin("orange", 761),
+			kpr: NewMockKeeper().WithGetParams(types.Params{
+				DefaultCost: sdk.NewInt64Coin("pink", 3_000),
+				ConversionFactor: types.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("pink", 400),
+					ConvertedAmount:  sdk.NewInt64Coin("orange", 761),
+				},
 			}),
 			req: &types.MsgUpdateParamsRequest{
 				Authority: authority,
 				Params: types.Params{
 					DefaultCost: sdk.NewInt64Coin("pink", 3_000),
 					ConversionFactor: types.ConversionFactor{
-						DefinitionAmount: sdk.NewInt64Coin("pink", 3),
-						ConvertedAmount:  sdk.NewInt64Coin("purple", 1),
+						DefinitionAmount: sdk.NewInt64Coin("pink", 400),
+						ConvertedAmount:  sdk.NewInt64Coin("purple", 761),
 					},
 				},
 			},
@@ -350,9 +377,12 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 		},
 		{
 			name: "changed both denoms",
-			kpr: NewMockKeeper().WithGetCF(types.ConversionFactor{
-				DefinitionAmount: sdk.NewInt64Coin("pink", 400),
-				ConvertedAmount:  sdk.NewInt64Coin("orange", 761),
+			kpr: NewMockKeeper().WithGetParams(types.Params{
+				DefaultCost: sdk.NewInt64Coin("pink", 3_000),
+				ConversionFactor: types.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("pink", 400),
+					ConvertedAmount:  sdk.NewInt64Coin("orange", 761),
+				},
 			}),
 			req: &types.MsgUpdateParamsRequest{
 				Authority: authority,
@@ -378,9 +408,12 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 		},
 		{
 			name: "okay: non-defaults",
-			kpr: NewMockKeeper().WithGetCF(types.ConversionFactor{
-				DefinitionAmount: sdk.NewInt64Coin("pink", 400),
-				ConvertedAmount:  sdk.NewInt64Coin("orange", 761),
+			kpr: NewMockKeeper().WithGetParams(types.Params{
+				DefaultCost: sdk.NewInt64Coin("pink", 3_000),
+				ConversionFactor: types.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("pink", 400),
+					ConvertedAmount:  sdk.NewInt64Coin("orange", 761),
+				},
 			}),
 			req: &types.MsgUpdateParamsRequest{
 				Authority: authority,
@@ -407,8 +440,8 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 			if tc.kpr == nil {
 				tc.kpr = NewMockKeeper()
 			}
-			if len(tc.kpr.GetCFResult.DefinitionAmount.Denom) == 0 {
-				tc.kpr = tc.kpr.WithGetCF(types.DefaultParams().ConversionFactor)
+			if len(tc.kpr.GetParamsResult.DefaultCost.Denom) == 0 {
+				tc.kpr = tc.kpr.WithGetParams(types.DefaultParams())
 			}
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			tc.kpr = tc.kpr.WithExpValidateAuthority(tc.req.Authority)
@@ -420,7 +453,7 @@ func (s *MsgServerTestSuite) TestUpdateParams() {
 			}
 
 			if !tc.expNoGet {
-				tc.kpr = tc.kpr.WithExpGetCFCalls(1)
+				tc.kpr = tc.kpr.WithExpGetParamsCalls(1)
 			}
 
 			if tc.expCall {
@@ -489,9 +522,11 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 		},
 		{
 			name: "same definition amount denom, different converted amount denom",
-			kpr: NewMockKeeper().WithGetCF(types.ConversionFactor{
-				DefinitionAmount: sdk.NewInt64Coin("yellow", 4),
-				ConvertedAmount:  sdk.NewInt64Coin("brown", 4),
+			kpr: NewMockKeeper().WithGetParams(types.Params{
+				ConversionFactor: types.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("yellow", 4),
+					ConvertedAmount:  sdk.NewInt64Coin("brown", 4),
+				},
 			}),
 			req: &types.MsgUpdateConversionFactorRequest{
 				Authority: sdk.AccAddress("some_address________").String(),
@@ -505,9 +540,11 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 		},
 		{
 			name: "different definition amount denom, same converted amount denom",
-			kpr: NewMockKeeper().WithGetCF(types.ConversionFactor{
-				DefinitionAmount: sdk.NewInt64Coin("yellow", 4),
-				ConvertedAmount:  sdk.NewInt64Coin("brown", 4),
+			kpr: NewMockKeeper().WithGetParams(types.Params{
+				ConversionFactor: types.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("yellow", 4),
+					ConvertedAmount:  sdk.NewInt64Coin("brown", 4),
+				},
 			}),
 			req: &types.MsgUpdateConversionFactorRequest{
 				Authority: sdk.AccAddress("some_address________").String(),
@@ -521,9 +558,11 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 		},
 		{
 			name: "both denoms different",
-			kpr: NewMockKeeper().WithGetCF(types.ConversionFactor{
-				DefinitionAmount: sdk.NewInt64Coin("yellow", 4),
-				ConvertedAmount:  sdk.NewInt64Coin("brown", 4),
+			kpr: NewMockKeeper().WithGetParams(types.Params{
+				ConversionFactor: types.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("yellow", 4),
+					ConvertedAmount:  sdk.NewInt64Coin("brown", 4),
+				},
 			}),
 			req: &types.MsgUpdateConversionFactorRequest{
 				Authority: sdk.AccAddress("some_address________").String(),
@@ -537,9 +576,11 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 		},
 		{
 			name: "error setting conversion factor",
-			kpr: NewMockKeeper().WithSetConversionFactorErrs("notgonnaconvert").WithGetCF(types.ConversionFactor{
-				DefinitionAmount: sdk.NewInt64Coin("green", 1),
-				ConvertedAmount:  sdk.NewInt64Coin("orange", 1),
+			kpr: NewMockKeeper().WithSetConversionFactorErrs("notgonnaconvert").WithGetParams(types.Params{
+				ConversionFactor: types.ConversionFactor{
+					DefinitionAmount: sdk.NewInt64Coin("green", 1),
+					ConvertedAmount:  sdk.NewInt64Coin("orange", 1),
+				},
 			}),
 			req: &types.MsgUpdateConversionFactorRequest{
 				Authority: sdk.AccAddress("whatever____________").String(),
@@ -647,14 +688,14 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor() {
 			if tc.kpr == nil {
 				tc.kpr = NewMockKeeper()
 			}
-			if len(tc.kpr.GetCFResult.DefinitionAmount.Denom) == 0 {
-				tc.kpr = tc.kpr.WithGetCF(types.DefaultParams().ConversionFactor)
+			if len(tc.kpr.GetParamsResult.ConversionFactor.DefinitionAmount.Denom) == 0 {
+				tc.kpr = tc.kpr.WithGetParams(types.DefaultParams())
 			}
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			tc.kpr = tc.kpr.WithExpValidateAuthority(tc.req.Authority)
 			tc.kpr = tc.kpr.WithExpIsOracleAddress(tc.req.Authority).WithIsOracleAddressResults(tc.isOracleAddr)
 			if !tc.expNoGet {
-				tc.kpr = tc.kpr.WithExpGetCFCalls(1)
+				tc.kpr = tc.kpr.WithExpGetParamsCalls(1)
 			}
 
 			var expResp, actResp *types.MsgUpdateConversionFactorResponse
@@ -782,6 +823,15 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor_MultipleUpdates() {
 			if tc.kpr == nil {
 				tc.kpr = NewMockKeeper()
 			}
+			tc.kpr = tc.kpr.WithGetParams(types.DefaultParams())
+			gpCalls := 0
+			for _, req := range tc.requests {
+				if len(req.expErr) > 0 {
+					break
+				}
+				gpCalls++
+			}
+			tc.kpr = tc.kpr.WithExpGetParamsCalls(gpCalls)
 
 			msgServer := keeper.NewMsgServer(tc.kpr)
 
@@ -803,11 +853,10 @@ func (s *MsgServerTestSuite) TestUpdateConversionFactor_MultipleUpdates() {
 
 				// Substring-based error assertion
 				if reqData.expErr != "" {
-					s.Require().Error(err)
-					s.Require().Contains(err.Error(), reqData.expErr,
+					s.Require().ErrorContains(err, reqData.expErr,
 						"UpdateConversionFactor [%d] error", i)
 				} else {
-					s.Require().NoError(err)
+					s.Require().NoError(err, "UpdateConversionFactor [%d] error", i)
 					expResp := &types.MsgUpdateConversionFactorResponse{}
 					s.Assert().Equal(expResp, actResp, "UpdateConversionFactor [%d] response", i)
 				}
