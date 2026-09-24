@@ -117,7 +117,7 @@ func (k Keeper) HandleSetAdministratorProposal(ctx sdk.Context, denom string, ac
 		logger.Info("controlling access to marker assigned ", "marker", denom, "access", a.String())
 	}
 
-	if err := m.Validate(); err != nil {
+	if err := m.ValidateWithAccessControl(); err != nil {
 		return err
 	}
 
@@ -133,7 +133,7 @@ func (k Keeper) HandleRemoveAdministratorProposal(ctx sdk.Context, denom string,
 	if err != nil {
 		return err
 	}
-	m, err := k.GetMarker(ctx, addr)
+	m, err := k.GetMarkerWithPerms(ctx, addr)
 	if err != nil {
 		return err
 	}
@@ -143,22 +143,27 @@ func (k Keeper) HandleRemoveAdministratorProposal(ctx sdk.Context, denom string,
 	if !m.HasGovernanceEnabled() {
 		return fmt.Errorf("%s marker does not allow governance control", denom)
 	}
+	removeAddrs := make([]sdk.AccAddress, 0, len(removedAddress))
 	for _, a := range removedAddress {
-		addr, err := sdk.AccAddressFromBech32(a)
+		removeAddr, err := sdk.AccAddressFromBech32(a)
 		if err != nil {
 			return err
 		}
-		if err = m.RevokeAccess(addr); err != nil {
+		if err = m.RevokeAccess(removeAddr); err != nil {
 			return err
 		}
+		removeAddrs = append(removeAddrs, removeAddr)
 	}
 
-	if err := m.Validate(); err != nil {
+	if err := m.ValidateWithAccessControl(); err != nil {
 		return err
 	}
 
-	if err := k.SetMarker(ctx, m); err != nil {
-		return err
+	// Only the permissions changed, so just delete those records.
+	for _, removeAddr := range removeAddrs {
+		if err := k.RevokeAccessEntry(ctx, addr, removeAddr); err != nil {
+			return err
+		}
 	}
 
 	logger := k.Logger(ctx)
@@ -173,7 +178,7 @@ func (k Keeper) HandleChangeStatusProposal(ctx sdk.Context, denom string, status
 	if err != nil {
 		return err
 	}
-	m, err := k.GetMarker(ctx, addr)
+	m, err := k.GetMarkerWithPerms(ctx, addr)
 	if err != nil {
 		return err
 	}
@@ -211,10 +216,10 @@ func (k Keeper) HandleChangeStatusProposal(ctx sdk.Context, denom string, status
 		return err
 	}
 
-	if err := m.Validate(); err != nil {
+	if err := m.ValidateWithAccessControl(); err != nil {
 		return err
 	}
-
+	m.ClearAccessList()
 	if err := k.SetMarker(ctx, m); err != nil {
 		return err
 	}

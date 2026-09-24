@@ -118,7 +118,9 @@ func (k Keeper) AddAccess(
 		if err := m.ValidateWithAccessControl(); err != nil {
 			return err
 		}
-		if err := k.SetMarker(ctx, m); err != nil {
+		// Only the permissions changed, so just update that one record.
+		perms := types.GrantsForAddress(grant.GetAddress(), m.GetAccessList()...).GetAccessList()
+		if err := k.SetAccess(ctx, m.GetAddress(), grant.GetAddress(), perms); err != nil {
 			return err
 		}
 	// Undefined, Cancelled, Destroyed -- no modifications are supported in these states
@@ -159,9 +161,6 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 			return fmt.Errorf("access revoke failed: %w", err)
 		}
 		if err := m.ValidateWithAccessControl(); err != nil {
-			return err
-		}
-		if err := k.SetMarker(ctx, m); err != nil {
 			return err
 		}
 		// SetMarker only rewrites the perms store when the marker's remaining access list is

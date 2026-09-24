@@ -547,3 +547,13 @@ func (k Keeper) IsMarkerAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
 	}
 	return has
 }
+
+// MarkerExists returns true if there's a marker for the provided denom.
+func (k Keeper) MarkerExists(ctx sdk.Context, denom string) bool {
+	addr, err := types.MarkerAddress(denom)
+	if err != nil {
+		return false
+	}
+	has, err := k.markers.Has(ctx, addr)
+	return err == nil && has
+}

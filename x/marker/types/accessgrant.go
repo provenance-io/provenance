@@ -72,11 +72,12 @@ func AccessListByNames(names string) AccessList {
 func ValidateGrants(grants ...AccessGrant) error {
 	registered := make(map[string]bool)
 	for _, grant := range grants {
-		if err := grant.Validate(); err != nil {
-			return err
-		}
 		if _, exists := registered[grant.Address]; exists {
 			return ErrDuplicateAccessEntry
+		}
+		registered[grant.Address] = true
+		if err := grant.Validate(); err != nil {
+			return err
 		}
 	}
 	return nil
