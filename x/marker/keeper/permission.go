@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"slices"
 
 	"cosmossdk.io/collections"
 
@@ -41,7 +42,12 @@ func (k Keeper) SetAccess(ctx sdk.Context, markerAddr, addr sdk.AccAddress, perm
 		}
 		return nil
 	}
-	if err := k.markerPerms.Set(ctx, key, types.MarkerPermissions{Permissions: perms}); err != nil {
+	// Store the permissions in a canonical (sorted, deduplicated) order so that a grant always has the
+	// same bytes in state regardless of how it was written (e.g. a tx vs a genesis import).
+	stored := slices.Clone(perms)
+	slices.Sort(stored)
+	stored = slices.Compact(stored)
+	if err := k.markerPerms.Set(ctx, key, types.MarkerPermissions{Permissions: stored}); err != nil {
 		return fmt.Errorf("could not set the permissions that %s has on marker %s: %w", addr, markerAddr, err)
 	}
 	return nil
