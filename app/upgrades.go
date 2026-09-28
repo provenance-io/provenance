@@ -64,6 +64,8 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
+			updateConversionFactor(ctx, app)
+
 			return vm, nil
 		},
 	},
@@ -88,6 +90,8 @@ var upgrades = map[string]appUpgrade{
 			if err = setContractStoreBundleFees(ctx, app); err != nil {
 				return nil, err
 			}
+
+			updateConversionFactor(ctx, app)
 
 			// geranium only
 			addFlatFeesOracleAddress(ctx, app, "pb1v5cdk7pt6l7f2lete654kvkk3qhzq0nsk35dw0")
@@ -347,6 +351,19 @@ func setContractStoreBundleFees(ctx sdk.Context, app *App) error {
 
 	ctx.Logger().Info("Done setting contract store-bundle flat fees.")
 	return nil
+}
+
+func updateConversionFactor(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Updating flatfees conversion factor.")
+	cf := flatfeestypes.ConversionFactor{
+		DefinitionAmount: sdk.NewInt64Coin("musd", 8),
+		ConvertedAmount:  sdk.NewInt64Coin("nhash", 1_000_000_000),
+	}
+	if err := app.FlatFeesKeeper.SetConversionFactor(ctx, cf); err != nil {
+		ctx.Logger().Error("Failed to update flatfees conversion factor.", "error", err, "cf", cf)
+		return
+	}
+	ctx.Logger().Info("Done updating flatfees conversion factor.")
 }
 
 // addFlatFeesOracleAddress adds the given address to the x/flatfees oracle address list.
