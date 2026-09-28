@@ -95,8 +95,8 @@ github.com/BurntSushi/toml v1.6.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/ClickHouse/clickhouse-go-linter v1.2.0 h1:zbm174up3hTKjp0wKZVnTzRiG7tSF5XZF0FJG/MuCBI=
 github.com/ClickHouse/clickhouse-go-linter v1.2.0/go.mod h1:pLorS7ffPTfuUV9M0SJgfHA/h/WQPQUk2FWG9x74cQ4=
-github.com/CosmWasm/wasmvm/v3 v3.0.7 h1:jNndgpVJ1EFAY61oy6GhmZCSCWbd+rp1LlkTftHPW+A=
-github.com/CosmWasm/wasmvm/v3 v3.0.7/go.mod h1:oknpb1bFERvvKcY7vHRp1F/Y/z66xVrsl7n9uWkOAlM=
+github.com/CosmWasm/wasmvm/v3 v3.0.8 h1:RwucGylWvzHH4Bh7fwMcQf7ta7rJvh4qXW1wU06X/Z8=
+github.com/CosmWasm/wasmvm/v3 v3.0.8/go.mod h1:oknpb1bFERvvKcY7vHRp1F/Y/z66xVrsl7n9uWkOAlM=
 github.com/DataDog/datadog-go v4.8.3+incompatible h1:fNGaYSuObuQb5nzeTQqowRAd9bpDIRRV4/gUtIBjh8Q=
 github.com/DataDog/datadog-go v4.8.3+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/DataDog/zstd v1.5.7 h1:ybO8RBeh29qrxIhCA9E8gKY6xfONU9T6G6aP9DTKfLE=
@@ -1013,8 +1013,8 @@ github.com/prometheus/procfs v0.21.1 h1:GljZCt+zSTS+NZq88cyQ1LjZ+RCHp3uVuabBWA5+
 github.com/prometheus/procfs v0.21.1/go.mod h1:aB55Cww9pdSJVHk0hUf0inxWyyjPogFIjmHKYgMKmtY=
 github.com/provenance-io/cosmos-sdk v0.53.8-pio-2 h1:H10JaP6Ys62dwafm7uGAtKzhu9PHWe8b90ivK/0dW3Q=
 github.com/provenance-io/cosmos-sdk v0.53.8-pio-2/go.mod h1:b/De6uhCfooGEy4kE5G4C0A+MxK9aPr0nZNMyR+PmY0=
-github.com/provenance-io/wasmd v0.61.10-pio-2 h1:uc0gDj31d2S4010dIy+rtI6RawUzsZ60i0BXcUT2gEk=
-github.com/provenance-io/wasmd v0.61.10-pio-2/go.mod h1:GMPqtsb1T8FvaKpQGJmGuj/JMPXBauk4ZhUErgmtEus=
+github.com/provenance-io/wasmd v0.61.15-pio-1 h1:L/CxrLmlLOuiPmVriBjOXBm0cPsj/bdjwgdmgE8J67w=
+github.com/provenance-io/wasmd v0.61.15-pio-1/go.mod h1:1KBJXoJM/ilwbPtiKuUNUx5DoCZ/8pe7d42lW80U6Sg=
 github.com/provlabs/vault v1.2.4 h1:EdcSfMy6uql2mMDv0VpCy5xfpHsUAATB1OH8Gq5wLo0=
 github.com/provlabs/vault v1.2.4/go.mod h1:7qBWmdh3VnUwUy7ZVl/ARYl2yZA41oLt+zktyEkslew=
 github.com/provlabs/vault/simapp v0.0.0-20250618191328-f45c4bfe12b9 h1:cu+rMHYCZIE9+StrjgwKn+cKta7wmDi9qBgVAb09e1g=
