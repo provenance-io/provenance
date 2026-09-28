@@ -1041,6 +1041,7 @@ func (s *UpgradeTestSuite) TestGeraniumRC1() {
 		LogMsgConvertFinishedVestingAccountsToBase,
 		"INF Setting MsgStoreAndInstantiateContract and MsgStoreAndMigrateContract flat fees. module=baseapp",
 		"INF Done setting contract store-bundle flat fees. module=baseapp",
+		"INF Updating flatfees conversion factor. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("geranium-rc1", expInLog, nil)
 }
@@ -1053,6 +1054,7 @@ func (s *UpgradeTestSuite) TestGeranium() {
 		LogMsgConvertFinishedVestingAccountsToBase,
 		"INF Setting MsgStoreAndInstantiateContract and MsgStoreAndMigrateContract flat fees. module=baseapp",
 		"INF Done setting contract store-bundle flat fees. module=baseapp",
+		"INF Updating flatfees conversion factor. module=baseapp",
 		"INF Adding flatfees oracle address. address=pb1v5cdk7pt6l7f2lete654kvkk3qhzq0nsk35dw0 module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("geranium", expInLog, nil)
