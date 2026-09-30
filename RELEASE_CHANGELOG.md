@@ -2,6 +2,34 @@
 
 Provenance Blockchain version `v1.31.0` contains some exciting new features, improvements and bug fixes.
 
+### RHEL 8 / glibc < 2.30: Replacement `libwasmvm.x86_64.so`
+
+The `libwasmvm.x86_64.so` in `provenance-linux-amd64-v1.31.0.zip` comes from wasmvm v3.0.8, and it requires glibc 2.30 or newer (previous releases only needed 2.28). If your system has an older glibc, `provenanced` will fail to start. This affects RHEL 8.x and other EL8 distros (Rocky Linux 8, AlmaLinux 8, Oracle Linux 8), and any other Linux with glibc older than 2.30.
+
+**You are affected if** `ldd --version` reports a glibc older than 2.30, or `provenanced` fails with an error like:
+
+```
+provenanced: /lib64/libc.so.6: version `GLIBC_2.30' not found (required by .../libwasmvm.x86_64.so)
+provenanced: /lib64/libm.so.6: version `GLIBC_2.29' not found (required by .../libwasmvm.x86_64.so)
+```
+
+If you're affected, use the `libwasmvm.x86_64.so` attached to this release instead of the one in the zip. It's built from the same wasmvm v3.0.8 source with the same Rust version (1.95.0), but on Rocky Linux 8, so it only requires glibc 2.28. It's state-compatible with the standard library. The only difference is the glibc version it's linked against.
+
+To use it:
+
+1. Download `libwasmvm.x86_64.so` and `libwasmvm.x86_64.so.sha256` from this release, and verify the file:
+   ```
+   sha256sum -c libwasmvm.x86_64.so.sha256
+   ```
+   Expected sha256: `aa735c44bee2f0a31d93657a76856a72a8f1dcc50edbcf687d8fd6831ad67429`
+2. Put the `provenanced` from `provenance-linux-amd64-v1.31.0.zip` in your upgrade directory as usual (e.g. `cosmovisor/upgrades/geranium/bin/`). Then **replace** the `libwasmvm.x86_64.so` next to it with the downloaded one. `provenanced` loads the library from its own directory first, so no `LD_LIBRARY_PATH` changes are needed.
+3. If you use cosmovisor, set `DAEMON_ALLOW_DOWNLOAD_BINARIES=false` and put the binaries in place yourself before the upgrade height. Otherwise cosmovisor's automatic download gets the standard zip, which won't run on your system.
+4. Check it: `provenanced query wasm libwasmvm-version` should print `3.0.8`.
+
+If your system has glibc 2.30 or newer, you don't need this; use the standard zip as-is. Only use this library with `provenanced` builds that use wasmvm v3.0.8.
+
+The build script is `scripts/build-libwasmvm-el8.sh`. The underlying issue has been reported upstream: https://github.com/CosmWasm/cosmwasm/issues/2710.
+
 ### Features
 
 * Migrated name module from kv-store to collections [#2411](https://github.com/provenance-io/provenance/issues/2411).
