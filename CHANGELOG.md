@@ -52,7 +52,7 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
-## [v1.31.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.31.0-rc1) 2026-09-28
+## [v1.31.0](https://github.com/provenance-io/provenance/releases/tag/v1.31.0) 2026-10-02
 
 ### Features
 
@@ -126,7 +126,7 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.30.0...v1.31.0-rc1
+* https://github.com/provenance-io/provenance/compare/v1.30.0...v1.31.0
 
 ---
 
