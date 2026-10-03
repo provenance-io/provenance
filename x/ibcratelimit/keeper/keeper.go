@@ -1,8 +1,12 @@
 package keeper
 
 import (
+	"errors"
+	"fmt"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,24 +19,44 @@ import (
 
 // Keeper for the ibcratelimit module
 type Keeper struct {
-	storeKey           storetypes.StoreKey
+	storeService       store.KVStoreService
 	cdc                codec.BinaryCodec
 	PermissionedKeeper ibcratelimit.PermissionedKeeper
 	authority          string
+	// Schema is the collections schema for this module's store.
+	Schema collections.Schema
+
+	// Params is the single-item collection storing the module parameters.
+	ParamsItem collections.Item[ibcratelimit.Params]
 }
 
 // NewKeeper Creates a new Keeper for the module.
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	key storetypes.StoreKey,
+	storeService store.KVStoreService,
 	permissionedKeeper ibcratelimit.PermissionedKeeper,
 ) Keeper {
-	return Keeper{
-		storeKey:           key,
+	sb := collections.NewSchemaBuilder(storeService)
+	k := Keeper{
 		cdc:                cdc,
+		storeService:       storeService,
 		PermissionedKeeper: permissionedKeeper,
 		authority:          authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		ParamsItem: collections.NewItem(
+			sb,
+			ibcratelimit.ParamsKeyPrefix,
+			"params",
+			codec.CollValue[ibcratelimit.Params](cdc),
+		),
 	}
+
+	var err error
+	k.Schema, err = sb.Build()
+	if err != nil {
+		panic(fmt.Errorf("failed to build ibcratelimit collections schema: %w", err))
+	}
+
+	return k
 }
 
 // Logger Creates a new logger for the module.
@@ -42,21 +66,19 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GetParams Gets the params for the module.
 func (k Keeper) GetParams(ctx sdk.Context) (params ibcratelimit.Params, err error) {
-	store := ctx.KVStore(k.storeKey)
-	key := ibcratelimit.ParamsKey
-	bz := store.Get(key)
-	if len(bz) == 0 {
-		return ibcratelimit.Params{}, nil
+	params, err = k.ParamsItem.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return ibcratelimit.Params{}, err
+		}
+		return ibcratelimit.Params{}, err
 	}
-	err = k.cdc.Unmarshal(bz, &params)
-	return params, err
+	return params, nil
 }
 
 // SetParams Sets the params for the module.
-func (k Keeper) SetParams(ctx sdk.Context, params ibcratelimit.Params) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&params)
-	store.Set(ibcratelimit.ParamsKey, bz)
+func (k Keeper) SetParams(ctx sdk.Context, params ibcratelimit.Params) error {
+	return k.ParamsItem.Set(ctx, params)
 }
 
 // GetContractAddress Gets the current value of the module's contract address.

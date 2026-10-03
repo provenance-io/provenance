@@ -77,9 +77,8 @@ func (chain *TestChain) RegisterRateLimiterContract(suite *suite.Suite, addr []b
 	addrStr, err := sdk.Bech32ifyAddressBytes("cosmos", addr)
 	suite.Require().NoError(err)
 	provenanceApp := chain.GetProvenanceApp()
-	provenanceApp.RateLimitingKeeper.SetParams(chain.GetContext(), ibcratelimit.Params{
-		ContractAddress: addrStr,
-	})
+	err = provenanceApp.RateLimitingKeeper.SetParams(chain.GetContext(), ibcratelimit.Params{ContractAddress: addrStr})
+	suite.Require().NoError(err, "failed to set rate limiter contract params")
 }
 
 // SendMsgsNoCheck is an alternative to ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller
