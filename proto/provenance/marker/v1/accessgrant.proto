@@ -53,3 +53,10 @@ enum Access {
   // This access right is only supported on RESTRICTED markers and only has meaning when allow_forced_transfer is true.
   ACCESS_FORCE_TRANSFER = 8 [(gogoproto.enumvalue_customname) = "ForceTransfer"];
 }
+
+// MarkerPermissions is the stored value for a single address' permissions on a
+// marker. The marker and grantee addresses are encoded in the store key, so only
+// the permission list is stored here.
+message MarkerPermissions {
+  repeated Access permissions = 1 [(gogoproto.castrepeated) = "AccessList"];
+}
