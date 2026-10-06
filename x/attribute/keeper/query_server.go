@@ -42,11 +42,10 @@ func (k Keeper) Attribute(c context.Context, req *types.QueryAttributeRequest) (
 	copy(nameHash[:], types.GetNameKeyBytes(req.Name))
 	blockTime := ctx.BlockTime().UTC()
 
-	rng, endBound := attrAddrNameRange(addrBz, nameHash)
-	attrs, pageRes, err := attrPageWalk(ctx, k.attributes, rng, endBound, req.Pagination,
-		func(attr types.Attribute) bool {
-			return attr.ExpirationDate == nil || !blockTime.After(attr.ExpirationDate.UTC())
-		},
+	rngFn := attrAddrNameRange(addrBz, types.ReverseName(req.Name))
+	attrs, pageRes, err := attrPageWalk(ctx, k.attributes, rngFn, req.Pagination, func(attr types.Attribute) bool {
+		return strings.EqualFold(attr.Name, req.Name) && (attr.ExpirationDate == nil || !blockTime.After(attr.ExpirationDate.UTC()))
+	},
 	)
 	if err != nil {
 		return nil, err
@@ -66,8 +65,8 @@ func (k Keeper) Attributes(c context.Context, req *types.QueryAttributesRequest)
 	addrBz := types.GetAttributeAddressBytes(req.Account)
 	blockTime := ctx.BlockTime().UTC()
 
-	rng, endBound := attrAddrRange(addrBz)
-	attrs, pageRes, err := attrPageWalk(ctx, k.attributes, rng, endBound, req.Pagination,
+	rngFn := attrAddrRange(addrBz)
+	attrs, pageRes, err := attrPageWalk(ctx, k.attributes, rngFn, req.Pagination,
 		func(attr types.Attribute) bool {
 			return attr.ExpirationDate == nil || !blockTime.After(attr.ExpirationDate.UTC())
 		},
@@ -93,8 +92,8 @@ func (k Keeper) Scan(c context.Context, req *types.QueryScanRequest) (*types.Que
 	addrBz := types.GetAttributeAddressBytes(req.Account)
 	blockTime := ctx.BlockTime().UTC()
 
-	rng, endBound := attrAddrRange(addrBz)
-	attrs, pageRes, err := attrPageWalk(ctx, k.attributes, rng, endBound, req.Pagination,
+	rngFn := attrAddrRange(addrBz)
+	attrs, pageRes, err := attrPageWalk(ctx, k.attributes, rngFn, req.Pagination,
 		func(attr types.Attribute) bool {
 			return strings.HasSuffix(attr.Name, req.Suffix) &&
 				(attr.ExpirationDate == nil || !blockTime.After(attr.ExpirationDate.UTC()))
@@ -109,11 +108,14 @@ func (k Keeper) Scan(c context.Context, req *types.QueryScanRequest) (*types.Que
 // AttributeAccounts queries for all accounts that have a specific attribute
 func (k Keeper) AttributeAccounts(c context.Context, req *types.QueryAttributeAccountsRequest) (*types.QueryAttributeAccountsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	var nameHash [32]byte
-	copy(nameHash[:], types.GetNameKeyBytes(req.AttributeName))
+	revName := types.ReverseName(req.AttributeName)
 
-	rng, endBound := nameHashRange(nameHash)
-	accounts, pageRes, err := nameAddrPageWalk(ctx, k.nameAddrCounts, rng, endBound, req.Pagination)
+	rngFn := napNameRange(revName)
+	accounts, pageRes, err := nameAddrPageWalk(ctx, k.nameAddrCounts, rngFn, req.Pagination,
+		func(key types.NameAddrPair) bool {
+			return key.RevName == revName
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -142,8 +144,7 @@ func (k Keeper) AccountData(c context.Context, req *types.QueryAccountDataReques
 func attrPageWalk(
 	ctx sdk.Context,
 	col collections.Map[types.AttrTriple, types.Attribute],
-	rng *collections.Range[types.AttrTriple],
-	endBound *types.AttrTriple,
+	rngFn attrRange,
 	pageReq *query.PageRequest,
 	accept func(types.Attribute) bool,
 ) ([]types.Attribute, *query.PageResponse, error) {
@@ -155,26 +156,23 @@ func attrPageWalk(
 		pageReq = &query.PageRequest{CountTotal: true}
 	}
 
-	if pageReq != nil {
-		if pageReq.Limit > 0 {
-			limit = pageReq.Limit
-		}
-		offset = pageReq.Offset
-		countTotal = pageReq.CountTotal
+	rng := rngFn(nil)
 
-		// Cursor resume: start from the key returned as NextKey by the previous page.
-		if len(pageReq.Key) > 0 {
-			_, startKey, err := types.AttrTripleKey.Decode(pageReq.Key)
-			if err != nil {
-				return nil, nil, fmt.Errorf("attribute: invalid pagination key: %w", err)
-			}
-			newRng := new(collections.Range[types.AttrTriple]).StartInclusive(startKey)
-			if endBound != nil {
-				newRng = newRng.EndExclusive(*endBound)
-			}
-			rng = newRng
-			offset = 0
+	if pageReq.Limit > 0 {
+		limit = pageReq.Limit
+	}
+	offset = pageReq.Offset
+	countTotal = pageReq.CountTotal
+
+	// start from the key returned as NextKey by the previous page.
+	// The factory rebuilds the same end bound, so only the start changes.
+	if len(pageReq.Key) > 0 {
+		_, startKey, err := types.AttrTripleKey.Decode(pageReq.Key)
+		if err != nil {
+			return nil, nil, fmt.Errorf("attribute: invalid pagination key: %w", err)
 		}
+		rng = rngFn(&startKey)
+		offset = 0
 	}
 
 	var (
@@ -224,9 +222,9 @@ func attrPageWalk(
 func nameAddrPageWalk(
 	ctx sdk.Context,
 	col collections.Map[types.NameAddrPair, uint64],
-	rng *collections.Range[types.NameAddrPair],
-	endBound *types.NameAddrPair,
+	rngFn napRange,
 	pageReq *query.PageRequest,
+	accept func(types.NameAddrPair) bool,
 ) ([]string, *query.PageResponse, error) {
 	limit := uint64(query.DefaultLimit)
 	offset := uint64(0)
@@ -236,25 +234,21 @@ func nameAddrPageWalk(
 		pageReq = &query.PageRequest{CountTotal: true}
 	}
 
-	if pageReq != nil {
-		if pageReq.Limit > 0 {
-			limit = pageReq.Limit
-		}
-		offset = pageReq.Offset
-		countTotal = pageReq.CountTotal
+	rng := rngFn(nil)
 
-		if len(pageReq.Key) > 0 {
-			_, startKey, err := types.NameAddrPairKey.Decode(pageReq.Key)
-			if err != nil {
-				return nil, nil, fmt.Errorf("attribute: invalid pagination key: %w", err)
-			}
-			newRng := new(collections.Range[types.NameAddrPair]).StartInclusive(startKey)
-			if endBound != nil {
-				newRng = newRng.EndExclusive(*endBound)
-			}
-			rng = newRng
-			offset = 0
+	if pageReq.Limit > 0 {
+		limit = pageReq.Limit
+	}
+	offset = pageReq.Offset
+	countTotal = pageReq.CountTotal
+
+	if len(pageReq.Key) > 0 {
+		_, startKey, err := types.NameAddrPairKey.Decode(pageReq.Key)
+		if err != nil {
+			return nil, nil, fmt.Errorf("attribute: invalid pagination key: %w", err)
 		}
+		rng = rngFn(&startKey)
+		offset = 0
 	}
 
 	var (
@@ -265,6 +259,9 @@ func nameAddrPageWalk(
 	)
 
 	if err := col.Walk(ctx, rng, func(key types.NameAddrPair, _ uint64) (bool, error) {
+		if !accept(key) {
+			return false, nil
+		}
 		total++
 		if skipped < offset {
 			skipped++

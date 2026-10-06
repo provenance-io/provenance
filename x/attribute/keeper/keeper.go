@@ -2,12 +2,14 @@ package keeper
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -28,6 +30,8 @@ type Keeper struct {
 	// The keeper used for ensuring names resolve to owners.
 	nameKeeper types.NameKeeper
 
+	// storeService abstracts access to the module's KVStore.
+	storeService store.KVStoreService
 	// The codec for binary encoding/decoding.
 	cdc codec.BinaryCodec
 
@@ -70,6 +74,7 @@ func NewKeeper(
 		authKeeper:      authKeeper,
 		nameKeeper:      nameKeeper,
 		cdc:             cdc,
+		storeService:    storeService,
 		modAddr:         authtypes.NewModuleAddress(types.ModuleName),
 		authority:       authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		attributes:      collections.NewMap(sb, collections.NewPrefix(types.AttributeKeyPrefix), "attributes", types.AttrTripleKey, codec.CollValue[types.Attribute](cdc)),
@@ -115,16 +120,14 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) GetAllAttributes(ctx sdk.Context, addr string) ([]types.Attribute, error) {
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "keeper_method", "get_all")
 
-	pred := func(string) bool { return true }
-	return k.prefixScan(ctx, types.AddrStrAttributesKeyPrefix(addr), pred)
+	return k.attrsForAddr(ctx, types.GetAttributeAddressBytes(addr))
 }
 
 // GetAllAttributesAddr gets all attributes for an AccAddress or MetadataAddress.
 func (k Keeper) GetAllAttributesAddr(ctx sdk.Context, addr []byte) ([]types.Attribute, error) {
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "keeper_method", "get_all")
 
-	pred := func(string) bool { return true }
-	return k.prefixScan(ctx, types.AddrAttributesKeyPrefix(addr), pred)
+	return k.attrsForAddr(ctx, addr)
 }
 
 // GetAttributes gets all attributes with the given name from an account.
@@ -135,8 +138,7 @@ func (k Keeper) GetAttributes(ctx sdk.Context, addr string, name string) ([]type
 	if _, err := k.nameKeeper.GetRecordByName(ctx, name); err != nil { // Ensure name exists (ie was bound to an address)
 		return nil, err
 	}
-	pred := func(s string) bool { return strings.EqualFold(s, name) }
-	return k.prefixScan(ctx, types.AddrStrAttributesNameKeyPrefix(addr, name), pred)
+	return k.attrsForAddrName(ctx, types.GetAttributeAddressBytes(addr), name)
 }
 
 // FindMissingAttributes returns the subset of reqAttrs for which addr does not have a matching,
@@ -148,74 +150,42 @@ func (k Keeper) FindMissingAttributes(ctx sdk.Context, addr []byte, reqAttrs []s
 		return nil, nil
 	}
 
+	// Only look each required attribute up once, even if it's provided more than once.
 	found := make(map[string]bool, len(reqAttrs))
-	var exacts []string
-	var wildcards []string
+	unique := make([]string, 0, len(reqAttrs))
 	for _, reqAttr := range reqAttrs {
-		if _, seen := found[reqAttr]; seen {
-			continue
-		}
-		found[reqAttr] = false
-		if strings.HasPrefix(reqAttr, "*.") {
-			wildcards = append(wildcards, reqAttr)
-		} else {
-			exacts = append(exacts, reqAttr)
+		if _, seen := found[reqAttr]; !seen {
+			found[reqAttr] = false
+			unique = append(unique, reqAttr)
 		}
 	}
 
-	store := ctx.KVStore(k.storeKey)
-
-	// If there are any wildcards, do a single pass over all of addr's attributes, checking each one
-	// against both the wildcards and the exact names, stopping once all wildcards have been found.
-	// Checking the exact names in here too means we might not need to look for them individually below.
-	if len(wildcards) > 0 {
-		remaining := len(wildcards)
-		it := storetypes.KVStorePrefixIterator(store, types.AddrAttributesKeyPrefix(addr))
-		for ; it.Valid() && remaining > 0; it.Next() {
-			attr := types.Attribute{}
-			if err := k.cdc.Unmarshal(it.Value(), &attr); err != nil {
-				it.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
-				return nil, fmt.Errorf("failed to unmarshal attribute: %w", err)
-			}
-			if isExpired(ctx, attr) {
-				continue
-			}
-			for _, wildcard := range wildcards {
-				// [1:] because we only want to ignore the '*'; the '.' needs to be part of the check.
-				if !found[wildcard] && strings.HasSuffix(attr.Name, wildcard[1:]) {
-					found[wildcard] = true
-					remaining--
-				}
-			}
-			for _, exact := range exacts {
-				if !found[exact] && attr.Name == exact {
-					found[exact] = true
-				}
-			}
+	for _, reqAttr := range unique {
+		// A wildcard is satisfied by anything under the name, an exact name only by itself.
+		// Both are a prefix scan; the exact one still needs the name checked since, e.g., the
+		// attributes named "aaa.bbb" and "aaa.bbbb" share the reversed prefix "bbb".
+		name, isWildcard := strings.CutPrefix(reqAttr, "*.")
+		revName := types.ReverseName(name)
+		if isWildcard {
+			revName += "."
 		}
-		it.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
-	}
 
-	// Look up any exact names that weren't already found above (or that we never scanned for above).
-	for _, exact := range exacts {
-		if found[exact] {
-			continue
-		}
 		has := false
-		nameIt := storetypes.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(addr, exact))
-		for ; nameIt.Valid(); nameIt.Next() {
-			attr := types.Attribute{}
-			if err := k.cdc.Unmarshal(nameIt.Value(), &attr); err != nil {
-				nameIt.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
-				return nil, fmt.Errorf("could not unmarshal attribute: %w", err)
-			}
-			if !isExpired(ctx, attr) {
+		err := k.attributes.Walk(ctx, attrAddrNameRange(addr, revName)(nil),
+			func(_ types.AttrTriple, attr types.Attribute) (bool, error) {
+				if isExpired(ctx, attr) {
+					return false, nil
+				}
+				if !isWildcard && attr.Name != reqAttr {
+					return false, nil
+				}
 				has = true
-				break
-			}
+				return true, nil // Stop at the first match.
+			})
+		if err != nil {
+			return nil, fmt.Errorf("could not look up the %q attribute on %s: %w", reqAttr, sdk.AccAddress(addr), err)
 		}
-		nameIt.Close() //nolint:errcheck,gosec // close error safe to ignore in this context.
-		found[exact] = has
+		found[reqAttr] = has
 	}
 
 	var missing []string
@@ -264,20 +234,31 @@ func (k Keeper) SetAttribute(
 		return fmt.Errorf("unable to normalize attribute name %q: %w", attr.Name, err)
 	}
 	attr.Name = normalizedName
-	// Verify an account exists for the given owner address
+
 	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
 		return fmt.Errorf("no account found for owner address %q", owner.String())
 	}
-	// Verify name resolves to owner
+
 	if !k.nameKeeper.ResolvesTo(ctx, attr.Name, owner) {
 		return fmt.Errorf("%q does not resolve to address %q", attr.Name, owner.String())
 	}
 	key := types.BuildAttrTriple(attr)
-	has, hasErr := k.attributes.Has(ctx, key)
-	if hasErr != nil {
-		return hasErr
+
+	var isNew bool
+	oldAttr, getErr := k.attributes.Get(ctx, key)
+	switch {
+	case getErr == nil:
+		// Overwriting an existing record. The attribute key doesn't include the expiration
+		// date, so a change to it reuses the same key; without this the old entry would be
+		// orphaned in the expiration index.
+		if err = k.removeExpireEntry(ctx, oldAttr); err != nil {
+			return err
+		}
+	case errors.Is(getErr, collections.ErrNotFound):
+		isNew = true
+	default:
+		return getErr
 	}
-	isNew := !has
 
 	if err = k.attributes.Set(ctx, key, attr); err != nil {
 		return err
@@ -386,7 +367,12 @@ func (k Keeper) UpdateAttribute(ctx sdk.Context, originalAttribute types.Attribu
 			if err = k.removeExpireEntry(ctx, currentAttr); err != nil {
 				return err
 			}
-
+			// Preserve the existing expiration date if the update doesn't specify one.
+			// MsgUpdateAttributeRequest has no expiration_date field, so updateAttribute.ExpirationDate
+			// is nil when this arrives via the msg server.
+			if updateAttribute.ExpirationDate == nil {
+				updateAttribute.ExpirationDate = currentAttr.ExpirationDate
+			}
 			if err = k.attributes.Set(ctx, types.BuildAttrTriple(updateAttribute), updateAttribute); err != nil {
 				return err
 			}
@@ -466,11 +452,9 @@ func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, updateAttribute types
 
 // AccountsByAttribute returns a list of sdk.AccAddress that have attribute name assigned
 func (k Keeper) AccountsByAttribute(ctx sdk.Context, name string) (addresses []sdk.AccAddress, err error) {
-	var nameHash [32]byte
-	copy(nameHash[:], types.GetNameKeyBytes(name))
-	rng, _ := nameHashRange(nameHash)
-	err = k.nameAddrCounts.Walk(ctx, rng, func(key types.NameAddrPair, _ uint64) (stop bool, walkErr error) {
-		if key.NameHash == nameHash {
+	revName := types.ReverseName(name)
+	err = k.nameAddrCounts.Walk(ctx, napNameRange(revName)(nil), func(key types.NameAddrPair, _ uint64) (stop bool, walkErr error) {
+		if key.RevName == revName {
 			addrCopy := make([]byte, len(key.AddrBytes))
 			copy(addrCopy, key.AddrBytes)
 			addresses = append(addresses, addrCopy)
@@ -499,13 +483,13 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 		}
 		// else name does not exist (anymore) so we can't enforce permission check on delete here, proceed.
 	}
+
 	addrz := types.GetAttributeAddressBytes(addr)
-	var nameHash [32]byte
-	copy(nameHash[:], types.GetNameKeyBytes(name))
-	rng, _ := attrAddrNameRange(addrz, nameHash)
+	rng := attrAddrNameRange(addrz, types.ReverseName(name))(nil)
 	attrToDelete := make([]types.Attribute, 0)
 
 	walkErr := k.attributes.Walk(ctx, rng, func(_ types.AttrTriple, attr types.Attribute) (stop bool, err error) {
+		// NOTE: this name check is now load-bearing (see below), not just defensive.
 		if attr.Address != addr || attr.Name != name {
 			return false, nil
 		}
@@ -549,6 +533,41 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 	return nil
 }
 
+// attrsForAddr gets all the attributes on the provided address.
+func (k Keeper) attrsForAddr(ctx sdk.Context, addrBz []byte) (attrs []types.Attribute, err error) {
+	err = k.attributes.Walk(ctx, attrAddrRange(addrBz)(nil), func(_ types.AttrTriple, attr types.Attribute) (bool, error) {
+		attrs = append(attrs, attr)
+		return false, nil
+	})
+	return attrs, err
+}
+
+// attrsForAddrName gets all the attributes with the provided name on the provided address.
+func (k Keeper) attrsForAddrName(ctx sdk.Context, addrBz []byte, name string) (attrs []types.Attribute, err error) {
+	rng := attrAddrNameRange(addrBz, types.ReverseName(name))(nil)
+	err = k.attributes.Walk(ctx, rng, func(_ types.AttrTriple, attr types.Attribute) (bool, error) {
+		// The range is on a name prefix, so make sure it is the name being asked for.
+		if strings.EqualFold(attr.Name, name) {
+			attrs = append(attrs, attr)
+		}
+		return false, nil
+	})
+	return attrs, err
+}
+
+// AttrsUnderName gets all the attributes on an address with a name under the provided name.
+// E.g. a name of "kyc.pb" will return the attributes named "x.kyc.pb" and "y.x.kyc.pb", but not "kyc.pb".
+// This is the wildcard ("*.kyc.pb") lookup, and is a single prefix scan.
+func (k Keeper) AttrsUnderName(ctx sdk.Context, addr string, name string) (attrs []types.Attribute, err error) {
+	addrBz := types.GetAttributeAddressBytes(addr)
+	rng := attrAddrNameRange(addrBz, types.ReverseName(name)+".")(nil)
+	err = k.attributes.Walk(ctx, rng, func(_ types.AttrTriple, attr types.Attribute) (bool, error) {
+		attrs = append(attrs, attr)
+		return false, nil
+	})
+	return attrs, err
+}
+
 // PurgeAttribute removes attributes under the given account from the state store.
 func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddress) error {
 	if ownerAcc := k.authKeeper.GetAccount(ctx, owner); ownerAcc == nil {
@@ -566,62 +585,42 @@ func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddres
 	if err != nil {
 		return err
 	}
-	var nameHash [32]byte
-	copy(nameHash[:], types.GetNameKeyBytes(name))
+	revName := types.ReverseName(name)
+
+	// The attribute is needed alongside its key to clear the expiration entry and to build
+	// the delete event, so collect both.
+	type keyedAttr struct {
+		key  types.AttrTriple
+		attr types.Attribute
+	}
 
 	for _, acct := range accts {
-		rng, _ := attrAddrNameRange(acct, nameHash)
-		var keysToRemove []types.AttrTriple
+		rng := attrAddrNameRange(acct, revName)(nil)
+		var toRemove []keyedAttr
 		if walkErr := k.attributes.Walk(ctx, rng, func(key types.AttrTriple, attr types.Attribute) (stop bool, err error) {
+			// The range is a name prefix, so attr.Name == name is load-bearing.
 			if bytes.Equal(key.AddrBytes, []byte(acct)) && attr.Name == name {
-				keysToRemove = append(keysToRemove, key)
+				toRemove = append(toRemove, keyedAttr{key: key, attr: attr})
 			}
 			return false, nil
 		}); walkErr != nil {
 			return walkErr
 		}
-		for _, key := range keysToRemove {
-			if err = k.attributes.Remove(ctx, key); err != nil {
+		for _, entry := range toRemove {
+			if err = k.attributes.Remove(ctx, entry.key); err != nil {
 				return err
 			}
 			k.DecAttrNameAddressLookup(ctx, name, acct)
+			if err = k.removeExpireEntry(ctx, entry.attr); err != nil {
+				return err
+			}
+			deleteEvent := types.NewEventAttributeDelete(name, entry.attr.Address, owner.String())
+			if err = ctx.EventManager().EmitTypedEvent(deleteEvent); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
-}
-
-// A predicate function for matching names
-type namePred = func(string) bool
-
-// Scan all attributes that match the given prefix.
-func (k Keeper) prefixScan(ctx sdk.Context, prefix []byte, f namePred) (attrs []types.Attribute, err error) {
-	if len(prefix) < 2 {
-		return nil, fmt.Errorf("attribute: prefixScan: prefix too short")
-	}
-	rest := prefix[1:]
-	addrLen := int(rest[0])
-	if len(rest) < 1+addrLen {
-		return nil, fmt.Errorf("attribute: prefixScan: prefix truncated at addr")
-	}
-	addrBz := rest[1 : 1+addrLen]
-	rest = rest[1+addrLen:]
-
-	var rng *collections.Range[types.AttrTriple]
-	if len(rest) == 32 {
-		var nameHash [32]byte
-		copy(nameHash[:], rest)
-		rng, _ = attrAddrNameRange(addrBz, nameHash)
-	} else {
-		rng, _ = attrAddrRange(addrBz)
-	}
-
-	err = k.attributes.Walk(ctx, rng, func(_ types.AttrTriple, attr types.Attribute) (bool, error) {
-		if f(attr.Name) {
-			attrs = append(attrs, attr)
-		}
-		return false, nil
-	})
-	return attrs, err
 }
 
 // A genesis helper that imports attribute state without owner checks.
@@ -667,53 +666,86 @@ func (k Keeper) importAttribute(ctx sdk.Context, attr types.Attribute) error {
 // DeleteExpiredAttributes find and delete expired attributes returns the total deleted
 // limit sets the max amount to delete in a call, 0 for not limit
 func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
-	upperEpoch := ctx.BlockTime().Unix()
-
-	endBound := types.ExpireTriple{EpochSecs: upperEpoch}
-	expiredRange := new(collections.Range[types.ExpireTriple]).EndExclusive(endBound)
+	// This sweep reads the expiration index through the raw store instead of
+	// k.expirationIndex.Walk because a Walk aborts on the first key it cannot decode,
+	// which would stop expired attributes from being deleted at all. Entries that can't
+	// be decoded are deleted and skipped. This also runs in the begin blocker (outside a
+	// tx), where there's no panic recovery, so it must not panic on malformed input.
+	store := k.storeService.OpenKVStore(ctx)
+	prefix := types.AttributeExpirationKeyPrefix
+	// Inclusive of the current block time: an attribute expiring exactly now is expired.
+	end := storetypes.PrefixEndBytes(types.GetAttributeExpireTimePrefix(ctx.BlockTime()))
 
 	type expiredEntry struct {
-		expKey  types.ExpireTriple
-		attrKey types.AttrTriple
+		rawKey    []byte
+		expKey    types.ExpireTriple
+		decodable bool
 	}
-	var toDelete []expiredEntry
+	var entries []expiredEntry
 
-	if walkErr := k.expirationIndex.Walk(ctx, expiredRange, func(key types.ExpireTriple, _ bool) (bool, error) {
-		toDelete = append(toDelete, expiredEntry{
-			expKey:  key,
-			attrKey: types.AttrTriple{AddrBytes: key.AddrBytes, NameHash: key.NameHash, ValueHash: key.ValueHash},
-		})
-		if limit != 0 && len(toDelete) >= limit {
-			return true, nil
-		}
-		return false, nil
-	}); walkErr != nil {
-		ctx.Logger().Error("attribute: DeleteExpiredAttributes walk failed", "error", walkErr)
+	iter, iterErr := store.Iterator(prefix, end)
+	if iterErr != nil {
+		ctx.Logger().Error("attribute: unable to iterate expiration index", "error", iterErr)
 		return 0
 	}
-
-	count := 0
-	for _, entry := range toDelete {
-		attr, getErr := k.attributes.Get(ctx, entry.attrKey)
-		if getErr == nil {
-			if removeErr := k.attributes.Remove(ctx, entry.attrKey); removeErr == nil {
-				k.DecAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
-				if emitErr := ctx.EventManager().EmitTypedEvent(types.NewEventAttributeExpired(attr)); emitErr != nil {
-					ctx.Logger().Error(fmt.Sprintf("failed to emit typed event %v", emitErr))
-				}
-				count++
-			} else {
-				ctx.Logger().Error(fmt.Sprintf("unable to remove attribute: %v error: %v", entry.attrKey, removeErr))
-			}
+	for ; iter.Valid(); iter.Next() {
+		rawKey := bytes.Clone(iter.Key())
+		entry := expiredEntry{rawKey: rawKey}
+		if _, expKey, decErr := types.ExpireTripleKey.Decode(rawKey[len(prefix):]); decErr == nil {
+			entry.expKey = expKey
+			entry.decodable = true
 		} else {
-			ctx.Logger().Error(fmt.Sprintf("unable to get attribute for expiry key: %v error: %v", entry.expKey, getErr))
+			ctx.Logger().Error(fmt.Sprintf("unable to decode expiration key: %v error: %v", rawKey, decErr))
 		}
-		if removeExpErr := k.expirationIndex.Remove(ctx, entry.expKey); removeExpErr != nil {
-			ctx.Logger().Error(fmt.Sprintf("unable to remove expiration entry: %v error: %v", entry.expKey, removeExpErr))
+		entries = append(entries, entry)
+		if limit != 0 && len(entries) >= limit {
+			break
+		}
+	}
+	if closeErr := iter.Close(); closeErr != nil {
+		ctx.Logger().Error("attribute: unable to close expiration iterator", "error", closeErr)
+	}
+
+	for _, entry := range entries {
+		// Delete the expiration lookup entry no matter what happens.
+		if delErr := store.Delete(entry.rawKey); delErr != nil {
+			ctx.Logger().Error(fmt.Sprintf("unable to remove expiration entry: %v error: %v", entry.rawKey, delErr))
+		}
+		if !entry.decodable {
+			continue
+		}
+
+		attrKey := types.AttrTriple{
+			AddrBytes: entry.expKey.AddrBytes,
+			RevName:   entry.expKey.RevName,
+			ValueHash: entry.expKey.ValueHash,
+		}
+		attr, getErr := k.attributes.Get(ctx, attrKey)
+		if getErr != nil {
+			continue
+		}
+
+		// Double check that the attribute is expired.
+		if !isExpired(ctx, attr) {
+			continue
+		}
+
+		if removeErr := k.attributes.Remove(ctx, attrKey); removeErr != nil {
+			ctx.Logger().Error(fmt.Sprintf("unable to remove attribute: %v error: %v", attrKey, removeErr))
+			continue
+		}
+		k.DecAttrNameAddressLookup(ctx, attr.Name, attr.GetAddressBytes())
+		if emitErr := ctx.EventManager().EmitTypedEvent(types.NewEventAttributeExpired(attr)); emitErr != nil {
+			ctx.Logger().Error(fmt.Sprintf("failed to emit attribute expired typed event %v", emitErr))
 		}
 	}
 
-	return expirationKeys
+	return len(entries)
+}
+
+// isExpired returns true if the provided attribute's expiration is before the current blocktime.
+func isExpired(ctx sdk.Context, attr types.Attribute) bool {
+	return attr.ExpirationDate != nil && !attr.ExpirationDate.After(ctx.BlockTime())
 }
 
 // ValidateExpirationDate returns error if attribute has an expiration date that is in the past of current block time
@@ -740,7 +772,6 @@ func (k Keeper) GetAccountData(ctx sdk.Context, addr string) (string, error) {
 // SetAccountData sets/updates/deletes the value of the special accountdata attribute for a given address.
 // An error is only returned if the account data cannot be set as requested.
 func (k Keeper) SetAccountData(ctx sdk.Context, addr string, value string) error {
-	// Delete anything that might already be there.
 	existings, err := k.GetAttributes(ctx, addr, types.AccountDataName)
 	if err != nil {
 		return fmt.Errorf("could not look up existing %s for %q: %w", types.AccountDataName, addr, err)
@@ -752,7 +783,6 @@ func (k Keeper) SetAccountData(ctx sdk.Context, addr string, value string) error
 		}
 	}
 
-	// Just leave it deleted if the new value is an empty string.
 	if len(value) > 0 {
 		attr := types.Attribute{
 			Name:          types.AccountDataName,
@@ -784,48 +814,74 @@ func (k Keeper) removeExpireEntry(ctx sdk.Context, attr types.Attribute) error {
 	return k.expirationIndex.Remove(ctx, key)
 }
 
-// attrAddrRange returns a Range over all attributes for addrBz, plus its end key.
-func attrAddrRange(addrBz []byte) (*collections.Range[types.AttrTriple], *types.AttrTriple) {
-	rng := new(collections.Range[types.AttrTriple]).
-		StartInclusive(types.AttrTriple{AddrBytes: addrBz})
-	end := make([]byte, len(addrBz))
-	copy(end, addrBz)
-	for i := len(end) - 1; i >= 0; i-- {
-		end[i]++
-		if end[i] != 0 {
-			endKey := types.AttrTriple{AddrBytes: end}
-			return rng.EndExclusive(endKey), &endKey
+// attrRange builds a Range over the attributes map. The start key is the one provided, or the
+// beginning of the range when nil (which is how pagination resumes from a NextKey).
+type attrRange func(start *types.AttrTriple) *collections.Range[types.AttrTriple]
+
+// napRange is the attrRange equivalent for the nameAddrCounts map.
+type napRange func(start *types.NameAddrPair) *collections.Range[types.NameAddrPair]
+
+// nextBytes returns the smallest byte slice greater than every slice starting with the one provided.
+// The bool is false when there isn't one, i.e. the provided bytes are all 0xFF.
+func nextBytes(bz []byte) ([]byte, bool) {
+	rv := make([]byte, len(bz))
+	copy(rv, bz)
+	for i := len(rv) - 1; i >= 0; i-- {
+		if rv[i] != 0xFF {
+			rv[i]++
+			return rv[:i+1], true
 		}
 	}
-	return rng, nil
+	return nil, false
 }
 
-// attrAddrNameRange returns a Range over attributes for addrBz+nameHash, plus its end key.
-func attrAddrNameRange(addrBz []byte, nameHash [32]byte) (*collections.Range[types.AttrTriple], *types.AttrTriple) {
-	endHash := nameHash
-	for i := 31; i >= 0; i-- {
-		endHash[i]++
-		if endHash[i] != 0 {
-			endKey := types.AttrTriple{AddrBytes: addrBz, NameHash: endHash}
-			return new(collections.Range[types.AttrTriple]).
-				StartInclusive(types.AttrTriple{AddrBytes: addrBz, NameHash: nameHash}).
-				EndExclusive(endKey), &endKey
+// attrAddrRange returns an attrRange covering all the attributes on addrBz.
+func attrAddrRange(addrBz []byte) attrRange {
+	return func(start *types.AttrTriple) *collections.Range[types.AttrTriple] {
+		from := types.AttrTriple{AddrBytes: addrBz}
+		if start != nil {
+			from = *start
 		}
+		rng := new(collections.Range[types.AttrTriple]).StartInclusive(from)
+		if end, ok := nextBytes(addrBz); ok {
+			rng = rng.EndExclusive(types.AttrTriple{AddrBytes: end})
+		}
+		return rng
 	}
-	return attrAddrRange(addrBz) // nameHash all-0xFF fallback
 }
 
-// nameHashRange returns a Range over all nameAddrCounts entries for nameHash, plus its end key.
-func nameHashRange(nameHash [32]byte) (*collections.Range[types.NameAddrPair], *types.NameAddrPair) {
-	rng := new(collections.Range[types.NameAddrPair]).
-		StartInclusive(types.NameAddrPair{NameHash: nameHash})
-	end := nameHash
-	for i := 31; i >= 0; i-- {
-		end[i]++
-		if end[i] != 0 {
-			endKey := types.NameAddrPair{NameHash: end}
-			return rng.EndExclusive(endKey), &endKey
+// attrAddrNameRange returns an attrRange covering the attributes on addrBz whose reversed name
+// starts with revName. Since names are stored reversed, this is also how all the names under a
+// name are found, e.g. a revName of "pb.kyc." covers everything under "kyc.pb".
+func attrAddrNameRange(addrBz []byte, revName string) attrRange {
+	return func(start *types.AttrTriple) *collections.Range[types.AttrTriple] {
+		from := types.AttrTriple{AddrBytes: addrBz, RevName: revName}
+		if start != nil {
+			from = *start
 		}
+		rng := new(collections.Range[types.AttrTriple]).StartInclusive(from)
+		if end, ok := nextBytes([]byte(revName)); ok {
+			return rng.EndExclusive(types.AttrTriple{AddrBytes: addrBz, RevName: string(end)})
+		}
+		if end, ok := nextBytes(addrBz); ok {
+			return rng.EndExclusive(types.AttrTriple{AddrBytes: end})
+		}
+		return rng
 	}
-	return rng, nil
+}
+
+// napNameRange returns a napRange covering the nameAddrCounts entries whose reversed name starts
+// with revName.
+func napNameRange(revName string) napRange {
+	return func(start *types.NameAddrPair) *collections.Range[types.NameAddrPair] {
+		from := types.NameAddrPair{RevName: revName}
+		if start != nil {
+			from = *start
+		}
+		rng := new(collections.Range[types.NameAddrPair]).StartInclusive(from)
+		if end, ok := nextBytes([]byte(revName)); ok {
+			rng = rng.EndExclusive(types.NameAddrPair{RevName: string(end)})
+		}
+		return rng
+	}
 }
