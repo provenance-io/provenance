@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	fmt "fmt"
@@ -23,9 +24,27 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 }
 
 // AttrTriple key (0x02),Format: [addr_len][addr][hash(name)][hash(value)].
+// encodeName writes a reversed name and its terminator to the buffer, returning the bytes written.
+func encodeName(buffer []byte, revName string) int {
+	n := copy(buffer, revName)
+	buffer[n] = NameTerminator
+	return n + 1
+}
+
+// decodeName reads a terminated reversed name from the front of the buffer.
+// It returns the bytes read (including the terminator) and the name.
+func decodeName(buffer []byte) (int, string, error) {
+	end := bytes.IndexByte(buffer, NameTerminator)
+	if end < 0 {
+		return 0, "", fmt.Errorf("attribute: no name terminator found in key")
+	}
+	return end + 1, string(buffer[:end]), nil
+}
+
+// AttrTriple key (0x02), Format: [addr_len][addr][reversed name][0x00][hash(value)].
 type AttrTriple struct {
 	AddrBytes []byte
-	NameHash  [32]byte
+	RevName   string
 	ValueHash [32]byte
 }
 
@@ -43,39 +62,37 @@ func (attrTripleKeyCodec) Encode(buffer []byte, key AttrTriple) (int, error) {
 	lp := address.MustLengthPrefix(key.AddrBytes)
 	copy(buffer[n:], lp)
 	n += len(lp)
-	copy(buffer[n:], key.NameHash[:])
-	n += 32
+	n += encodeName(buffer[n:], key.RevName)
 	copy(buffer[n:], key.ValueHash[:])
 	n += 32
 	return n, nil
 }
 
 func (attrTripleKeyCodec) Decode(buffer []byte) (int, AttrTriple, error) {
-	// Empty address: 64 bytes (two 32-byte hashes).
-	if len(buffer) == 64 {
-		var nameHash, valueHash [32]byte
-		copy(nameHash[:], buffer[0:32])
-		copy(valueHash[:], buffer[32:64])
-		return 64, AttrTriple{NameHash: nameHash, ValueHash: valueHash}, nil
-	}
 	if len(buffer) < 1 {
 		return 0, AttrTriple{}, fmt.Errorf("attribute: buffer too short for AttrTriple")
 	}
 	n := 0
 	addrLen := int(buffer[n])
 	n++
-	if len(buffer) < n+addrLen+64 {
-		return 0, AttrTriple{}, fmt.Errorf("attribute: buffer too short: need %d bytes, have %d", n+addrLen+64, len(buffer))
+	if len(buffer) < n+addrLen {
+		return 0, AttrTriple{}, fmt.Errorf("attribute: buffer too short for AttrTriple address")
 	}
 	addrBytes := make([]byte, addrLen)
 	copy(addrBytes, buffer[n:n+addrLen])
 	n += addrLen
-	var nameHash, valueHash [32]byte
-	copy(nameHash[:], buffer[n:n+32])
-	n += 32
+	read, revName, err := decodeName(buffer[n:])
+	if err != nil {
+		return 0, AttrTriple{}, err
+	}
+	n += read
+	if len(buffer) < n+32 {
+		return 0, AttrTriple{}, fmt.Errorf("attribute: buffer too short for AttrTriple value hash")
+	}
+	var valueHash [32]byte
 	copy(valueHash[:], buffer[n:n+32])
 	n += 32
-	return n, AttrTriple{AddrBytes: addrBytes, NameHash: nameHash, ValueHash: valueHash}, nil
+	return n, AttrTriple{AddrBytes: addrBytes, RevName: revName, ValueHash: valueHash}, nil
 }
 
 func (c attrTripleKeyCodec) EncodeNonTerminal(buffer []byte, key AttrTriple) (int, error) {
@@ -86,35 +103,33 @@ func (c attrTripleKeyCodec) DecodeNonTerminal(buffer []byte) (int, AttrTriple, e
 }
 func (c attrTripleKeyCodec) SizeNonTerminal(key AttrTriple) int { return c.Size(key) }
 func (attrTripleKeyCodec) Size(key AttrTriple) int {
-	if len(key.AddrBytes) == 0 {
-		return 64 // no length prefix + two 32-byte hashes
-	}
-	return 1 + len(key.AddrBytes) + 32 + 32
+	return 1 + len(key.AddrBytes) + len(key.RevName) + 1 + 32
 }
 func (attrTripleKeyCodec) EncodeJSON(key AttrTriple) ([]byte, error) {
-	return json.Marshal(fmt.Sprintf("attr(%x,%x,%x)", key.AddrBytes, key.NameHash, key.ValueHash))
+	return json.Marshal(fmt.Sprintf("attr(%x,%s,%x)", key.AddrBytes, key.RevName, key.ValueHash))
 }
 func (attrTripleKeyCodec) DecodeJSON(_ []byte) (AttrTriple, error) {
 	return AttrTriple{}, fmt.Errorf("AttrTriple JSON decode not supported")
 }
 func (attrTripleKeyCodec) Stringify(key AttrTriple) string {
-	return fmt.Sprintf("attr(%x)", key.AddrBytes)
+	return fmt.Sprintf("attr(%x,%s)", key.AddrBytes, key.RevName)
 }
 func (attrTripleKeyCodec) KeyType() string { return "AttrTriple" }
 
 // BuildAttrTriple constructs an AttrTriple from an Attribute.
 func BuildAttrTriple(attr Attribute) AttrTriple {
-	addrBz := attr.GetAddressBytes()
-	var nameHash [32]byte
-	copy(nameHash[:], GetNameKeyBytes(attr.Name))
 	var valueHash [32]byte
 	copy(valueHash[:], attr.Hash())
-	return AttrTriple{AddrBytes: addrBz, NameHash: nameHash, ValueHash: valueHash}
+	return AttrTriple{
+		AddrBytes: attr.GetAddressBytes(),
+		RevName:   ReverseName(attr.Name),
+		ValueHash: valueHash,
+	}
 }
 
-// NameAddrPair key (0x03),Format: [hash(name)][addr_len][addr].
+// NameAddrPair key (0x03), Format: [reversed name][0x00][addr_len][addr].
 type NameAddrPair struct {
-	NameHash  [32]byte
+	RevName   string
 	AddrBytes []byte
 }
 
@@ -127,9 +142,7 @@ func (nameAddrPairKeyCodec) Encode(buffer []byte, key NameAddrPair) (int, error)
 	if len(key.AddrBytes) > 255 {
 		return 0, fmt.Errorf("attribute: address length %d exceeds 255", len(key.AddrBytes))
 	}
-	n := 0
-	copy(buffer[n:], key.NameHash[:])
-	n += 32
+	n := encodeName(buffer, key.RevName)
 	lp := address.MustLengthPrefix(key.AddrBytes)
 	copy(buffer[n:], lp)
 	n += len(lp)
@@ -137,13 +150,13 @@ func (nameAddrPairKeyCodec) Encode(buffer []byte, key NameAddrPair) (int, error)
 }
 
 func (nameAddrPairKeyCodec) Decode(buffer []byte) (int, NameAddrPair, error) {
-	if len(buffer) < 33 {
-		return 0, NameAddrPair{}, fmt.Errorf("attribute: buffer too short for NameAddrPair")
+	n, revName, err := decodeName(buffer)
+	if err != nil {
+		return 0, NameAddrPair{}, err
 	}
-	n := 0
-	var nameHash [32]byte
-	copy(nameHash[:], buffer[n:n+32])
-	n += 32
+	if len(buffer) < n+1 {
+		return 0, NameAddrPair{}, fmt.Errorf("attribute: buffer too short for NameAddrPair address length")
+	}
 	addrLen := int(buffer[n])
 	n++
 	if len(buffer) < n+addrLen {
@@ -152,7 +165,7 @@ func (nameAddrPairKeyCodec) Decode(buffer []byte) (int, NameAddrPair, error) {
 	addrBytes := make([]byte, addrLen)
 	copy(addrBytes, buffer[n:n+addrLen])
 	n += addrLen
-	return n, NameAddrPair{NameHash: nameHash, AddrBytes: addrBytes}, nil
+	return n, NameAddrPair{RevName: revName, AddrBytes: addrBytes}, nil
 }
 
 func (c nameAddrPairKeyCodec) EncodeNonTerminal(buffer []byte, key NameAddrPair) (int, error) {
@@ -162,30 +175,30 @@ func (c nameAddrPairKeyCodec) DecodeNonTerminal(buffer []byte) (int, NameAddrPai
 	return c.Decode(buffer)
 }
 func (c nameAddrPairKeyCodec) SizeNonTerminal(key NameAddrPair) int { return c.Size(key) }
-func (nameAddrPairKeyCodec) Size(key NameAddrPair) int              { return 32 + 1 + len(key.AddrBytes) }
+func (nameAddrPairKeyCodec) Size(key NameAddrPair) int {
+	return len(key.RevName) + 1 + 1 + len(key.AddrBytes)
+}
 func (nameAddrPairKeyCodec) EncodeJSON(key NameAddrPair) ([]byte, error) {
-	return json.Marshal(fmt.Sprintf("nap(%x,%x)", key.NameHash, key.AddrBytes))
+	return json.Marshal(fmt.Sprintf("nap(%s,%x)", key.RevName, key.AddrBytes))
 }
 func (nameAddrPairKeyCodec) DecodeJSON(_ []byte) (NameAddrPair, error) {
 	return NameAddrPair{}, fmt.Errorf("NameAddrPair JSON decode not supported")
 }
 func (nameAddrPairKeyCodec) Stringify(key NameAddrPair) string {
-	return fmt.Sprintf("nap(%x)", key.NameHash)
+	return fmt.Sprintf("nap(%s)", key.RevName)
 }
 func (nameAddrPairKeyCodec) KeyType() string { return "NameAddrPair" }
 
 // BuildNameAddrPair constructs a NameAddrPair from name and raw address bytes.
 func BuildNameAddrPair(name string, addrBytes []byte) NameAddrPair {
-	var nameHash [32]byte
-	copy(nameHash[:], GetNameKeyBytes(name))
-	return NameAddrPair{NameHash: nameHash, AddrBytes: addrBytes}
+	return NameAddrPair{RevName: ReverseName(name), AddrBytes: addrBytes}
 }
 
-// ExpireTriple key (0x04),Format: [epoch(8)][addr_len][addr][hash(name)][hash(value)]
+// ExpireTriple key (0x04), Format: [epoch(8)][addr_len][addr][reversed name][0x00][hash(value)]
 type ExpireTriple struct {
 	EpochSecs int64
 	AddrBytes []byte
-	NameHash  [32]byte
+	RevName   string
 	ValueHash [32]byte
 }
 
@@ -204,8 +217,7 @@ func (expireTripleKeyCodec) Encode(buffer []byte, key ExpireTriple) (int, error)
 	lp := address.MustLengthPrefix(key.AddrBytes)
 	copy(buffer[n:], lp)
 	n += len(lp)
-	copy(buffer[n:], key.NameHash[:])
-	n += 32
+	n += encodeName(buffer[n:], key.RevName)
 	copy(buffer[n:], key.ValueHash[:])
 	n += 32
 	return n, nil
@@ -220,18 +232,24 @@ func (expireTripleKeyCodec) Decode(buffer []byte) (int, ExpireTriple, error) {
 	n += 8
 	addrLen := int(buffer[n])
 	n++
-	if len(buffer) < n+addrLen+64 {
-		return 0, ExpireTriple{}, fmt.Errorf("attribute: buffer too short for ExpireTriple body")
+	if len(buffer) < n+addrLen {
+		return 0, ExpireTriple{}, fmt.Errorf("attribute: buffer too short for ExpireTriple address")
 	}
 	addrBytes := make([]byte, addrLen)
 	copy(addrBytes, buffer[n:n+addrLen])
 	n += addrLen
-	var nameHash, valueHash [32]byte
-	copy(nameHash[:], buffer[n:n+32])
-	n += 32
+	read, revName, err := decodeName(buffer[n:])
+	if err != nil {
+		return 0, ExpireTriple{}, err
+	}
+	n += read
+	if len(buffer) < n+32 {
+		return 0, ExpireTriple{}, fmt.Errorf("attribute: buffer too short for ExpireTriple value hash")
+	}
+	var valueHash [32]byte
 	copy(valueHash[:], buffer[n:n+32])
 	n += 32
-	return n, ExpireTriple{EpochSecs: epochSecs, AddrBytes: addrBytes, NameHash: nameHash, ValueHash: valueHash}, nil
+	return n, ExpireTriple{EpochSecs: epochSecs, AddrBytes: addrBytes, RevName: revName, ValueHash: valueHash}, nil
 }
 
 func (c expireTripleKeyCodec) EncodeNonTerminal(buffer []byte, key ExpireTriple) (int, error) {
@@ -241,9 +259,11 @@ func (c expireTripleKeyCodec) DecodeNonTerminal(buffer []byte) (int, ExpireTripl
 	return c.Decode(buffer)
 }
 func (c expireTripleKeyCodec) SizeNonTerminal(key ExpireTriple) int { return c.Size(key) }
-func (expireTripleKeyCodec) Size(key ExpireTriple) int              { return 8 + 1 + len(key.AddrBytes) + 32 + 32 }
+func (expireTripleKeyCodec) Size(key ExpireTriple) int {
+	return 8 + 1 + len(key.AddrBytes) + len(key.RevName) + 1 + 32
+}
 func (expireTripleKeyCodec) EncodeJSON(key ExpireTriple) ([]byte, error) {
-	return json.Marshal(fmt.Sprintf("expire(%d,%x)", key.EpochSecs, key.AddrBytes))
+	return json.Marshal(fmt.Sprintf("expire(%d,%x,%s)", key.EpochSecs, key.AddrBytes, key.RevName))
 }
 func (expireTripleKeyCodec) DecodeJSON(_ []byte) (ExpireTriple, error) {
 	return ExpireTriple{}, fmt.Errorf("ExpireTriple JSON decode not supported")
@@ -258,14 +278,12 @@ func BuildExpireTriple(attr Attribute) (ExpireTriple, bool) {
 	if attr.ExpirationDate == nil {
 		return ExpireTriple{}, false
 	}
-	var nameHash [32]byte
-	copy(nameHash[:], GetNameKeyBytes(attr.Name))
 	var valueHash [32]byte
 	copy(valueHash[:], attr.Hash())
 	return ExpireTriple{
 		EpochSecs: attr.ExpirationDate.Unix(),
 		AddrBytes: attr.GetAddressBytes(),
-		NameHash:  nameHash,
+		RevName:   ReverseName(attr.Name),
 		ValueHash: valueHash,
 	}, true
 }

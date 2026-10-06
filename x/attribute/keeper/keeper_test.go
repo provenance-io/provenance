@@ -779,7 +779,9 @@ func (s *KeeperTestSuite) runGetAllAttributesTests(funcName string, attrGetter f
 	attrsSetUp := uint(0)
 	// Attributes are keyed using a hash of the name. So they aren't in alphabetical order.
 	// The order should never change, though, unless their name changes.
-	attrStoreOrder := []uint{2, 7, 9, 6, 8, 1, 3, 5, 0, 4}
+	// Reversed-name order: "exampleN.attribute" reverses to "attribute.exampleN", so these
+	// now sort 0-9 instead of by sha256 of the name.
+	attrStoreOrder := []uint{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	getExpAttrs := func(count uint) []types.Attribute {
 		// providing a count instead of just using attrsSetUp so that the size is dictated by the test.
 		var rv []types.Attribute
