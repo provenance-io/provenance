@@ -1,6 +1,11 @@
 package keeper
 
 import (
+	"errors"
+	"fmt"
+
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/attribute/types"
@@ -9,12 +14,17 @@ import (
 // GetParams returns the attribute Params.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	params, err := k.params.Get(ctx)
-	if err != nil {
+	switch {
+	case err == nil:
+		return params
+	case errors.Is(err, collections.ErrNotFound):
+		// Params have never been set, so use the defaults.
 		return types.Params{
 			MaxValueLength: types.DefaultMaxValueLength,
 		}
+	default:
+		panic(fmt.Errorf("attribute: could not read params: %w", err))
 	}
-	return params
 }
 
 // SetParams sets the account parameters to the param store.

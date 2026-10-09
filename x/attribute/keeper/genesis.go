@@ -96,7 +96,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 		return nil
 	}
 
-	if err := k.IterateRecords(ctx, types.AttributeKeyPrefix, appendToRecords); err != nil {
+	if err := k.IterateRecords(ctx, appendToRecords); err != nil {
 		panic(err)
 	}
 
