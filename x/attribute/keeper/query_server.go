@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -140,6 +139,28 @@ func (k Keeper) AccountData(c context.Context, req *types.QueryAccountDataReques
 	return resp, nil
 }
 
+// pageParams applies the PageRequest defaults the same way the SDK's query.Paginate does, so these
+// handlers page exactly like the pre-collections ones: a nil request or a zero limit means
+// query.DefaultLimit with a total count, a total is only counted for offset-based requests, and
+// a request can't have both an offset and a key.
+func pageParams(pageReq *query.PageRequest) (limit, offset uint64, countTotal bool, err error) {
+	if pageReq == nil {
+		pageReq = &query.PageRequest{}
+	}
+	if pageReq.Offset > 0 && len(pageReq.Key) > 0 {
+		return 0, 0, false, status.Error(codes.InvalidArgument, "invalid request, either offset or key is expected, got both")
+	}
+	limit, offset, countTotal = pageReq.Limit, pageReq.Offset, pageReq.CountTotal
+	if limit == 0 {
+		limit = query.DefaultLimit
+		countTotal = true
+	}
+	if len(pageReq.Key) > 0 {
+		countTotal = false
+	}
+	return limit, offset, countTotal, nil
+}
+
 // attrPageWalk walks col over rng with full pagination:
 func attrPageWalk(
 	ctx sdk.Context,
@@ -148,31 +169,22 @@ func attrPageWalk(
 	pageReq *query.PageRequest,
 	accept func(types.Attribute) bool,
 ) ([]types.Attribute, *query.PageResponse, error) {
-	limit := uint64(query.DefaultLimit)
-	offset := uint64(0)
-	countTotal := false
-
-	if pageReq == nil {
-		pageReq = &query.PageRequest{CountTotal: true}
+	limit, offset, countTotal, err := pageParams(pageReq)
+	if err != nil {
+		return nil, nil, err
 	}
-
 	rng := rngFn(nil)
-
-	if pageReq.Limit > 0 {
-		limit = pageReq.Limit
-	}
-	offset = pageReq.Offset
-	countTotal = pageReq.CountTotal
 
 	// start from the key returned as NextKey by the previous page.
 	// The factory rebuilds the same end bound, so only the start changes.
-	if len(pageReq.Key) > 0 {
-		_, startKey, err := types.AttrTripleKey.Decode(pageReq.Key)
-		if err != nil {
-			return nil, nil, fmt.Errorf("attribute: invalid pagination key: %w", err)
+	if pageReq != nil && len(pageReq.Key) > 0 {
+		_, startKey, decErr := types.AttrTripleKey.Decode(pageReq.Key)
+		if decErr != nil {
+			return nil, nil, status.Errorf(codes.InvalidArgument, "invalid pagination key: %v", decErr)
 		}
-		rng = rngFn(&startKey)
-		offset = 0
+		if rng = rngFn(&startKey); rng == nil {
+			return nil, nil, status.Error(codes.InvalidArgument, "pagination key is outside the requested range")
+		}
 	}
 
 	var (
@@ -226,29 +238,20 @@ func nameAddrPageWalk(
 	pageReq *query.PageRequest,
 	accept func(types.NameAddrPair) bool,
 ) ([]string, *query.PageResponse, error) {
-	limit := uint64(query.DefaultLimit)
-	offset := uint64(0)
-	countTotal := false
-
-	if pageReq == nil {
-		pageReq = &query.PageRequest{CountTotal: true}
+	limit, offset, countTotal, err := pageParams(pageReq)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	rng := rngFn(nil)
-
-	if pageReq.Limit > 0 {
-		limit = pageReq.Limit
-	}
-	offset = pageReq.Offset
-	countTotal = pageReq.CountTotal
-
-	if len(pageReq.Key) > 0 {
-		_, startKey, err := types.NameAddrPairKey.Decode(pageReq.Key)
-		if err != nil {
-			return nil, nil, fmt.Errorf("attribute: invalid pagination key: %w", err)
+	if pageReq != nil && len(pageReq.Key) > 0 {
+		_, startKey, decErr := types.NameAddrPairKey.Decode(pageReq.Key)
+		if decErr != nil {
+			return nil, nil, status.Errorf(codes.InvalidArgument, "invalid pagination key: %v", decErr)
 		}
-		rng = rngFn(&startKey)
-		offset = 0
+		if rng = rngFn(&startKey); rng == nil {
+			return nil, nil, status.Error(codes.InvalidArgument, "pagination key is outside the requested range")
+		}
 	}
 
 	var (
