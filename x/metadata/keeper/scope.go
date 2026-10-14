@@ -4,9 +4,10 @@ import (
 	"errors"
 	"fmt"
 
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/gogoproto/proto"
 
@@ -16,57 +17,50 @@ import (
 
 // IterateScopes processes all stored scopes with the given handler.
 func (k Keeper) IterateScopes(ctx sdk.Context, handler func(types.Scope) (stop bool)) error {
-	store := ctx.KVStore(k.storeKey)
-	it := storetypes.KVStorePrefixIterator(store, types.ScopeKeyPrefix)
-	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
-	for ; it.Valid(); it.Next() {
-		scope := k.mustReadScopeBz(it.Value())
+	return k.scopeCollections.Walk(ctx, nil, func(_ []byte, scope types.Scope) (stop bool, err error) {
+		// Clear ValueOwnerAddress — historical state may have it set; it is not trusted.
+		// See original readScopeBz comment.
+		scope.ValueOwnerAddress = ""
 		k.PopulateScopeValueOwner(ctx, &scope)
-		if handler(scope) {
-			break
-		}
-	}
-	return nil
+		return handler(scope), nil
+	})
 }
 
 // IterateScopesForAddress processes scopes associated with the provided address with the given handler.
-func (k Keeper) IterateScopesForAddress(ctx sdk.Context, address sdk.AccAddress, handler func(scopeID types.MetadataAddress) (stop bool)) error {
-	store := ctx.KVStore(k.storeKey)
-	prefix := types.GetAddressScopeCacheIteratorPrefix(address)
-	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
-
-	for ; it.Valid(); it.Next() {
-		var scopeID types.MetadataAddress
-		if err := scopeID.Unmarshal(it.Key()[len(prefix):]); err != nil {
-			return err
-		}
-		if handler(scopeID) {
-			break
-		}
-	}
-	return nil
+func (k Keeper) IterateScopesForAddress(ctx sdk.Context, addr sdk.AccAddress, handler func(scopeID types.MetadataAddress) (stop bool)) error {
+	// Index key format: length_prefix(addr) + scopeID_17bytes
+	// Use length_prefix(addr) as the prefix to iterate all scopes for this address.
+	addrPrefix := address.MustLengthPrefix(addr)
+	return k.addressScopeIndex.Walk(ctx,
+		new(collections.Range[[]byte]).Prefix(addrPrefix),
+		func(key []byte, _ []byte) (stop bool, err error) {
+			// key = length_prefix(addr) + scopeID_17bytes
+			// Strip the address prefix to get the scopeID bytes (full 17-byte MetadataAddress).
+			scopeIDBytes := key[len(addrPrefix):]
+			var scopeID types.MetadataAddress
+			if err := scopeID.Unmarshal(scopeIDBytes); err != nil {
+				return false, err
+			}
+			return handler(scopeID), nil
+		})
 }
 
 // IterateScopesForScopeSpec processes scopes associated with the provided scope specification id with the given handler.
 func (k Keeper) IterateScopesForScopeSpec(ctx sdk.Context, scopeSpecID types.MetadataAddress,
 	handler func(scopeID types.MetadataAddress) (stop bool),
 ) error {
-	store := ctx.KVStore(k.storeKey)
-	prefix := types.GetScopeSpecScopeCacheIteratorPrefix(scopeSpecID)
-	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
-
-	for ; it.Valid(); it.Next() {
-		var scopeID types.MetadataAddress
-		if err := scopeID.Unmarshal(it.Key()[len(prefix):]); err != nil {
-			return err
-		}
-		if handler(scopeID) {
-			break
-		}
-	}
-	return nil
+	// Index key format: scopeSpecID_17bytes + scopeID_17bytes
+	specPrefix := scopeSpecID.Bytes() // full 17 bytes including type prefix byte
+	return k.scopeSpecScopeIndex.Walk(ctx,
+		new(collections.Range[[]byte]).Prefix(specPrefix),
+		func(key []byte, _ []byte) (stop bool, err error) {
+			scopeIDBytes := key[len(specPrefix):]
+			var scopeID types.MetadataAddress
+			if err := scopeID.Unmarshal(scopeIDBytes); err != nil {
+				return false, err
+			}
+			return handler(scopeID), nil
+		})
 }
 
 // GetScope returns the scope with the given id. The ValueOwnerAddress field will always be empty from this method.
@@ -75,34 +69,13 @@ func (k Keeper) GetScope(ctx sdk.Context, id types.MetadataAddress) (types.Scope
 	if !id.IsScopeAddress() {
 		return types.Scope{}, false
 	}
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(id.Bytes())
-	if b == nil {
+	val, err := k.scopeCollections.Get(ctx, mdKey(id))
+	if err != nil {
 		return types.Scope{}, false
 	}
-	return k.mustReadScopeBz(b), true
-}
-
-// readScopeBz will unmarshal the given bytes into a Scope.
-// The ValueOwnerAddress will always be empty. See also: GetScopeValueOwner, PopulateScopeValueOwner.
-func (k Keeper) readScopeBz(bz []byte) (types.Scope, error) {
-	var scope types.Scope
-	err := k.cdc.Unmarshal(bz, &scope)
-	// In the viridian upgrade, we switched to using the bank module to track the ValueOwnerAddress,
-	// but we didn't update all the scopes to remove the data from that field. Any value in that field
-	// in state is therefore not to be trusted (probably out of date), so we clear it out here.
-	scope.ValueOwnerAddress = ""
-	return scope, err
-}
-
-// mustReadScopeBz will unmarshal the given bytes into a Scope, panicking if there's an error.
-// The ValueOwnerAddress will always be empty. See also: GetScopeValueOwner, PopulateScopeValueOwner.
-func (k Keeper) mustReadScopeBz(bz []byte) types.Scope {
-	scope, err := k.readScopeBz(bz)
-	if err != nil {
-		panic(err)
-	}
-	return scope
+	// Clear ValueOwnerAddress — not trusted from state (managed by bank module).
+	val.ValueOwnerAddress = ""
+	return val, true
 }
 
 // GetScopeWithValueOwner will get a scope from state and also look up and set its value owner field.
@@ -144,26 +117,21 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) error {
 // writeScopeToState writes the given scope to state, updates the related indexes, and emits the appropriate events.
 // It's split out from SetScope only so that unit tests can write scopes that have something in the value owner field.
 func (k Keeper) writeScopeToState(ctx sdk.Context, scope types.Scope) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshal(&scope)
-
 	var oldScope *types.Scope
 	var event proto.Message = types.NewEventScopeCreated(scope.ScopeId)
-	if store.Has(scope.ScopeId) {
+
+	if has, _ := k.scopeCollections.Has(ctx, mdKey(scope.ScopeId)); has {
 		event = types.NewEventScopeUpdated(scope.ScopeId)
-		if oldScopeBytes := store.Get(scope.ScopeId); len(oldScopeBytes) > 0 {
-			os, err := k.readScopeBz(oldScopeBytes)
-			if err != nil {
-				k.Logger(ctx).Error("could not unmarshal old scope", "err", err,
-					"scopeId", scope.ScopeId.String(), "oldScopeBytes", oldScopeBytes)
-			} else {
-				oldScope = &os
-			}
+		if existing, err := k.scopeCollections.Get(ctx, mdKey(scope.ScopeId)); err == nil {
+			existing.ValueOwnerAddress = "" // clear before using for index comparison
+			oldScope = &existing
 		}
 	}
 
-	store.Set(scope.ScopeId, b)
-	k.indexScope(store, &scope, oldScope)
+	if err := k.scopeCollections.Set(ctx, mdKey(scope.ScopeId), scope); err != nil {
+		panic(err)
+	}
+	k.indexScope(ctx, &scope, oldScope)
 	k.EmitEvent(ctx, event)
 }
 
@@ -185,20 +153,24 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) error {
 	}
 
 	// Remove all records. The sessions are deleted by RemoveRecord as the last record in each is deleted.
-	store := ctx.KVStore(k.storeKey)
-	prefix, _ := id.ScopeRecordIteratorPrefix() // Can't return an error because we know it's a valid scope id.
-	iter := storetypes.KVStorePrefixIterator(store, prefix)
-	defer func() {
-		if err := iter.Close(); err != nil {
-			k.Logger(ctx).Error("Failed to close RemoveScope", "error", err)
-		}
-	}()
-	for ; iter.Valid(); iter.Next() {
-		k.RemoveRecord(ctx, iter.Key())
+	// Collect all record IDs first, then remove them.
+	// (Each RemoveRecord may also remove its session once the last record is gone.)
+	var recordIDs []types.MetadataAddress
+	if err := k.IterateRecords(ctx, id, func(r types.Record) (stop bool) {
+		recordID := r.SessionId.MustGetAsRecordAddress(r.Name)
+		recordIDs = append(recordIDs, recordID)
+		return false
+	}); err != nil {
+		return err
+	}
+	for _, recordID := range recordIDs {
+		k.RemoveRecord(ctx, recordID)
 	}
 
-	k.indexScope(store, nil, &scope)
-	store.Delete(id)
+	k.indexScope(ctx, nil, &scope)
+	if err := k.scopeCollections.Remove(ctx, mdKey(id)); err != nil {
+		return err
+	}
 	k.EmitEvent(ctx, types.NewEventScopeDeleted(scope.ScopeId))
 	return nil
 }
@@ -406,22 +378,41 @@ func (v scopeIndexValues) IndexKeys() [][]byte {
 //
 // If both newScope and oldScope are not nil, it is assumed that they have the same ScopeId.
 // Failure to meet this assumption will result in strange and bad behavior.
-func (k Keeper) indexScope(store storetypes.KVStore, newScope, oldScope *types.Scope) {
+func (k Keeper) indexScope(ctx sdk.Context, newScope, oldScope *types.Scope) {
 	if newScope == nil && oldScope == nil {
 		return
 	}
 
-	newScopeIndexValues := getScopeIndexValues(newScope)
-	oldScopeIndexValues := getScopeIndexValues(oldScope)
+	toAdd := getMissingScopeIndexValues(getScopeIndexValues(newScope), getScopeIndexValues(oldScope))
+	toRemove := getMissingScopeIndexValues(getScopeIndexValues(oldScope), getScopeIndexValues(newScope))
 
-	toAdd := getMissingScopeIndexValues(newScopeIndexValues, oldScopeIndexValues)
-	toRemove := getMissingScopeIndexValues(oldScopeIndexValues, newScopeIndexValues)
+	applyKey := func(indexKey []byte, set bool) {
+		if len(indexKey) == 0 {
+			return
+		}
+		// indexKey[0] is the collection prefix byte; indexKey[1:] is the collection key.
+		subKey := indexKey[1:]
+		switch indexKey[0] {
+		case types.AddressScopeCacheKeyPrefix[0]: // 0x17 → AddressScopeIndex
+			if set {
+				_ = k.addressScopeIndex.Set(ctx, subKey, indexPresent)
+			} else {
+				_ = k.addressScopeIndex.Remove(ctx, subKey)
+			}
+		case types.ScopeSpecScopeCacheKeyPrefix[0]: // 0x11 → ScopeSpecScopeIndex
+			if set {
+				_ = k.scopeSpecScopeIndex.Set(ctx, subKey, indexPresent)
+			} else {
+				_ = k.scopeSpecScopeIndex.Remove(ctx, subKey)
+			}
+		}
+	}
 
 	for _, indexKey := range toAdd.IndexKeys() {
-		store.Set(indexKey, []byte{0x01})
+		applyKey(indexKey, true)
 	}
 	for _, indexKey := range toRemove.IndexKeys() {
-		store.Delete(indexKey)
+		applyKey(indexKey, false)
 	}
 }
 
@@ -849,25 +840,18 @@ func (k Keeper) GetNetAssetValue(ctx sdk.Context, metadataDenom, priceDenom stri
 		return nil, fmt.Errorf("could not get metadata address: %w", err)
 	}
 
-	store := ctx.KVStore(k.storeKey)
-	key := types.NetAssetValueKey(scopeID, priceDenom)
-	value := store.Get(key)
-	if len(value) == 0 {
-		return nil, nil
-	}
-
-	var scopeNAV types.NetAssetValue
-	err = k.cdc.Unmarshal(value, &scopeNAV)
+	navKey := append(address.MustLengthPrefix(scopeID.Bytes()), []byte(priceDenom)...)
+	val, err := k.netAssetValues.Get(ctx, navKey)
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, nil // genuinely not found
+		}
 		return nil, fmt.Errorf("could not read nav for %q with price denom %q: %w", scopeID, priceDenom, err)
 	}
-	// The Volume will be zero for NAVs written before that field was added. So if it's still 0,
-	// we switch it to 1 since that's what it was assumed to be before the Volume field was added.
-	if scopeNAV.Volume < 1 {
-		scopeNAV.Volume = 1
+	if val.Volume < 1 {
+		val.Volume = 1
 	}
-
-	return &scopeNAV, nil
+	return &val, nil
 }
 
 // SetNetAssetValue adds/updates a net asset value to scope
@@ -887,48 +871,35 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, scopeID types.MetadataAddress,
 		return err
 	}
 
-	key := types.NetAssetValueKey(scopeID, netAssetValue.Price.Denom)
-	store := ctx.KVStore(k.storeKey)
-
-	bz, err := k.cdc.Marshal(&netAssetValue)
-	if err != nil {
-		return err
-	}
-	store.Set(key, bz)
-
-	return nil
+	navKey := append(address.MustLengthPrefix(scopeID.Bytes()), []byte(netAssetValue.Price.Denom)...)
+	return k.netAssetValues.Set(ctx, navKey, netAssetValue)
 }
 
 // IterateNetAssetValues iterates net asset values for scope
 func (k Keeper) IterateNetAssetValues(ctx sdk.Context, scopeID types.MetadataAddress, handler func(state types.NetAssetValue) (stop bool)) error {
-	store := ctx.KVStore(k.storeKey)
-	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(scopeID))
-	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
-
-	for ; it.Valid(); it.Next() {
-		var scopeNav types.NetAssetValue
-		err := k.cdc.Unmarshal(it.Value(), &scopeNav)
-		if err != nil {
-			return err
-		} else if handler(scopeNav) {
-			break
-		}
-	}
-	return nil
+	// NAV key = length_prefix(scopeAddr) + denom
+	navPrefix := address.MustLengthPrefix(scopeID.Bytes())
+	return k.netAssetValues.Walk(ctx,
+		new(collections.Range[[]byte]).Prefix(navPrefix),
+		func(_ []byte, nav types.NetAssetValue) (stop bool, err error) {
+			return handler(nav), nil
+		})
 }
 
 // RemoveNetAssetValues removes all net asset values for a scope
 func (k Keeper) RemoveNetAssetValues(ctx sdk.Context, scopeID types.MetadataAddress) {
-	store := ctx.KVStore(k.storeKey)
-	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(scopeID))
-	var keys [][]byte
-	for ; it.Valid(); it.Next() {
-		keys = append(keys, it.Key())
-	}
-	defer it.Close() //nolint:errcheck // close error safe to ignore in this context.
+	navPrefix := address.MustLengthPrefix(scopeID.Bytes())
 
+	// Collect all keys first, then delete (cannot mutate while iterating).
+	var keys [][]byte
+	_ = k.netAssetValues.Walk(ctx,
+		new(collections.Range[[]byte]).Prefix(navPrefix),
+		func(key []byte, _ types.NetAssetValue) (stop bool, err error) {
+			keys = append(keys, key)
+			return false, nil
+		})
 	for _, key := range keys {
-		store.Delete(key)
+		_ = k.netAssetValues.Remove(ctx, key)
 	}
 }
 
@@ -944,13 +915,6 @@ func (k Keeper) SetNetAssetValueWithBlockHeight(ctx sdk.Context, scopeID types.M
 		return err
 	}
 
-	key := types.NetAssetValueKey(scopeID, netAssetValue.Price.Denom)
-	bz, err := k.cdc.Marshal(&netAssetValue)
-	if err != nil {
-		return err
-	}
-	store := ctx.KVStore(k.storeKey)
-	store.Set(key, bz)
-
-	return nil
+	navKey := append(address.MustLengthPrefix(scopeID.Bytes()), []byte(netAssetValue.Price.Denom)...)
+	return k.netAssetValues.Set(ctx, navKey, netAssetValue)
 }
