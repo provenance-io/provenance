@@ -10,9 +10,10 @@ import (
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
 
+	"cosmossdk.io/collections"
+	corestore "cosmossdk.io/core/store"
 	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,29 +27,46 @@ import (
 
 type (
 	Keeper struct {
-		cdc      codec.BinaryCodec
-		storeKey storetypes.StoreKey
-
+		cdc            codec.BinaryCodec
+		storeService   corestore.KVStoreService
+		schema         collections.Schema
 		channelKeeper  types.ChannelKeeper
 		ContractKeeper *wasmkeeper.PermissionedKeeper
 		authority      string
+		// Params stores the module's persistent parameters using the legacy key (0x01).
+		params collections.Item[types.Params]
+		// PacketCallbacks stores temporary callback state for packets.
+		// Maps (channel, sequence) to a contract bech32 address (prefix 0x02).
+		packetCallbacks collections.Map[collections.Pair[string, uint64], string]
+		// PacketAckActors maps (channel, sequence) to "contract::hash" bytes.
+		// Used to store temporary acknowledgment state for each packet (prefix 0x03).
+		packetAckActors collections.Map[collections.Pair[string, uint64], []byte]
 	}
 )
 
 // NewKeeper returns a new instance of the x/ibchooks keeper
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	storeKey storetypes.StoreKey,
+	storeService corestore.KVStoreService,
 	channelKeeper types.ChannelKeeper,
 	contractKeeper *wasmkeeper.PermissionedKeeper,
 ) Keeper {
+	sb := collections.NewSchemaBuilder(storeService)
 	keeper := Keeper{
-		cdc:            cdc,
-		storeKey:       storeKey,
-		channelKeeper:  channelKeeper,
-		ContractKeeper: contractKeeper,
-		authority:      authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		cdc:             cdc,
+		storeService:    storeService,
+		channelKeeper:   channelKeeper,
+		ContractKeeper:  contractKeeper,
+		authority:       authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		params:          collections.NewItem(sb, types.ParamsKeyPrefix, "params", codec.CollValue[types.Params](cdc)),
+		packetCallbacks: collections.NewMap(sb, types.PacketCallbackKeyPrefix, "packet_callbacks", collections.PairKeyCodec(collections.StringKey, collections.Uint64Key), collections.StringValue),
+		packetAckActors: collections.NewMap(sb, types.PacketAckKeyPrefix, "packet_ack_actors", collections.PairKeyCodec(collections.StringKey, collections.Uint64Key), collections.BytesValue),
 	}
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	keeper.schema = schema
 	return keeper
 }
 
@@ -108,39 +126,44 @@ func GeneratePacketAckValue(packet channeltypes.Packet, contract string) ([]byte
 
 // StorePacketCallback stores which contract will be listening for the ack or timeout of a packet
 func (k Keeper) StorePacketCallback(ctx sdk.Context, channel string, packetSequence uint64, contract string) {
-	store := ctx.KVStore(k.storeKey)
-	store.Set(GetPacketCallbackKey(channel, packetSequence), []byte(contract))
+	if err := k.packetCallbacks.Set(ctx, collections.Join(channel, packetSequence), contract); err != nil {
+		panic(err)
+	}
 }
 
 // GetPacketCallback returns the bech32 addr of the contract that is expecting a callback from a packet
 func (k Keeper) GetPacketCallback(ctx sdk.Context, channel string, packetSequence uint64) string {
-	store := ctx.KVStore(k.storeKey)
-	return string(store.Get(GetPacketCallbackKey(channel, packetSequence)))
+	v, err := k.packetCallbacks.Get(ctx, collections.Join(channel, packetSequence))
+	if err != nil {
+		return ""
+	}
+	return v
 }
 
 // DeletePacketCallback deletes the callback from storage once it has been processed
 func (k Keeper) DeletePacketCallback(ctx sdk.Context, channel string, packetSequence uint64) {
-	store := ctx.KVStore(k.storeKey)
-	store.Delete(GetPacketCallbackKey(channel, packetSequence))
+	if err := k.packetCallbacks.Remove(ctx, collections.Join(channel, packetSequence)); err != nil {
+		panic(err)
+	}
 }
 
 // StorePacketAckActor stores which contract is allowed to send an ack for the packet
 func (k Keeper) StorePacketAckActor(ctx sdk.Context, packet channeltypes.Packet, contract string) {
-	store := ctx.KVStore(k.storeKey)
-	channel := packet.GetSourceChannel()
-	packetSequence := packet.GetSequence()
-
 	val, err := GeneratePacketAckValue(packet, contract)
 	if err != nil {
 		panic(err)
 	}
-	store.Set(GetPacketAckKey(channel, packetSequence), val)
+	if err := k.packetAckActors.Set(ctx, collections.Join(packet.GetSourceChannel(), packet.GetSequence()), val); err != nil {
+		panic(err)
+	}
 }
 
 // GetPacketAckActor returns the bech32 addr  of the contract that is allowed to send an ack for the packet and the packet hash
 func (k Keeper) GetPacketAckActor(ctx sdk.Context, channel string, packetSequence uint64) (string, string) {
-	store := ctx.KVStore(k.storeKey)
-	rawData := store.Get(GetPacketAckKey(channel, packetSequence))
+	rawData, err := k.packetAckActors.Get(ctx, collections.Join(channel, packetSequence))
+	if err != nil {
+		return "", ""
+	}
 	if rawData == nil {
 		return "", ""
 	}
@@ -162,8 +185,9 @@ func (k Keeper) GetPacketAckActor(ctx sdk.Context, channel string, packetSequenc
 
 // DeletePacketAckActor deletes the ack actor from storage once it has been used
 func (k Keeper) DeletePacketAckActor(ctx sdk.Context, channel string, packetSequence uint64) {
-	store := ctx.KVStore(k.storeKey)
-	store.Delete(GetPacketAckKey(channel, packetSequence))
+	if err := k.packetAckActors.Remove(ctx, collections.Join(channel, packetSequence)); err != nil {
+		panic(err)
+	}
 }
 
 // DeriveIntermediateSender derives the sender address to be used when calling wasm hooks
