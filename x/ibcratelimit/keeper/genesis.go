@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/ibcratelimit"
@@ -23,5 +25,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *ibcratelimit.GenesisState) {
 	if err := data.Validate(); err != nil {
 		panic(err)
 	}
-	k.SetParams(ctx, data.Params)
+	if err := k.SetParams(ctx, data.Params); err != nil {
+		panic(fmt.Errorf("failed to set ibcratelimit params during InitGenesis: %w", err))
+	}
 }
