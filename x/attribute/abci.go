@@ -9,7 +9,7 @@ import (
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 
-const MaxExpiredAttributionCount = 100_000
+const MaxExpiredAttributionCount = 500
 
 // BeginBlocker is called at the beginning of every block
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {

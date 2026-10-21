@@ -10,7 +10,6 @@ import (
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/x/exchange"
-	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 // paymentExists returns true if there's a payment in the store with the given source and external id.
@@ -272,7 +271,6 @@ func (k Keeper) AcceptPayment(ctx sdk.Context, payment *exchange.Payment) error 
 		return err
 	}
 
-	ctx = quarantine.WithBypass(ctx)
 	if !existing.SourceAmount.IsZero() {
 		err = k.bankKeeper.SendCoins(ctx, source, target, existing.SourceAmount)
 		if err != nil {

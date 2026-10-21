@@ -9,7 +9,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
-	attrTypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -172,11 +171,10 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 		return nil
 	}
 
-	attributes, err := k.attrKeeper.GetAllAttributesAddr(ctx, toAddr)
+	missing, err := k.attrKeeper.FindMissingAttributes(ctx, toAddr, reqAttr)
 	if err != nil {
-		return fmt.Errorf("could not get attributes for %s: %w", toAddr.String(), err)
+		return fmt.Errorf("error finding missing attributes for %s (%s): %w", toAddr.String(), denom, err)
 	}
-	missing := findMissingAttributes(reqAttr, attributes)
 	if len(missing) != 0 {
 		pl := ""
 		if len(missing) != 1 {
@@ -186,22 +184,6 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 	}
 
 	return nil
-}
-
-// findMissingAttributes returns all entries in required that don't pass
-// MatchAttribute on at least one of the provided attribute names.
-func findMissingAttributes(required []string, attributes []attrTypes.Attribute) []string {
-	var rv []string
-reqLoop:
-	for _, req := range required {
-		for _, attr := range attributes {
-			if MatchAttribute(req, attr.Name) {
-				continue reqLoop
-			}
-		}
-		rv = append(rv, req)
-	}
-	return rv
 }
 
 // NormalizeRequiredAttributes normalizes the required attribute names using name module's Normalize method
@@ -226,16 +208,4 @@ func (k Keeper) NormalizeRequiredAttributes(ctx sdk.Context, requiredAttributes 
 		result[i] = fmt.Sprintf("%s%s", prefix, normalizedAttr)
 	}
 	return result, nil
-}
-
-// MatchAttribute returns true if the provided attr satisfies the reqAttr.
-func MatchAttribute(reqAttr string, attr string) bool {
-	if len(reqAttr) < 1 {
-		return false
-	}
-	if strings.HasPrefix(reqAttr, "*.") {
-		// [1:] because we only want to ignore the '*'; the '.' needs to be part of the check.
-		return strings.HasSuffix(attr, reqAttr[1:])
-	}
-	return reqAttr == attr
 }

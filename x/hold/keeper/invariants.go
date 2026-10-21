@@ -12,7 +12,7 @@ import (
 
 const balanceInvariant = "Hold-Account-Balances"
 
-// RegisterInvariants registers all quarantine invariants.
+// RegisterInvariants registers all hold module invariants.
 func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) { //nolint:staticcheck // We still want to use invariants.
 	ir.RegisterRoute(hold.ModuleName, balanceInvariant, HoldAccountBalancesInvariant(keeper))
 }

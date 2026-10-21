@@ -88,6 +88,6 @@ func (k *mockNameKeeper) UpdateNameRecord(ctx sdk.Context, name string, addr sdk
 }
 
 // IterateRecords calls the parent's IterateRecords function.
-func (k *mockNameKeeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(nametypes.NameRecord) error) error {
-	return k.Parent.IterateRecords(ctx, prefix, handle)
+func (k *mockNameKeeper) IterateRecords(ctx sdk.Context, handle func(nametypes.NameRecord) error) error {
+	return k.Parent.IterateRecords(ctx, handle)
 }

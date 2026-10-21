@@ -24,6 +24,7 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the quarantine module's genesis state.
+// Deprecated: The quarantine module has been removed.
 type GenesisState struct {
 	// quarantined_addresses defines account addresses that are opted into quarantine.
 	QuarantinedAddresses []string `protobuf:"bytes,1,rep,name=quarantined_addresses,json=quarantinedAddresses,proto3" json:"quarantined_addresses,omitempty"`

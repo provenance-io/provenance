@@ -132,7 +132,7 @@ func (s *TestSuite) TestKeeper_DoTransfer() {
 			outputs: []banktypes.Output{{Address: s.addr2.String(), Coins: s.coins("10apple")}},
 			expErr:  "test error X from SendCoins",
 			expSends: []*SendCoinsArgs{
-				{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr2, amt: s.coins("10apple")},
+				{fromAddr: s.addr1, toAddr: s.addr2, amt: s.coins("10apple")},
 			},
 			expBlockedAddrs: []sdk.AccAddress{s.addr2},
 		},
@@ -141,7 +141,7 @@ func (s *TestSuite) TestKeeper_DoTransfer() {
 			inputs:  []banktypes.Input{{Address: s.addr2.String(), Coins: s.coins("15banana")}},
 			outputs: []banktypes.Output{{Address: s.addr3.String(), Coins: s.coins("15banana")}},
 			expSends: []*SendCoinsArgs{
-				{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr3, amt: s.coins("15banana")},
+				{fromAddr: s.addr2, toAddr: s.addr3, amt: s.coins("15banana")},
 			},
 			expBlockedAddrs: []sdk.AccAddress{s.addr3},
 		},
@@ -224,9 +224,8 @@ func (s *TestSuite) TestKeeper_DoTransfer() {
 			}
 			if tc.expIO {
 				expCalls.InputOutputCoins = append(expCalls.InputOutputCoins, &InputOutputCoinsArgs{
-					ctxHasQuarantineBypass: true,
-					inputs:                 tc.inputs,
-					outputs:                tc.outputs,
+					inputs:  tc.inputs,
+					outputs: tc.outputs,
 				})
 			}
 
@@ -382,7 +381,7 @@ func (s *TestSuite) TestKeeper_CollectFee() {
 			expErr:   "error transferring 750apple from " + s.addr1.String() + " to market 1: test error F from SendCoins",
 			expCalls: BankCalls{
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: false, fromAddr: s.addr1, toAddr: s.marketAddr1, amt: s.coins("750apple")},
+					{fromAddr: s.addr1, toAddr: s.marketAddr1, amt: s.coins("750apple")},
 				},
 			},
 		},

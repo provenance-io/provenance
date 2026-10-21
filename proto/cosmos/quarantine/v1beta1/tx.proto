@@ -41,6 +41,7 @@ service Msg {
 }
 
 // MsgOptIn represents a message for opting in to account quarantine.
+// Deprecated: The quarantine module has been removed.
 message MsgOptIn {
   option (cosmos.msg.v1.signer) = "to_address";
 
@@ -51,6 +52,7 @@ message MsgOptIn {
 message MsgOptInResponse {}
 
 // MsgOptOut represents a message for opting in to account quarantine.
+// Deprecated: The quarantine module has been removed.
 message MsgOptOut {
   option (cosmos.msg.v1.signer) = "to_address";
 
@@ -61,6 +63,7 @@ message MsgOptOut {
 message MsgOptOutResponse {}
 
 // MsgAccept represents a message for accepting quarantined funds.
+// Deprecated: The quarantine module has been removed.
 message MsgAccept {
   option (cosmos.msg.v1.signer) = "to_address";
 
@@ -88,6 +91,7 @@ message MsgAcceptResponse {
 }
 
 // MsgDecline represents a message for declining quarantined funds.
+// Deprecated: The quarantine module has been removed.
 message MsgDecline {
   option (cosmos.msg.v1.signer) = "to_address";
 
@@ -107,6 +111,7 @@ message MsgDecline {
 message MsgDeclineResponse {}
 
 // MsgUpdateAutoResponses represents a message for updating quarantine auto-responses for a receiving address.
+// Deprecated: The quarantine module has been removed.
 message MsgUpdateAutoResponses {
   option (cosmos.msg.v1.signer) = "to_address";
 

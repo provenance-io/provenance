@@ -353,7 +353,10 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 	}
 
 	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
-	to := sdk.MustAccAddressFromBech32(msg.ToAddress)
+	to := admin
+	if len(msg.ToAddress) > 0 {
+		to = sdk.MustAccAddressFromBech32(msg.ToAddress)
+	}
 
 	if err := k.WithdrawCoins(ctx, admin, to, msg.Denom, msg.Amount); err != nil {
 		ctx.Logger().Error("unable to withdraw coins from marker", "err", err)

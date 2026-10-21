@@ -1,8 +1,9 @@
 package types
 
 import (
+	"bytes"
 	"encoding/hex"
-	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -25,89 +26,6 @@ func TestNameKeySuite(t *testing.T) {
 	suite.Run(t, s)
 }
 
-func (s *NameKeyTestSuite) TestNameKeyPrefix() {
-	cases := map[string]struct {
-		name      string
-		key       []byte
-		expectErr bool
-		errValue  string
-	}{
-		"valid two-part": {
-			"name.domain",
-			mustHexDecode("0369e54bac206cf0d1dc5a11c9ae404c5f15a1b75456327e2dba1a8182e507e23a"),
-			false,
-			"",
-		},
-		"valid single": {
-			"domain",
-			mustHexDecode("03f2ff83860a4dc203988ed1a22ba1f21237f04abdbd0c4c951103cfbed121de78"),
-			false,
-			"",
-		},
-		"valid multi-part": {
-			"first.second.third.fourth.fifth.sixth.seventh.eighth.ninth.tenth",
-			mustHexDecode("0319f8e4495c302135434642f853698172ef1f167400d04c12864f9cdf539fbaba"),
-			false,
-			"",
-		},
-		"invalid empty name": {
-			"",
-			[]byte(nil),
-			true,
-			fmt.Errorf("name can not be empty: %w", ErrNameInvalid).Error(),
-		},
-		"invalid empty name whitespace": {
-			"   ",
-			[]byte(nil),
-			true,
-			fmt.Errorf("name can not be empty: %w", ErrNameInvalid).Error(),
-		},
-		"invalid empty name segment": {
-			"name..empty.segment",
-			[]byte(nil),
-			true,
-			fmt.Errorf("name segment cannot be empty: %w", ErrNameInvalid).Error(),
-		},
-		"invalid empty name segment whitespace": {
-			"name. .empty.segment",
-			[]byte(nil),
-			true,
-			fmt.Errorf("name segment cannot be empty: %w", ErrNameInvalid).Error(),
-		},
-	}
-	for n, tc := range cases {
-
-		s.Run(n, func() {
-			key, err := GetNameKeyPrefix(tc.name)
-			if tc.expectErr {
-				s.Error(err)
-				if s != nil {
-					s.Equal(tc.errValue, err.Error())
-				}
-			} else {
-				s.NoError(err)
-			}
-			s.Equal(tc.key, key)
-		})
-	}
-}
-
-func (s *NameKeyTestSuite) TestAddressKeyPrefix() {
-	key, err := GetAddressKeyPrefix(s.addr1)
-	s.Assert().NoError(err)
-	// check for address prefix
-	s.Assert().Equal("05", hex.EncodeToString(key[0:1]))
-	s.Assert().Equal(byte(20), key[1:2][0], "should be the length of key 20 for secp256k1")
-	s.Assert().Equal(AddressKeyPrefix, key[0:1])
-
-	key, err = GetAddressKeyPrefix(s.addr2)
-	s.Assert().NoError(err)
-	// check for address prefix
-	s.Assert().Equal("05", hex.EncodeToString(key[0:1]))
-	s.Assert().Equal(byte(32), key[1:2][0], "should be the length of key 32 for secp256r1")
-	s.Assert().Equal(AddressKeyPrefix, key[0:1])
-}
-
 func mustHexDecode(h string) []byte {
 	var err error
 	var result []byte
@@ -115,4 +33,128 @@ func mustHexDecode(h string) []byte {
 		panic(err)
 	}
 	return result
+}
+
+func (s *NameKeyTestSuite) TestReverseName() {
+	tests := []struct {
+		name string
+		exp  string
+	}{
+		{name: "", exp: ""},
+		{name: "domain", exp: "domain"},
+		{name: "name.domain", exp: "domain.name"},
+		{name: "ab.cd.ef", exp: "ef.cd.ab"},
+		{name: "one.two.three.four.five", exp: "five.four.three.two.one"},
+		{name: "AB.Cd.eF", exp: "ef.cd.ab"},
+		{name: " ab . cd .ef ", exp: "ef.cd.ab"},
+		{name: "name..domain", exp: "domain..name"},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Assert().Equal(tc.exp, ReverseName(tc.name), "ReverseName(%q)", tc.name)
+		})
+	}
+}
+
+func (s *NameKeyTestSuite) TestReversedNameKeyCodec() {
+	codec := ReversedNameKeyCodec{}
+
+	tests := []struct {
+		name    string
+		input   string
+		expKey  string // The expected encoded key bytes (as a string).
+		expName string // The expected result of decoding the key.
+	}{
+		{name: "single segment", input: "domain", expKey: "domain", expName: "domain"},
+		{name: "two segments", input: "name.domain", expKey: "domain.name", expName: "name.domain"},
+		{name: "three segments", input: "ab.cd.ef", expKey: "ef.cd.ab", expName: "ab.cd.ef"},
+		{name: "not normalized", input: " AB.Cd . ef", expKey: "ef.cd.ab", expName: "ab.cd.ef"},
+		{name: "uuid segment", input: "91978ba2-5f35-459a-86a7-feca1b0512e0.pb", expKey: "pb.91978ba2-5f35-459a-86a7-feca1b0512e0", expName: "91978ba2-5f35-459a-86a7-feca1b0512e0.pb"},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Run("Encode/Decode", func() {
+				size := codec.Size(tc.input)
+				s.Require().Equal(len(tc.expKey), size, "Size(%q)", tc.input)
+
+				buffer := make([]byte, size)
+				n, err := codec.Encode(buffer, tc.input)
+				s.Require().NoError(err, "Encode(%q)", tc.input)
+				s.Require().Equal(size, n, "Encode(%q) bytes written", tc.input)
+				s.Assert().Equal(tc.expKey, string(buffer), "Encode(%q) key", tc.input)
+
+				read, name, err := codec.Decode(buffer)
+				s.Require().NoError(err, "Decode(%q)", buffer)
+				s.Assert().Equal(n, read, "Decode(%q) bytes read", buffer)
+				s.Assert().Equal(tc.expName, name, "Decode(%q) name", buffer)
+			})
+
+			s.Run("EncodeNonTerminal/DecodeNonTerminal", func() {
+				size := codec.SizeNonTerminal(tc.input)
+				s.Require().Equal(len(tc.expKey)+1, size, "SizeNonTerminal(%q)", tc.input)
+
+				buffer := make([]byte, size)
+				n, err := codec.EncodeNonTerminal(buffer, tc.input)
+				s.Require().NoError(err, "EncodeNonTerminal(%q)", tc.input)
+				s.Require().Equal(size, n, "EncodeNonTerminal(%q) bytes written", tc.input)
+
+				// Put something after it to make sure DecodeNonTerminal only reads its part.
+				buffer = append(buffer, []byte("extra")...)
+				read, name, err := codec.DecodeNonTerminal(buffer)
+				s.Require().NoError(err, "DecodeNonTerminal(%q)", buffer)
+				s.Assert().Equal(n, read, "DecodeNonTerminal(%q) bytes read", buffer)
+				s.Assert().Equal(tc.expName, name, "DecodeNonTerminal(%q) name", buffer)
+			})
+
+			s.Run("JSON", func() {
+				bz, err := codec.EncodeJSON(tc.input)
+				s.Require().NoError(err, "EncodeJSON(%q)", tc.input)
+				name, err := codec.DecodeJSON(bz)
+				s.Require().NoError(err, "DecodeJSON(%q)", bz)
+				s.Assert().Equal(tc.input, name, "DecodeJSON(%q)", bz)
+			})
+
+			s.Run("Stringify and KeyType", func() {
+				s.Assert().Equal(tc.input, codec.Stringify(tc.input), "Stringify(%q)", tc.input)
+				s.Assert().Equal("reversedname", codec.KeyType(), "KeyType()")
+			})
+		})
+	}
+}
+
+// TestReversedNameKeyOrdering makes sure that a name's sub-names are stored right after it, and share its key prefix.
+func (s *NameKeyTestSuite) TestReversedNameKeyOrdering() {
+	codec := ReversedNameKeyCodec{}
+	encode := func(name string) []byte {
+		buffer := make([]byte, codec.Size(name))
+		_, err := codec.Encode(buffer, name)
+		s.Require().NoError(err, "Encode(%q)", name)
+		return buffer
+	}
+
+	names := []string{"ab.cd.ef", "gh.ef", "ef", "cdx.ef", "cd.ef", "xy.ab.cd.ef", "cd.gh"}
+	keys := make([][]byte, len(names))
+	for i, name := range names {
+		keys[i] = encode(name)
+	}
+	slices.SortFunc(keys, bytes.Compare)
+
+	actual := make([]string, len(keys))
+	for i, key := range keys {
+		actual[i] = string(key)
+	}
+	expected := []string{"ef", "ef.cd", "ef.cd.ab", "ef.cd.ab.xy", "ef.cdx", "ef.gh", "gh.cd"}
+	s.Assert().Equal(expected, actual, "sorted keys")
+
+	// Everything under cd.ef has a key starting with "ef.cd." (note the trailing dot, so cdx.ef isn't included).
+	childPrefix := append(encode("cd.ef"), '.')
+	var children []string
+	for _, name := range names {
+		if bytes.HasPrefix(encode(name), childPrefix) {
+			children = append(children, name)
+		}
+	}
+	s.Assert().ElementsMatch([]string{"ab.cd.ef", "xy.ab.cd.ef"}, children, "names under cd.ef")
 }

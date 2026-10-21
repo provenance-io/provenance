@@ -511,9 +511,8 @@ func (s *TestSuite) TestKeeper_CreateAskOrder() {
 			expErr: "market 2 is not accepting orders",
 		},
 		{
-			name: "attrs required: does not have",
-			attrKeeper: NewMockAttributeKeeper().
-				WithGetAllAttributesAddrResult(s.addr4, []string{"ccc.bb.aa"}, ""),
+			name:       "attrs required: does not have",
+			attrKeeper: NewMockAttributeKeeper().WithFindMissingAttributesResult(s.addr4, []string{"cc.bb.aa"}, ""),
 			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:         7,
@@ -721,8 +720,7 @@ func (s *TestSuite) TestKeeper_CreateAskOrder() {
 			},
 		},
 		{
-			name:       "attrs required: has",
-			attrKeeper: NewMockAttributeKeeper().WithGetAllAttributesAddrResult(s.addr2, []string{"dd.cc.bb.aa"}, ""),
+			name: "attrs required: has",
 			setup: func() {
 				s.k.SetParams(s.ctx, &exchange.Params{
 					DefaultSplit: 200,
@@ -984,9 +982,8 @@ func (s *TestSuite) TestKeeper_CreateBidOrder() {
 			expErr: "market 2 is not accepting orders",
 		},
 		{
-			name: "attrs required: does not have",
-			attrKeeper: NewMockAttributeKeeper().
-				WithGetAllAttributesAddrResult(s.addr4, []string{"ccc.bb.aa"}, ""),
+			name:       "attrs required: does not have",
+			attrKeeper: NewMockAttributeKeeper().WithFindMissingAttributesResult(s.addr4, []string{"cc.bb.aa"}, ""),
 			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId:         7,
@@ -1213,8 +1210,7 @@ func (s *TestSuite) TestKeeper_CreateBidOrder() {
 			},
 		},
 		{
-			name:       "attrs required: has",
-			attrKeeper: NewMockAttributeKeeper().WithGetAllAttributesAddrResult(s.addr2, []string{"dd.cc.bb.aa"}, ""),
+			name: "attrs required: has",
 			setup: func() {
 				s.k.SetParams(s.ctx, &exchange.Params{
 					DefaultSplit: 200,

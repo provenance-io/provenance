@@ -76,4 +76,4 @@ protoc \
   -I "third_party/proto" \
   --doc_out=./docs \
   --doc_opt=./docs/protodoc-markdown.tmpl,proto-docs.md \
-  $( find "proto" -name '*.proto' )
+  $( find "proto" -name '*.proto' -not -path '*/quarantine/*' )

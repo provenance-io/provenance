@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
-	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -252,7 +251,7 @@ func (a *mockAuthorization) ProtoMessage() {}
 // WrappedAttrKeeper wraps an AttrKeeper such that some functions can be set up to return specific things instead.
 type WrappedAttrKeeper struct {
 	types.AttrKeeper
-	GetAllAttributesAddrErrs []string
+	FindMissingAttributesErrs []string
 }
 
 var _ types.AttrKeeper = (*WrappedAttrKeeper)(nil)
@@ -269,23 +268,23 @@ func (w *WrappedAttrKeeper) WithParent(attrKeeper types.AttrKeeper) *WrappedAttr
 	return w
 }
 
-// WithGetAllAttributesAddrErrs adds the provided error strings to the list of errors that will be
-// returned by GetAllAttributesAddr. A non-empty entry will be returned as an error (when its time comes).
-// An empty entry (or if there aren't any entries left when GetAllAttributesAddr is called) will
-// result in the parent's GetAllAttributesAddr function being called and returned.
-func (w *WrappedAttrKeeper) WithGetAllAttributesAddrErrs(errs ...string) *WrappedAttrKeeper {
-	w.GetAllAttributesAddrErrs = append(w.GetAllAttributesAddrErrs, errs...)
+// WithFindMissingAttributesErrs adds the provided error strings to the list of errors that will be
+// returned by FindMissingAttributesErrs. A non-empty entry will be returned as an error (when its time comes).
+// An empty entry (or if there aren't any entries left when FindMissingAttributesErrs is called) will
+// result in the parent's FindMissingAttributesErrs function being called and returned.
+func (w *WrappedAttrKeeper) WithFindMissingAttributesErrs(errs ...string) *WrappedAttrKeeper {
+	w.FindMissingAttributesErrs = append(w.FindMissingAttributesErrs, errs...)
 	return w
 }
 
-// GetAllAttributesAddr either returns a pre-defined error, or, if there isn't one, calls GetAllAttributesAddr on the parent.
-func (w *WrappedAttrKeeper) GetAllAttributesAddr(ctx sdk.Context, addr []byte) ([]attrtypes.Attribute, error) {
-	if len(w.GetAllAttributesAddrErrs) > 0 {
-		rv := w.GetAllAttributesAddrErrs[0]
-		w.GetAllAttributesAddrErrs = w.GetAllAttributesAddrErrs[1:]
+// FindMissingAttributes either returns a pre-defined error, or, if there isn't one, calls FindMissingAttributes on the parent.
+func (w *WrappedAttrKeeper) FindMissingAttributes(ctx sdk.Context, addr []byte, reqAttrs []string) ([]string, error) {
+	if len(w.FindMissingAttributesErrs) > 0 {
+		rv := w.FindMissingAttributesErrs[0]
+		w.FindMissingAttributesErrs = w.FindMissingAttributesErrs[1:]
 		if len(rv) > 0 {
 			return nil, errors.New(rv)
 		}
 	}
-	return w.AttrKeeper.GetAllAttributesAddr(ctx, addr)
+	return w.AttrKeeper.FindMissingAttributes(ctx, addr, reqAttrs)
 }

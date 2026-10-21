@@ -115,8 +115,7 @@ During settlement:
 
 With complex settlements, it's possible that an ask order's `assets` go to a different account than the `price` funds come from, and vice versa for bid orders.
 
-Transfers of the `assets` and `price` bypass the quarantine module since order creation can be viewed as acceptance of those funds.
-No other send-restrictions are bypassed (e.g. `x/marker` or `x/sanction` module restrictions).
+No send-restrictions are bypassed (e.g. `x/marker` or `x/sanction` module restrictions).
 E.g. If an order's funds are in a sanctioned account, settlement of that order will fail since those funds cannot be removed from that account.
 
 

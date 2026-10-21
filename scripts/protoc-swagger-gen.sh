@@ -14,7 +14,7 @@ output_file='./client/docs/swagger-ui/swagger.yaml'
 set -eo pipefail
 
 mkdir -p "$temp_dir"
-proto_files=$( find "$proto_dir" -type f -name '*.proto' -print0 | xargs -0 grep -El '^service +[^ ]+ +\{' )
+proto_files=$( find "$proto_dir" -type f -name '*.proto' -not -path '*/quarantine/*' -print0 | xargs -0 grep -El '^service +[^ ]+ +\{' )
 
 # Include provlabs proto files if the directory exists
 if [ -d "$proto_provlabs_dir" ]; then

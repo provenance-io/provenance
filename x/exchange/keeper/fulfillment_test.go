@@ -85,7 +85,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expErr: "market 1 does not allow user settlement",
 		},
 		{
-			name: "seller cannot create ask",
+			name:       "seller cannot create ask",
+			attrKeeper: NewMockAttributeKeeper().WithFindMissingAttributesResult(s.addr1, []string{"some.attr.no.one.has"}, ""),
 			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId: 1, AcceptingOrders: true, AllowUserSettlement: true,
@@ -99,7 +100,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				BidOrderIds: []uint64{1},
 			},
 			expErr:       "account " + s.addr1.String() + " is not allowed to create ask orders in market 1",
-			expAttrCalls: AttributeCalls{GetAllAttributesAddr: [][]byte{s.addr1}},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, []string{"some.attr.no.one.has"})),
 		},
 		{
 			name: "not enough creation fee",
@@ -116,7 +117,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				BidOrderIds:         []uint64{1},
 				AskOrderCreationFee: s.coinP("4fig"),
 			},
-			expErr: "insufficient ask order creation fee: \"4fig\" is less than required amount \"5fig\"",
+			expErr:       "insufficient ask order creation fee: \"4fig\" is less than required amount \"5fig\"",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, nil)),
 		},
 		{
 			name: "not enough seller settlement flat fee",
@@ -133,7 +135,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				BidOrderIds:             []uint64{1},
 				SellerSettlementFlatFee: s.coinP("4fig"),
 			},
-			expErr: "insufficient seller settlement flat fee: \"4fig\" is less than required amount \"5fig\"",
+			expErr:       "insufficient seller settlement flat fee: \"4fig\" is less than required amount \"5fig\"",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, nil)),
 		},
 		{
 			name: "bid order does not exist",
@@ -146,7 +149,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				TotalAssets: s.coins("1apple"),
 				BidOrderIds: []uint64{8},
 			},
-			expErr: "order 8 not found",
+			expErr:       "order 8 not found",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, nil)),
 		},
 		{
 			name: "ask order id provided",
@@ -165,7 +169,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				TotalAssets: s.coins("1apple"),
 				BidOrderIds: []uint64{8},
 			},
-			expErr: "order 8 is type ask: expected bid",
+			expErr:       "order 8 is type ask: expected bid",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, nil)),
 		},
 		{
 			name: "order in wrong market",
@@ -184,7 +189,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				TotalAssets: s.coins("1apple"),
 				BidOrderIds: []uint64{8},
 			},
-			expErr: "order 8 market id 2 does not equal requested market id 1",
+			expErr:       "order 8 market id 2 does not equal requested market id 1",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, nil)),
 		},
 		{
 			name: "order has same buyer as provided seller",
@@ -203,7 +209,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				TotalAssets: s.coins("1apple"),
 				BidOrderIds: []uint64{8},
 			},
-			expErr: "order 8 has the same buyer " + s.addr1.String() + " as the requested seller",
+			expErr:       "order 8 has the same buyer " + s.addr1.String() + " as the requested seller",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, nil)),
 		},
 		{
 			name: "multiple problems with orders",
@@ -240,6 +247,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				"order 17 is type ask: expected bid",
 				"order 11 has the same buyer "+s.addr1.String()+" as the requested seller",
 			),
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, nil)),
 		},
 		{
 			name: "provided total assets less than actual total assets",
@@ -261,7 +269,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				TotalAssets: s.coins("5apple"),
 				BidOrderIds: []uint64{1, 2, 3},
 			},
-			expErr: "total assets \"5apple\" does not equal sum of bid order assets \"6apple\"",
+			expErr:       "total assets \"5apple\" does not equal sum of bid order assets \"6apple\"",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 		},
 		{
 			name: "provided total assets more than actual total assets",
@@ -283,7 +292,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				TotalAssets: s.coins("7apple"),
 				BidOrderIds: []uint64{1, 2, 3},
 			},
-			expErr: "total assets \"7apple\" does not equal sum of bid order assets \"6apple\"",
+			expErr:       "total assets \"7apple\" does not equal sum of bid order assets \"6apple\"",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 		},
 		{
 			name: "ratio fee calc error",
@@ -304,6 +314,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			},
 			expErr: "error calculating seller settlement ratio fee: no seller " +
 				"settlement fee ratio found for denom \"plum\"",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 		},
 		{
 			name: "invalid bid order owner",
@@ -321,7 +332,8 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				TotalAssets: s.coins("6apple"),
 				BidOrderIds: []uint64{1},
 			},
-			expErr: "invalid bid order 1 owner \"badbuyer\": decoding bech32 failed: invalid separator index -1",
+			expErr:       "invalid bid order 1 owner \"badbuyer\": decoding bech32 failed: invalid separator index -1",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 		},
 		{
 			name:       "error releasing hold",
@@ -339,6 +351,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				BidOrderIds: []uint64{1},
 			},
 			expErr:       "error releasing hold for bid order 1: no plum for you",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("6plum")}}},
 		},
 		{
@@ -357,12 +370,13 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				BidOrderIds: []uint64{1},
 			},
 			expErr:       "first transfer error",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("6plum")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr1, s.addr4},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
+					{fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
+					{fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
 				},
 			},
 		},
@@ -383,12 +397,13 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				BidOrderIds: []uint64{1},
 			},
 			expErr:       "second transfer error",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("6plum")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr1, s.addr4},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
+					{fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
+					{fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
 				},
 			},
 		},
@@ -414,16 +429,16 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				BidOrderIds: []uint64{99},
 			},
 			expErr:       "error collecting fees for market 2: first fake error",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("2fig,6plum")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr1, s.addr4},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
+					{fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
+					{fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
 				},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
-						ctxHasQuarantineBypass: false,
 						inputs: []banktypes.Input{
 							{Address: s.addr1.String(), Coins: s.coins("2fig")},
 							{Address: s.addr4.String(), Coins: s.coins("1plum")},
@@ -456,13 +471,14 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expEvents: []*exchange.EventOrderFilled{
 				{OrderId: 99, Assets: "1apple", Price: "6plum", MarketId: 2},
 			},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("6plum")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr1, s.addr4},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
-					{ctxHasQuarantineBypass: false, fromAddr: s.addr4, toAddr: s.marketAddr2, amt: s.coins("2fig")},
+					{fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
+					{fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
+					{fromAddr: s.addr4, toAddr: s.marketAddr2, amt: s.coins("2fig")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -496,12 +512,13 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expEvents: []*exchange.EventOrderFilled{
 				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
 			},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr5, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
+					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
+					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -534,12 +551,13 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
 			},
 			adlEvents:    sdk.Events{s.markerNavSetEvent("12apple", "60plum", 6)},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr5, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
+					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
+					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -565,12 +583,13 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
 			},
 			adlEvents:    sdk.Events{s.markerNavSetEvent("12apple", "60plum", 6)},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr5, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
+					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
+					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -597,12 +616,13 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				{OrderId: 13, Assets: "184467440737095516150apple", Price: "60plum", MarketId: 6},
 			},
 			adlEvents:    sdk.Events{s.markerNavSetEvent("184467440737095516150apple", "60plum", 6)},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr5, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("184467440737095516150apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
+					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("184467440737095516150apple")},
+					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
 				},
 			},
 			expLog: []string{
@@ -630,12 +650,13 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expEvents: []*exchange.EventOrderFilled{
 				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
 			},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr5, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
+					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
+					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -679,13 +700,14 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expEvents: []*exchange.EventOrderFilled{
 				{OrderId: 13, Assets: "12apple", Price: "60plum", Fees: "10fig", MarketId: 3, ExternalId: "thirteen"},
 			},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr5, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("10fig,60plum")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
-					{ctxHasQuarantineBypass: false, fromAddr: s.addr5, toAddr: s.marketAddr3, amt: s.coins("15fig")},
+					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
+					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
+					{fromAddr: s.addr5, toAddr: s.marketAddr3, amt: s.coins("15fig")},
 				},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
@@ -743,6 +765,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				{OrderId: 121, Assets: "6apple", Price: "33prune", MarketId: 3},
 				{OrderId: 17, Assets: "12apple", Price: "60plum", MarketId: 3},
 			},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{
 				{addr: s.addr2, funds: s.coins("22fig,50prune")},
 				{addr: s.addr3, funds: s.coins("33prune")},
@@ -752,15 +775,13 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr3, s.addr1},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
-						ctxHasQuarantineBypass: true,
-						inputs:                 []banktypes.Input{{Address: s.addr1.String(), Coins: s.coins("5acorn,18apple")}},
+						inputs: []banktypes.Input{{Address: s.addr1.String(), Coins: s.coins("5acorn,18apple")}},
 						outputs: []banktypes.Output{
 							{Address: s.addr2.String(), Coins: s.coins("5acorn,12apple")},
 							{Address: s.addr3.String(), Coins: s.coins("6apple")},
 						},
 					},
 					{
-						ctxHasQuarantineBypass: true,
 						inputs: []banktypes.Input{
 							{Address: s.addr2.String(), Coins: s.coins("60plum,50prune")},
 							{Address: s.addr3.String(), Coins: s.coins("33prune")},
@@ -768,7 +789,6 @@ func (s *TestSuite) TestKeeper_FillBids() {
 						outputs: []banktypes.Output{{Address: s.addr1.String(), Coins: s.coins("60plum,83prune")}},
 					},
 					{
-						ctxHasQuarantineBypass: false,
 						inputs: []banktypes.Input{
 							{Address: s.addr2.String(), Coins: s.coins("22fig")},
 							{Address: s.addr1.String(), Coins: s.coins("2plum,5prune")},
@@ -943,7 +963,8 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expErr: "market 1 does not allow user settlement",
 		},
 		{
-			name: "buyer cannot create bid",
+			name:       "buyer cannot create bid",
+			attrKeeper: NewMockAttributeKeeper().WithFindMissingAttributesResult(s.addr1, []string{"some.attr.no.one.has"}, ""),
 			setup: func() {
 				s.requireCreateMarket(exchange.Market{
 					MarketId: 1, AcceptingOrders: true, AllowUserSettlement: true,
@@ -957,7 +978,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				AskOrderIds: []uint64{1},
 			},
 			expErr:       "account " + s.addr1.String() + " is not allowed to create bid orders in market 1",
-			expAttrCalls: AttributeCalls{GetAllAttributesAddr: [][]byte{s.addr1}},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, []string{"some.attr.no.one.has"})),
 		},
 		{
 			name: "not enough creation fee",
@@ -974,7 +995,8 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				AskOrderIds:         []uint64{1},
 				BidOrderCreationFee: s.coinP("4fig"),
 			},
-			expErr: "insufficient bid order creation fee: \"4fig\" is less than required amount \"5fig\"",
+			expErr:       "insufficient bid order creation fee: \"4fig\" is less than required amount \"5fig\"",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, nil)),
 		},
 		{
 			name: "not enough buyer settlement fee",
@@ -996,6 +1018,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				"required flat fee not satisfied, valid options: 5fig",
 				"insufficient buyer settlement fee 4fig",
 			),
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, nil)),
 		},
 		{
 			name: "ask order does not exist",
@@ -1008,7 +1031,8 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				TotalPrice:  s.coin("1prune"),
 				AskOrderIds: []uint64{8},
 			},
-			expErr: "order 8 not found",
+			expErr:       "order 8 not found",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, nil)),
 		},
 		{
 			name: "bid order id provided",
@@ -1027,7 +1051,8 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				TotalPrice:  s.coin("1plum"),
 				AskOrderIds: []uint64{8},
 			},
-			expErr: "order 8 is type bid: expected ask",
+			expErr:       "order 8 is type bid: expected ask",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, nil)),
 		},
 		{
 			name: "order in wrong market",
@@ -1046,7 +1071,8 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				TotalPrice:  s.coin("1plum"),
 				AskOrderIds: []uint64{8},
 			},
-			expErr: "order 8 market id 2 does not equal requested market id 1",
+			expErr:       "order 8 market id 2 does not equal requested market id 1",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, nil)),
 		},
 		{
 			name: "order has same seller as provided buyer",
@@ -1065,7 +1091,8 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				TotalPrice:  s.coin("1plum"),
 				AskOrderIds: []uint64{8},
 			},
-			expErr: "order 8 has the same seller " + s.addr1.String() + " as the requested buyer",
+			expErr:       "order 8 has the same seller " + s.addr1.String() + " as the requested buyer",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, nil)),
 		},
 		{
 			name: "multiple problems with orders",
@@ -1102,6 +1129,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				"order 17 is type bid: expected ask",
 				"order 11 has the same seller "+s.addr1.String()+" as the requested buyer",
 			),
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, nil)),
 		},
 		{
 			name: "provided total price less than actual total price",
@@ -1123,7 +1151,8 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				TotalPrice:  s.coin("5plum"),
 				AskOrderIds: []uint64{1, 2, 3},
 			},
-			expErr: "total price \"5plum\" does not equal sum of ask order prices \"6plum\"",
+			expErr:       "total price \"5plum\" does not equal sum of ask order prices \"6plum\"",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 		},
 		{
 			name: "provided total price more than actual total price",
@@ -1145,7 +1174,8 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				TotalPrice:  s.coin("7plum"),
 				AskOrderIds: []uint64{1, 2, 3},
 			},
-			expErr: "total price \"7plum\" does not equal sum of ask order prices \"6plum\"",
+			expErr:       "total price \"7plum\" does not equal sum of ask order prices \"6plum\"",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 		},
 		{
 			name: "ratio fee calc error",
@@ -1166,6 +1196,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			},
 			expErr: "error calculating seller settlement ratio fee for order 1: no seller " +
 				"settlement fee ratio found for denom \"plum\"",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 		},
 		{
 			name: "invalid bid order owner",
@@ -1183,7 +1214,8 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				TotalPrice:  s.coin("6plum"),
 				AskOrderIds: []uint64{1},
 			},
-			expErr: "invalid ask order 1 owner \"badseller\": decoding bech32 failed: invalid separator index -1",
+			expErr:       "invalid ask order 1 owner \"badseller\": decoding bech32 failed: invalid separator index -1",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 		},
 		{
 			name:       "error releasing hold",
@@ -1201,6 +1233,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				AskOrderIds: []uint64{1},
 			},
 			expErr:       "error releasing hold for ask order 1: no apple for you",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("6apple")}}},
 		},
 		{
@@ -1219,12 +1252,13 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				AskOrderIds: []uint64{1},
 			},
 			expErr:       "first transfer error",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("1apple")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr1},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
+					{fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
+					{fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
 				},
 			},
 		},
@@ -1245,12 +1279,13 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				AskOrderIds: []uint64{1},
 			},
 			expErr:       "second transfer error",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("1apple")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr1},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
+					{fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
+					{fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
 				},
 			},
 		},
@@ -1277,16 +1312,16 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				BuyerSettlementFees: s.coins("2fig"),
 			},
 			expErr:       "error collecting fees for market 2: first fake error",
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("2fig,1apple")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr1},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
+					{fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
+					{fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
 				},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
-						ctxHasQuarantineBypass: false,
 						inputs: []banktypes.Input{
 							{Address: s.addr1.String(), Coins: s.coins("2fig,1plum")},
 							{Address: s.addr4.String(), Coins: s.coins("2fig")},
@@ -1319,13 +1354,14 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expEvents: []*exchange.EventOrderFilled{
 				{OrderId: 99, Assets: "1apple", Price: "6plum", MarketId: 2},
 			},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr4, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("1apple")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr1},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
-					{ctxHasQuarantineBypass: false, fromAddr: s.addr4, toAddr: s.marketAddr2, amt: s.coins("2fig")},
+					{fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
+					{fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
+					{fromAddr: s.addr4, toAddr: s.marketAddr2, amt: s.coins("2fig")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -1359,12 +1395,13 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expEvents: []*exchange.EventOrderFilled{
 				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
 			},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr5, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("12apple")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
+					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
+					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -1397,12 +1434,13 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
 			},
 			adlEvents:    sdk.Events{s.markerNavSetEvent("12apple", "60plum", 6)},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr5, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("12apple")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
+					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
+					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -1428,12 +1466,13 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
 			},
 			adlEvents:    sdk.Events{s.markerNavSetEvent("12apple", "60plum", 6)},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr5, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("12apple")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
+					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
+					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -1459,12 +1498,13 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				{OrderId: 13, Assets: "184467440737095516150apple", Price: "60plum", MarketId: 6},
 			},
 			adlEvents:    sdk.Events{s.markerNavSetEvent("184467440737095516150apple", "60plum", 6)},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr5, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("184467440737095516150apple")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("184467440737095516150apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
+					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("184467440737095516150apple")},
+					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
 				},
 			},
 			expLog: []string{
@@ -1492,12 +1532,13 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expEvents: []*exchange.EventOrderFilled{
 				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
 			},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr5, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("12apple")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
+					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
+					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -1541,13 +1582,14 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expEvents: []*exchange.EventOrderFilled{
 				{OrderId: 13, Assets: "12apple", Price: "60plum", Fees: "8fig,2plum", MarketId: 3, ExternalId: "thirteen"},
 			},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr5, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("12apple,8fig")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
-					{ctxHasQuarantineBypass: false, fromAddr: s.addr5, toAddr: s.marketAddr3, amt: s.coins("15fig")},
+					{fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
+					{fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
+					{fromAddr: s.addr5, toAddr: s.marketAddr3, amt: s.coins("15fig")},
 				},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
@@ -1605,6 +1647,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				{OrderId: 121, Assets: "6apple", Price: "33prune", MarketId: 3, Fees: "2prune"},
 				{OrderId: 17, Assets: "12apple", Price: "60prune", MarketId: 3, Fees: "3prune"},
 			},
+			expAttrCalls: NewAttributeCalls(NewFindMissingAttributesCall(s.addr1, nil)),
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{
 				{addr: s.addr2, funds: s.coins("5acorn,22fig")},
 				{addr: s.addr3, funds: s.coins("6apple")},
@@ -1614,7 +1657,6 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				BlockedAddr: []sdk.AccAddress{s.addr1, s.addr2, s.addr3},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
-						ctxHasQuarantineBypass: true,
 						inputs: []banktypes.Input{
 							{Address: s.addr2.String(), Coins: s.coins("5acorn,12apple")},
 							{Address: s.addr3.String(), Coins: s.coins("6apple")},
@@ -1622,7 +1664,6 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 						outputs: []banktypes.Output{{Address: s.addr1.String(), Coins: s.coins("5acorn,18apple")}},
 					},
 					{
-						ctxHasQuarantineBypass: true,
 						inputs: []banktypes.Input{
 							{Address: s.addr1.String(), Coins: s.coins("143prune")},
 						},
@@ -1632,7 +1673,6 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 						},
 					},
 					{
-						ctxHasQuarantineBypass: false,
 						inputs: []banktypes.Input{
 							{Address: s.addr2.String(), Coins: s.coins("22fig,5prune")},
 							{Address: s.addr3.String(), Coins: s.coins("2prune")},
@@ -1927,12 +1967,11 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr1},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr2, amt: s.coins("4apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr1, amt: s.coins("16peach")},
+					{fromAddr: s.addr1, toAddr: s.addr2, amt: s.coins("4apple")},
+					{fromAddr: s.addr2, toAddr: s.addr1, amt: s.coins("16peach")},
 				},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
-						ctxHasQuarantineBypass: false,
 						inputs: []banktypes.Input{
 							{Address: s.addr1.String(), Coins: s.coins("100fig")},
 							{Address: s.addr2.String(), Coins: s.coins("50grape")},
@@ -1985,8 +2024,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr4, amt: s.coins("1apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr5, amt: s.coins("5peach")},
+					{fromAddr: s.addr5, toAddr: s.addr4, amt: s.coins("1apple")},
+					{fromAddr: s.addr4, toAddr: s.addr5, amt: s.coins("5peach")},
 				},
 			},
 		},
@@ -2022,8 +2061,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr3},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+					{fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
+					{fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -2066,8 +2105,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr3},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: scopeID1.Coins()},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+					{fromAddr: s.addr3, toAddr: s.addr4, amt: scopeID1.Coins()},
+					{fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
 				},
 			},
 			expMDCalls: MetadataCalls{
@@ -2111,8 +2150,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr3},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+					{fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
+					{fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -2150,8 +2189,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr3},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+					{fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
+					{fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -2190,8 +2229,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr3},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("184467440737095516150apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+					{fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("184467440737095516150apple")},
+					{fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
 				},
 			},
 			expLog: []string{"ERR could not record net-asset-value of \"184467440737095516150apple\" at a price of \"5peach\": asset volume greater than max uint64 module=x/exchange"},
@@ -2228,8 +2267,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr3},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+					{fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("1apple")},
+					{fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
 				},
 			},
 			expMarkerCalls: MarkerCalls{
@@ -2280,8 +2319,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr3},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("10apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("50peach")},
+					{fromAddr: s.addr3, toAddr: s.addr4, amt: s.coins("10apple")},
+					{fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("50peach")},
 				},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
@@ -2354,8 +2393,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr3, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr3, amt: s.coins("7apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr5, amt: s.coins("40peach")},
+					{fromAddr: s.addr5, toAddr: s.addr3, amt: s.coins("7apple")},
+					{fromAddr: s.addr3, toAddr: s.addr5, amt: s.coins("40peach")},
 					{fromAddr: s.addr5, toAddr: s.marketAddr1, amt: s.coins("14fig")},
 				},
 			},
@@ -2417,8 +2456,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr3, s.addr5},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr3, amt: s.coins("7apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr5, amt: s.coins("35peach")},
+					{fromAddr: s.addr5, toAddr: s.addr3, amt: s.coins("7apple")},
+					{fromAddr: s.addr3, toAddr: s.addr5, amt: s.coins("35peach")},
 					{fromAddr: s.addr3, toAddr: s.marketAddr1, amt: s.coins("14fig")},
 				},
 			},
@@ -2479,13 +2518,12 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr3, s.addr2, s.addr5, s.addr5, s.addr4, s.addr1, s.addr1, s.addr1},
 				SendCoins: []*SendCoinsArgs{
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr5, amt: s.coins("25apple")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr1, amt: s.coins("40peach")},
-					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr1, amt: s.coins("50peach")},
+					{fromAddr: s.addr1, toAddr: s.addr5, amt: s.coins("25apple")},
+					{fromAddr: s.addr2, toAddr: s.addr1, amt: s.coins("40peach")},
+					{fromAddr: s.addr5, toAddr: s.addr1, amt: s.coins("50peach")},
 				},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
-						ctxHasQuarantineBypass: true,
 						inputs: []banktypes.Input{
 							{Address: s.addr4.String(), Coins: s.coins("75apple")},
 						},
@@ -2496,7 +2534,6 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 						},
 					},
 					{
-						ctxHasQuarantineBypass: true,
 						inputs: []banktypes.Input{
 							{Address: s.addr3.String(), Coins: s.coins("60peach")},
 						},

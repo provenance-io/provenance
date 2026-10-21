@@ -50,7 +50,7 @@ func (s *NameParamTestSuite) TestGetSetParams() {
 	}
 
 	s.app.NameKeeper.SetParams(s.ctx, newParams)
-
+	s.Require().NoError(s.app.NameKeeper.SetParams(s.ctx, newParams), "initial SetParams")
 	updatedParams := s.app.NameKeeper.GetParams(s.ctx)
 	s.Require().Equal(newMaxNameLevels, updatedParams.MaxNameLevels, "Updated MaxNameLevels should match")
 	s.Require().Equal(newMaxSegmentLength, updatedParams.MaxSegmentLength, "Updated MaxSegmentLength should match")

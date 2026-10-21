@@ -15,7 +15,6 @@ There are some complex interactions involved with transfers of restricted coins.
     - [Bypass Accounts](#bypass-accounts)
   - [Send Restrictions](#send-restrictions)
     - [Flowcharts](#flowcharts)
-    - [Quarantine Complexities](#quarantine-complexities)
 
 ## General
 
@@ -73,9 +72,7 @@ Whenever funds are being withdrawn, the transfer agent must have `withdraw` perm
 There are several hard-coded module account addresses that are given special consideration in the marker module's `SendRestrictionFn`:
 
 * `authtypes.FeeCollectorName` - Allows paying fees with restricted coins.
-* `reward` - Allows reward programs to use restricted coins.
-* `quarantine` - Allows quarantine and acceptance of quarantined coins.
-* `gov` - Allows deposits to have quarantined coins.
+* `gov` - Allows deposits to have restricted coins.
 * `distribution` - Allows collection of delegation rewards in restricted coins.
 * `stakingtypes.BondedPoolName` - Allows delegation of restricted coins.
 * `stakingtypes.NotBondedPoolName` - Allows delegation of restricted coins.
@@ -315,114 +312,4 @@ flowchart TD
 
     linkStyle 1,3,6,14,16,18 stroke:#b30000,color:#b30000
     linkStyle 19 stroke:#1b8500,color:#1b8500
-```
-
-### Quarantine Complexities
-
-There are some notable complexities involving restricted coins and quarantined accounts.
-
-#### Sending Restricted Coins to a Quarantined Account
-
-The marker module's `SendRestrictionFn` is applied before the quarantine module's. So, when funds are being sent to a quarantined account, the marker module runs its check using the original `Sender` and `Receiver` (i.e. the `Receiver` is not `QFH`).
-
-If the `Receiver` is a quarantined account, we can assume that it is neither a marker, nor a bypass account. Then, (as long as the `Sender` is not on the deny list), the `validateSendDenom` flow can be simplified to this for restricted coins.
-
-```mermaid
-%%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
-flowchart LR
-    vsd[["validateSendDenom(Sender, Receiver, Denom, Transfer Agents)"]]
-    transq{{"Does Sender or a transfer agent\n have transfer for Denom?"}}
-    mreqattr{{"Does Denom have\nrequired attributes?"}}
-    treqattr{{"Does Receiver have\nthose attributes?"}}
-    ok(["Denom transfer allowed."])
-    style ok fill:#bbffaa,stroke:#1b8500,stroke-width:3px
-    denied(["Send denied."])
-    style denied fill:#ffaaaa,stroke:#b30000,stroke-width:3px
-    transq -->|yes| ok
-    transq -.->|no| mreqattr
-    mreqattr -->|yes| treqattr
-    mreqattr -.->|no| denied
-    treqattr -->|yes| ok
-    treqattr -.->|no| denied
-
-    linkStyle 3,5 stroke:#b30000,color:#b30000
-    linkStyle 0,4 stroke:#1b8500,color:#1b8500
-```
-
-If the `Send` is allowed, and the `Receiver` is a quarantined account, the quarantine module's `SendRestrictionFn` will then change the `Send`'s destination to `QFH` (the Quarantined-funds-holder account) and make a record of the transfer. The `Send` then transfers funds from the `Sender` to `QFH`.
-
-The marker's `SendRestrictionFn` should never have `QFH` as a `Receiver`. The only way this would happen is if `MsgSend` is used to send funds directly to `QFH`.
-
-If `MsgTransferRequest` is used to transfer a restricted coin to a quarantined account, the standard `MsgTransferRequest` logic is applied (bypassing the marker module's `SendRestrictionFn`). The quarantine module's `SendRestrictionFn` is not bypassed, though, so the funds still go to the `QFH`.
-
-#### Accepting Quarantined Restricted Coins
-
-Once funds have been sent to `QFH`, the `Receiver` will probably want to accept them, and have them sent to their account. They issue an `Accept` to the quarantine module which utilizes the bank module's `Send` functionality to try to transfer funds from `QFH` to the `Receiver`.
-
-`QFH` is a bypass account. Since `Receiver` is a quarantined account, we can assume that it is neither a marker nor bypass account. So, the `validateSendDenom` flow can be simplified to this for restricted coins.
-
-```mermaid
-%%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
-flowchart LR
-    vsd[["validateSendDenom(Sender, Receiver, Denom)"]]
-    mreqattr{{"Does Denom have\nrequired attributes?"}}
-    treqattr{{"Does Receiver have\nthose attributes?"}}
-    ok(["Denom transfer allowed."])
-    style ok fill:#bbffaa,stroke:#1b8500,stroke-width:3px
-    denied(["Send denied."])
-    style denied fill:#ffaaaa,stroke:#b30000,stroke-width:3px
-    mreqattr -->|yes| treqattr
-    mreqattr -.->|no| ok
-    treqattr -->|yes| ok
-    treqattr -.->|no| denied
-
-    linkStyle 3 stroke:#b30000,color:#b30000
-    linkStyle 1,2 stroke:#1b8500,color:#1b8500
-
-```
-
-If the `Send` is allowed, the requested funds are transferred from `QFH` to `Receiver`.
-
-If the `Send` is denied, the funds remain with `QFH`.
-
-An important subtle part of this process is the rechecking of `Receiver` attributes. It's possible for the initial send to be okay (causing funds to be quarantined), then later, during this `Accept`, the send is not okay, and the quarantined funds are effectively locked with`QFH` until the `Receiver` gets the required attributes.
-
-If the marker does not have required attributes though, it's assumed that they were originally sent by someone with transfer authority, so they are allowed to continue from here too.
-
-#### Successful Quarantine and Accept Sequence
-
-When restricted coin funds are sent to a quarantined account (1), the marker's `SendRestrictionFn` is called using the original `Sender` and `Receiver` (2). Then, the quarantine's `SendRestrictionFn` is called (4) which will return `QFH` for the new destination (5). Funds are then transferred from `Sender` to `QFH` (6).
-
-When the `Receiver` attempts to `Accept` those quarantined funds (7), the marker's `SendRestrictionFn` is called again, this time using `QFH` (as the sender) and `Receiver` (9). The quarantine's `SendRestrictionFn` is bypassed (11), so the destination is not changed (12). Funds are then transferred from `QFH` to `Receiver` (13).
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Sender
-    actor Receiver
-    participant Bank Module
-    participant Quarantine Module
-    participant Marker Restriction
-    participant Quarantine Restriction
-    participant QFH
-    Sender ->>+ Bank Module: Send(sender, receiver)
-    Bank Module ->>+ Marker Restriction: Is this send  from Sender to Receiver allowed?
-    Marker Restriction -->>- Bank Module: Yes
-    Bank Module ->>+ Quarantine Restriction: Is Receiver quarantined?
-    Quarantine Restriction -->>- Bank Module: Yes. Change destination to QFH.
-    Sender ->> QFH: Funds transferred from Sender to QFH.
-    deactivate Bank Module
-
-    Note over Sender,QFH: Some Time Later
-
-    Receiver ->>+ Quarantine Module: Accept(receiver, sender)
-    Quarantine Module ->> Bank Module: Send(QFH, receiver)
-    activate Bank Module
-    Bank Module ->>+ Marker Restriction: Is this send  from QFH to Receiver allowed?
-    Marker Restriction -->>- Bank Module: Yes
-    Bank Module ->>+ Quarantine Restriction: Is Receiver quarantined?
-    Quarantine Restriction -->>- Bank Module: Restriction bypassed. No change.
-    QFH ->> Receiver: Funds transferred from QFH to Receiver.
-    deactivate Bank Module
-    deactivate Quarantine Module
 ```

@@ -52,7 +52,85 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
-## [v1.30.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.30.0-rc1) 2026-07-31
+## [v1.31.0](https://github.com/provenance-io/provenance/releases/tag/v1.31.0) 2026-10-02
+
+### Features
+
+* Migrated name module from kv-store to collections [#2411](https://github.com/provenance-io/provenance/issues/2411).
+* Use hashed name for key instead of just the segments [#2683](https://github.com/provenance-io/provenance/issues/2683).
+* Add geranium and geranium-rc1 upgrades [#2832](https://github.com/provenance-io/provenance/issues/2832).
+
+### Improvements
+
+* Remove the quarantine module [#2695](https://github.com/provenance-io/provenance/issues/2695).
+* Use an arm runner to build the arm docker images [PR 2833](https://github.com/provenance-io/provenance/pull/2833).
+* Improve required attribute checking (in the marker and exchange modules) to make it read less from state [PR 2843](https://github.com/provenance-io/provenance/pull/2843).
+* Reduce the number of expired attributes that can be deleted per block to 500 (from 100,000) [PR 2850](https://github.com/provenance-io/provenance/pull/2850).
+* Store name records with keys that use the name with segments reversed instead of hashing the name [#2851](https://github.com/provenance-io/provenance/issues/2851).
+* Do not allow the denoms to change when updating the flatfees params or conversion factor [PR 2854](https://github.com/provenance-io/provenance/pull/2854).
+* Update the flatfees conversion factor [PR 2857](https://github.com/provenance-io/provenance/pull/2857).
+
+### Bug Fixes
+
+* Fix the heighliner docker build GitHub action [PR 2833](https://github.com/provenance-io/provenance/pull/2833).
+* When setting an attribute, delete any previously recorded expiration entry [PR 2842](https://github.com/provenance-io/provenance/pull/2842).
+* Ensure attributes are actually expired before deleting them [PR 2842](https://github.com/provenance-io/provenance/pull/2842).
+* Prevent a smart contract that only holds an `x/authz` grant from one `x/metadata` party from vouching for the signatures of the other parties listed after it [PR 2848](https://github.com/provenance-io/provenance/pull/2848).
+* Fix marker withdraw to not panic if there's no to address [PR 2849](https://github.com/provenance-io/provenance/pull/2849).
+
+### Api Breaking
+
+* The previously deprecated quarantine module has been fully removed [#2695](https://github.com/provenance-io/provenance/issues/2695).
+
+### Dependencies
+
+* `actions/download-artifact` bumped to 8 (from 4) [PR 2837](https://github.com/provenance-io/provenance/pull/2837).
+* `actions/setup-java` bumped to 6 (from 5) [PR 2828](https://github.com/provenance-io/provenance/pull/2828).
+* `actions/upload-artifact` bumped to 7 (from 4) [PR 2836](https://github.com/provenance-io/provenance/pull/2836).
+* `cloud.google.com/go/auth` bumped to v0.20.0 (from v0.18.2) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `github.com/CosmWasm/wasmd` bumped to v0.61.15-pio-1 of `github.com/provenance-io/wasmd` (from v0.61.10-pio-2 of `github.com/provenance-io/wasmd`) [PR 2856](https://github.com/provenance-io/provenance/pull/2856).
+* `github.com/CosmWasm/wasmvm/v3` bumped to v3.0.8 (from v3.0.7) [PR 2856](https://github.com/provenance-io/provenance/pull/2856).
+* `github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp` bumped to v1.34.0 (from v1.33.0) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `github.com/cosmos/cosmos-sdk` bumped to v0.53.8-pio-2 of `github.com/provenance-io/cosmos-sdk` (from v0.53.8-pio-1 of `github.com/provenance-io/cosmos-sdk`) [PR 2839](https://github.com/provenance-io/provenance/pull/2839).
+* `github.com/felixge/httpsnoop` bumped to v1.1.0 (from v1.0.4) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `github.com/googleapis/enterprise-certificate-proxy` bumped to v0.3.15 (from v0.3.14) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `github.com/googleapis/gax-go/v2` bumped to v2.22.0 (from v2.17.0) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `github.com/go-logr/logr` bumped to v1.4.4 (from v1.4.3) [PR 2844](https://github.com/provenance-io/provenance/pull/2844).
+* `github.com/hashicorp/go-metrics` bumped to v0.7.0 (from v0.6.1) [PR 2846](https://github.com/provenance-io/provenance/pull/2846).
+* `github.com/pmezard/go-difflib` removed at v1.0.1-0.20181226105442-5d4384ee4fb2 [PR 2825](https://github.com/provenance-io/provenance/pull/2825).
+* `github.com/prometheus/client_model` bumped to v0.6.3 (from v0.6.2) [PR 2846](https://github.com/provenance-io/provenance/pull/2846).
+* `github.com/prometheus/common` bumped to v0.71.0 (from v0.70.1) [PR 2846](https://github.com/provenance-io/provenance/pull/2846).
+* `github.com/spiffe/go-spiffe/v2` bumped to v2.8.1 (from v2.7.0) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `github.com/stretchr/objx` bumped to v0.5.3 (from v0.5.2) [PR 2825](https://github.com/provenance-io/provenance/pull/2825).
+* `github.com/stretchr/testify` bumped to v1.12.1 (from v1.11.1) [PR 2825](https://github.com/provenance-io/provenance/pull/2825).
+* `github/codeql-action` bumped to 4.38.1 (from 4.37.6) ([PR 2830](https://github.com/provenance-io/provenance/pull/2830), [PR 2841](https://github.com/provenance-io/provenance/pull/2841), [PR 2847](https://github.com/provenance-io/provenance/pull/2847)).
+* `golang.org/x/crypto` bumped to v0.55.0 (from v0.54.0) [PR 2829](https://github.com/provenance-io/provenance/pull/2829).
+* `golang.org/x/mod` bumped to v0.38.0 (from v0.37.0) [PR 2829](https://github.com/provenance-io/provenance/pull/2829).
+* `golang.org/x/net` bumped to v0.58.0 (from v0.57.0) [PR 2829](https://github.com/provenance-io/provenance/pull/2829).
+* `golang.org/x/text` bumped to v0.41.0 (from v0.40.0) [PR 2829](https://github.com/provenance-io/provenance/pull/2829).
+* `golang.org/x/tools` bumped to v0.48.0 (from v0.47.0) [PR 2829](https://github.com/provenance-io/provenance/pull/2829).
+* `google.golang.org/api` bumped to v0.278.0 (from v0.271.0) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `google.golang.org/genproto/googleapis/api` bumped to v0.0.0-20260706201446-f0a921348800 (from v0.0.0-20260526163538-3dc84a4a5aaa) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `google.golang.org/genproto/googleapis/rpc` bumped to v0.0.0-20260706201446-f0a921348800 (from v0.0.0-20260526163538-3dc84a4a5aaa) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `google.golang.org/genproto` bumped to v0.0.0-20260319201613-d00831a3d3e7 (from v0.0.0-20260128011058-8636f8732409) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `google.golang.org/grpc` bumped to v1.84.0 (from v1.83.0) ([PR 2829](https://github.com/provenance-io/provenance/pull/2829), [PR 2845](https://github.com/provenance-io/provenance/pull/2845)).
+* `google.golang.org/protobuf` bumped to v1.36.12 (from v1.36.11) [PR 2819](https://github.com/provenance-io/provenance/pull/2819).
+* `go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc` bumped to v0.67.0 (from v0.63.0) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp` bumped to v0.69.0 (from v0.62.0) [PR 2845](https://github.com/provenance-io/provenance/pull/2845).
+* `go.opentelemetry.io/otel/metric` bumped to v1.45.0 (from v1.44.0) [PR 2844](https://github.com/provenance-io/provenance/pull/2844).
+* `go.opentelemetry.io/otel/sdk/metric` bumped to v1.45.0 (from v1.44.0) [PR 2844](https://github.com/provenance-io/provenance/pull/2844).
+* `go.opentelemetry.io/otel/sdk` bumped to v1.45.0 (from v1.44.0) [PR 2844](https://github.com/provenance-io/provenance/pull/2844).
+* `go.opentelemetry.io/otel/trace` bumped to v1.45.0 (from v1.44.0) [PR 2844](https://github.com/provenance-io/provenance/pull/2844).
+* `go.opentelemetry.io/otel` bumped to v1.45.0 (from v1.44.0) [PR 2844](https://github.com/provenance-io/provenance/pull/2844).
+* `go.yaml.in/yaml/v3` bumped to v3.0.5 (from v3.0.4) [PR 2825](https://github.com/provenance-io/provenance/pull/2825).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.30.0...v1.31.0
+
+---
+
+## [v1.30.0](https://github.com/provenance-io/provenance/releases/tag/v1.30.0) 2026-08-20
 
 ### Features
 
@@ -64,6 +142,9 @@ See: [.changelog/unreleased](.changelog/unreleased)
 * Reduce race test runtime by excluding long-running simulation tests from race builds [#2738](https://github.com/provenance-io/provenance/issues/2738).
 * Add the forsythia upgrade and remove older upgrades [PR 2780](https://github.com/provenance-io/provenance/pull/2780).
 * Short circuit at the lookup step when deleting expired events [PR 2789](https://github.com/provenance-io/provenance/pull/2789).
+* Detect vault principal accounts, which are marker accounts, and exclude them from force transfers [PR 2804](https://github.com/provenance-io/provenance/pull/2804).
+* Remove the marker all-supply permissions bypass [PR 2807](https://github.com/provenance-io/provenance/pull/2807).
+* Set the flatfees for some vault messages [PR 2815](https://github.com/provenance-io/provenance/pull/2815).
 
 ### Bug Fixes
 
@@ -71,6 +152,7 @@ See: [.changelog/unreleased](.changelog/unreleased)
 * Enforce the unrestricted denom regex on markers created by the asset module [PR 2784](https://github.com/provenance-io/provenance/pull/2784).
 * Propagate the AllowList when updating a MarkerTransferAuthorization [PR 2786](https://github.com/provenance-io/provenance/pull/2786).
 * Verify smart contract signers in metadata's AddNetAssetValues endpoint [PR 2787](https://github.com/provenance-io/provenance/pull/2787).
+* Honor `require_deposit_access` when withdrawing to or depositing into an unrestricted marker account [PR 2809](https://github.com/provenance-io/provenance/pull/2809).
 
 ### Deprecated
 
@@ -91,7 +173,7 @@ See: [.changelog/unreleased](.changelog/unreleased)
 * `codecov/codecov-action` bumped to 7 (from 6) [PR 2756](https://github.com/provenance-io/provenance/pull/2756).
 * `dev.gaijin.team/go/exhaustruct/v4` added at v4.0.0 [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `dev.gaijin.team/go/golib` added at v0.6.0 [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
-* `docker/login-action` bumped to 4.5.2 (from 4) [PR 2797](https://github.com/provenance-io/provenance/pull/2797).
+* `docker/login-action` bumped to 4.6.0 (from 4) ([PR 2797](https://github.com/provenance-io/provenance/pull/2797), [PR 2802](https://github.com/provenance-io/provenance/pull/2802)).
 * `github.com/4meepo/tagalign` bumped to v1.4.3 (from v1.3.4) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/Abirdcfly/dupword` bumped to v0.1.7 (from v0.1.1) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/AdminBenni/iota-mixing` added at v1.0.0 [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
@@ -212,7 +294,7 @@ See: [.changelog/unreleased](.changelog/unreleased)
 * `github.com/prometheus/client_golang` bumped to v1.24.1 (from v1.23.2) [PR 2795](https://github.com/provenance-io/provenance/pull/2795).
 * `github.com/prometheus/common` bumped to v0.70.1 (from v0.67.5) [PR 2795](https://github.com/provenance-io/provenance/pull/2795).
 * `github.com/prometheus/procfs` bumped to v0.21.1 (from v0.19.2) [PR 2795](https://github.com/provenance-io/provenance/pull/2795).
-* `github.com/provlabs/vault` bumped to v1.2.3 (from v1.1.0) ([PR 2779](https://github.com/provenance-io/provenance/pull/2779), [PR 2790](https://github.com/provenance-io/provenance/pull/2790)).
+* `github.com/provlabs/vault` bumped to v1.2.4 (from v1.1.0) ([PR 2779](https://github.com/provenance-io/provenance/pull/2779), [PR 2790](https://github.com/provenance-io/provenance/pull/2790), [PR 2811](https://github.com/provenance-io/provenance/pull/2811)).
 * `github.com/quasilyte/go-ruleguard/dsl` bumped to v0.3.23 (from v0.3.22) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/quasilyte/go-ruleguard` bumped to v0.4.5 (from v0.4.3-0.20240823090925-0fe6f58b47b1) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/raeperd/recvcheck` added at v0.2.0 [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
@@ -244,7 +326,7 @@ See: [.changelog/unreleased](.changelog/unreleased)
 * `github.com/uudashr/iface` added at v1.4.2 [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/xen0n/gosmopolitan` bumped to v1.3.0 (from v1.2.2) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `github.com/xo/terminfo` added at v0.0.0-20220910002029-abceb7e1c41e [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
-* `github/codeql-action` bumped to 4.37.3 (from 4) [PR 2798](https://github.com/provenance-io/provenance/pull/2798).
+* `github/codeql-action` bumped to 4.37.6 (from 4) ([PR 2798](https://github.com/provenance-io/provenance/pull/2798), [PR 2806](https://github.com/provenance-io/provenance/pull/2806)).
 * `golang.org/x/crypto` bumped to v0.54.0 (from v0.50.0) ([PR 2759](https://github.com/provenance-io/provenance/pull/2759), [PR 2776](https://github.com/provenance-io/provenance/pull/2776), [PR 2775](https://github.com/provenance-io/provenance/pull/2775), [PR 2795](https://github.com/provenance-io/provenance/pull/2795)).
 * `golang.org/x/exp/typeparams` bumped to v0.0.0-20260209203927-2842357ff358 (from v0.0.0-20240314144324-c7f7c6466f7f) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
 * `golang.org/x/exp` bumped to v0.0.0-20250620022241-b7579e27df2b (from v0.0.0-20250305212735-054e65f0b394) [PR 2779](https://github.com/provenance-io/provenance/pull/2779).
@@ -278,7 +360,7 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.29.0...v1.30.0-rc1
+* https://github.com/provenance-io/provenance/compare/v1.29.0...v1.30.0
 
 ---
 

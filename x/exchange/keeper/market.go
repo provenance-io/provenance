@@ -14,7 +14,6 @@ import (
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 // getLastAutoMarketID gets the last auto-selected market id.
@@ -1254,19 +1253,8 @@ func updateReqAttrsCommitment(store storetypes.KVStore, marketID uint32, toRemov
 
 // acctHasReqAttrs returns true if either reqAttrs is empty or the provide address has all of them on their account.
 func (k Keeper) acctHasReqAttrs(ctx sdk.Context, addr sdk.AccAddress, reqAttrs []string) bool {
-	if len(reqAttrs) == 0 {
-		return true
-	}
-	attrs, err := k.attrKeeper.GetAllAttributesAddr(ctx, addr)
-	if err != nil {
-		return false
-	}
-	accAttrs := make([]string, len(attrs))
-	for i, attr := range attrs {
-		accAttrs[i] = attr.Name
-	}
-	missing := exchange.FindUnmatchedReqAttrs(reqAttrs, accAttrs)
-	return len(missing) == 0
+	missing, err := k.attrKeeper.FindMissingAttributes(ctx, addr, reqAttrs)
+	return err == nil && len(missing) == 0
 }
 
 // GetReqAttrsAsk gets the attributes required to create an ask order.
@@ -1555,9 +1543,6 @@ func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk
 	}
 	marketAddr := exchange.GetMarketAddress(marketID)
 	xferCtx := markertypes.WithTransferAgents(ctx, admin)
-	if toAddr.Equals(admin) {
-		xferCtx = quarantine.WithBypass(xferCtx)
-	}
 	err = k.bankKeeper.SendCoins(xferCtx, marketAddr, toAddr, amount)
 	if err != nil {
 		return fmt.Errorf("failed to withdraw %s from market %d: %w", amount, marketID, err)

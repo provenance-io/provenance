@@ -33,6 +33,7 @@ func DefaultParams() Params {
 		OracleAddresses: nil,
 	}
 }
+
 func (p Params) Validate() error {
 	if err := p.DefaultCost.Validate(); err != nil {
 		return fmt.Errorf("invalid default cost %q: %w", p.DefaultCost, err)
@@ -46,6 +47,23 @@ func (p Params) Validate() error {
 	}
 	if err := validateOracleAddresses(p.OracleAddresses); err != nil {
 		return err
+	}
+	return nil
+}
+
+// ValidateParamsChange returns an error if any of the denoms change.
+func ValidateParamsChange(current, updated Params) error {
+	if current.DefaultCost.Denom != updated.DefaultCost.Denom {
+		return errors.New("invalid default cost: provided denom must equal existing denom")
+	}
+	return ValidateConversionFactorChange(current.ConversionFactor, updated.ConversionFactor)
+}
+
+// ValidateConversionFactorChange returns an error if any of the denoms change.
+func ValidateConversionFactorChange(current, updated ConversionFactor) error {
+	if current.DefinitionAmount.Denom != updated.DefinitionAmount.Denom ||
+		current.ConvertedAmount.Denom != updated.ConvertedAmount.Denom {
+		return errors.New("invalid conversion factor: provided denoms must match existing denoms")
 	}
 	return nil
 }

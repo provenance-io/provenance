@@ -28,6 +28,7 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // AutoResponse enumerates the quarantine auto-response options.
+// Deprecated: The quarantine module has been removed.
 type AutoResponse int32
 
 const (
@@ -62,6 +63,7 @@ func (AutoResponse) EnumDescriptor() ([]byte, []int) {
 }
 
 // QuarantinedFunds defines structure that represents coins that have been quarantined.
+// Deprecated: The quarantine module has been removed.
 type QuarantinedFunds struct {
 	// to_address is the intended recipient of the coins that have been quarantined.
 	ToAddress string `protobuf:"bytes,1,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
@@ -135,6 +137,7 @@ func (m *QuarantinedFunds) GetDeclined() bool {
 }
 
 // AutoResponseEntry defines the auto response to one address from another.
+// Deprecated: The quarantine module has been removed.
 type AutoResponseEntry struct {
 	// to_address is the receiving address.
 	ToAddress string `protobuf:"bytes,1,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
@@ -199,6 +202,7 @@ func (m *AutoResponseEntry) GetResponse() AutoResponse {
 }
 
 // AutoResponseUpdate defines a quarantine auto response update that should be applied.
+// Deprecated: The quarantine module has been removed.
 type AutoResponseUpdate struct {
 	// from_address is the address that funds would be coming from.
 	FromAddress string `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
@@ -255,6 +259,7 @@ func (m *AutoResponseUpdate) GetResponse() AutoResponse {
 }
 
 // QuarantineRecord defines information regarding quarantined funds that is stored in state.
+// Deprecated: The quarantine module has been removed.
 type QuarantineRecord struct {
 	// unaccepted_from_addresses are the senders that have not been part of an accept yet for these coins.
 	UnacceptedFromAddresses []github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,1,rep,name=unaccepted_from_addresses,json=unacceptedFromAddresses,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"unaccepted_from_addresses,omitempty"`
@@ -328,6 +333,7 @@ func (m *QuarantineRecord) GetDeclined() bool {
 }
 
 // QuarantineRecordSuffixIndex defines a list of record suffixes that can be stored in state and used as an index.
+// Deprecated: The quarantine module has been removed.
 type QuarantineRecordSuffixIndex struct {
 	RecordSuffixes [][]byte `protobuf:"bytes,1,rep,name=record_suffixes,json=recordSuffixes,proto3" json:"record_suffixes,omitempty"`
 }

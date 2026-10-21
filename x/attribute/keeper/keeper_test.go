@@ -207,6 +207,48 @@ func (s *KeeperTestSuite) TestSetAttribute() {
 
 }
 
+func (s *KeeperTestSuite) TestSetAttributeReplacesOldExpirationLookup() {
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	future1 := s.startBlockTime.Add(1 * time.Hour)
+	future2 := s.startBlockTime.Add(2 * time.Hour)
+
+	s.Run("changing the expiration date deletes the old expiration key and adds the new one", func() {
+		value := []byte("attr-val-1")
+		attrV1 := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, &future1, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrV1, s.user1Addr), "SetAttribute with future1 expiration")
+		s.Require().NotNil(store.Get(types.AttributeExpireKey(attrV1)), "expiration key for future1 should exist after first SetAttribute")
+
+		attrV2 := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, &future2, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrV2, s.user1Addr), "SetAttribute with future2 expiration")
+
+		s.Assert().Nil(store.Get(types.AttributeExpireKey(attrV1)), "expiration key for future1 should be deleted after SetAttribute with future2")
+		s.Assert().NotNil(store.Get(types.AttributeExpireKey(attrV2)), "expiration key for future2 should exist after SetAttribute with future2")
+	})
+
+	s.Run("removing the expiration date deletes the old expiration key", func() {
+		value := []byte("attr-val-2")
+		attrWithExp := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, &future1, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrWithExp, s.user1Addr), "SetAttribute with expiration")
+		s.Require().NotNil(store.Get(types.AttributeExpireKey(attrWithExp)), "expiration key should exist after first SetAttribute")
+
+		attrNoExp := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, nil, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrNoExp, s.user1Addr), "SetAttribute without expiration")
+
+		s.Assert().Nil(store.Get(types.AttributeExpireKey(attrWithExp)), "expiration key should be deleted after SetAttribute without expiration")
+	})
+
+	s.Run("adding an expiration date to a previously unexpiring attribute adds a new key", func() {
+		value := []byte("attr-val-3")
+		attrNoExp := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, nil, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrNoExp, s.user1Addr), "SetAttribute without expiration")
+
+		attrWithExp := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, value, &future1, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attrWithExp, s.user1Addr), "SetAttribute with expiration")
+
+		s.Assert().NotNil(store.Get(types.AttributeExpireKey(attrWithExp)), "expiration key should exist after SetAttribute with expiration")
+	})
+}
+
 func (s *KeeperTestSuite) TestUpdateAttribute() {
 	attr := types.Attribute{
 		Name:          "example.attribute",
@@ -806,6 +848,113 @@ func (s *KeeperTestSuite) runGetAllAttributesTests(funcName string, attrGetter f
 	}
 }
 
+func (s *KeeperTestSuite) TestFindMissingAttributes() {
+	target := s.user1Addr
+
+	// Use an earlier block time for setup so that attributes with an expiration of "expired"
+	// (which is before s.ctx's block time) can still be set (their expiration just needs to be
+	// after the block time at the time they're set).
+	before := s.ctx.WithBlockTime(s.startBlockTime.Add(-1 * time.Hour))
+	expired := s.startBlockTime.Add(-1 * time.Minute)
+
+	names := []string{"aaa.bbb", "ccc.bbb", "ddd.eee", "fff.ggg", "old.bbb", "old.zzz", "lll.mmm", "evilfoo"}
+	for _, name := range names {
+		s.Require().NoError(s.app.NameKeeper.SetNameRecord(before, name, s.user1Addr, false), "SetNameRecord %q", name)
+	}
+
+	setAttr := func(name, value string, expirationDate *time.Time) {
+		attr := types.NewAttribute(name, target.String(), types.AttributeType_String, []byte(value), expirationDate, "")
+		s.Require().NoError(s.app.AttributeKeeper.SetAttribute(before, attr, s.user1Addr), "SetAttribute %q = %q", name, value)
+	}
+
+	setAttr("aaa.bbb", "v1", nil)           // matches exact "aaa.bbb" and wildcard "*.bbb"
+	setAttr("ccc.bbb", "v1", nil)           // also matches wildcard "*.bbb"
+	setAttr("ddd.eee", "v1", nil)           // matches wildcard "*.eee"
+	setAttr("fff.ggg", "v1", nil)           // exact-only control, no matching wildcard used below
+	setAttr("old.bbb", "v1", &expired)      // expired; would otherwise match "old.bbb" and "*.bbb"
+	setAttr("old.zzz", "v1", &expired)      // expired; the only attribute with a ".zzz" suffix
+	setAttr("lll.mmm", "expired", &expired) // expired entry under a name that also has an active one
+	setAttr("lll.mmm", "active", nil)       // active entry, same name as the expired one above
+	setAttr("evilfoo", "v1", nil)           // ends with "foo" but has no "." before it; must not match "*.foo"
+
+	tests := []struct {
+		name     string
+		addr     sdk.AccAddress
+		reqAttrs []string
+		expected []string
+	}{
+		{name: "no required attributes", addr: target, reqAttrs: nil, expected: nil},
+		{name: "single exact match", addr: target, reqAttrs: []string{"aaa.bbb"}, expected: nil},
+		{name: "single exact no match", addr: target, reqAttrs: []string{"zzz.zzz"}, expected: []string{"zzz.zzz"}},
+		{name: "single wildcard match", addr: target, reqAttrs: []string{"*.bbb"}, expected: nil},
+		{name: "single wildcard no match", addr: target, reqAttrs: []string{"*.zzz"}, expected: []string{"*.zzz"}},
+		{name: "expired exact attribute is missing", addr: target, reqAttrs: []string{"old.bbb"}, expected: []string{"old.bbb"}},
+		{name: "wildcard whose only match is expired", addr: target, reqAttrs: []string{"*.zzz"}, expected: []string{"*.zzz"}},
+		{
+			name:     "wildcard requires a dot boundary, not just a matching suffix",
+			addr:     target,
+			reqAttrs: []string{"*.foo"},
+			expected: []string{"*.foo"},
+		},
+		{
+			name:     "exact match with an expired entry and an active entry under the same name",
+			addr:     target,
+			reqAttrs: []string{"lll.mmm"},
+			expected: nil,
+		},
+		{
+			name:     "mixed exact and wildcard, all satisfied",
+			addr:     target,
+			reqAttrs: []string{"aaa.bbb", "*.bbb", "fff.ggg"},
+			expected: nil,
+		},
+		{
+			name:     "mixed exact and wildcard, exact not satisfied",
+			addr:     target,
+			reqAttrs: []string{"*.bbb", "zzz.zzz"},
+			expected: []string{"zzz.zzz"},
+		},
+		{
+			name:     "multiple wildcards, all satisfied",
+			addr:     target,
+			reqAttrs: []string{"*.bbb", "*.eee"},
+			expected: nil,
+		},
+		{
+			name:     "multiple wildcards, one unsatisfied",
+			addr:     target,
+			reqAttrs: []string{"*.bbb", "*.zzz"},
+			expected: []string{"*.zzz"},
+		},
+		{
+			name:     "duplicate entries, all satisfied",
+			addr:     target,
+			reqAttrs: []string{"aaa.bbb", "aaa.bbb", "*.bbb", "*.bbb"},
+			expected: nil,
+		},
+		{
+			name:     "duplicate entries, all missing",
+			addr:     target,
+			reqAttrs: []string{"zzz.zzz", "zzz.zzz"},
+			expected: []string{"zzz.zzz", "zzz.zzz"},
+		},
+		{
+			name:     "address with no attributes at all",
+			addr:     s.user2Addr,
+			reqAttrs: []string{"aaa.bbb", "*.bbb"},
+			expected: []string{"aaa.bbb", "*.bbb"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			missing, err := s.app.AttributeKeeper.FindMissingAttributes(s.ctx, tc.addr, tc.reqAttrs)
+			s.Require().NoError(err, "FindMissingAttributes error")
+			s.Assert().Equal(tc.expected, missing, "FindMissingAttributes result")
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestIncAndDecAddNameAddressLookup() {
 	attr := types.Attribute{
 		Name:          "example.attribute",
@@ -852,10 +1001,10 @@ func (s *KeeperTestSuite) TestGetAttributesByName() {
 	}
 	s.Assert().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr), "should save successfully")
 	_, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1, "blah")
-	s.Assert().Error(err)
-	s.Assert().Equal("no address bound to name", err.Error())
+	s.Assert().Error(err, "GetAttributes")
+	s.Assert().Contains(err.Error(), "no address bound to name")
 	attributes, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1, "example.attribute")
-	s.Assert().NoError(err)
+	s.Assert().NoError(err, "GetAttributes should succeed")
 	s.Assert().Equal(1, len(attributes))
 	s.Assert().Equal(attr.Name, attributes[0].Name)
 	s.Assert().Equal(attr.Address, attributes[0].Address)
@@ -1087,6 +1236,30 @@ func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
 	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr5)), "store.Get attr5 AttributeExpireKey")
 	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr5.Name, attr5.GetAddressBytes())), "store.Get attr5 AttributeNameAddrKeyPrefix")
 
+	// attr6 has a real, current expiration date in the future, so it should not be deleted.
+	s.Require().NoError(s.app.NameKeeper.SetNameRecord(s.ctx, "six.expire.testing", s.user1Addr, false), "SetNameRecord six.expire.testing")
+	attr6 := types.NewAttribute("six.expire.testing", s.user1, types.AttributeType_String, []byte("test6"), nil, "")
+	attr6.ExpirationDate = &future
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr6, s.user1Addr), "SetAttribute attr6")
+	s.Require().NotNil(store.Get(types.AttributeExpireKey(attr6)), "store.Get attr6 AttributeExpireKey")
+	s.Require().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr6.Name, attr6.GetAddressBytes())), "store.Get attr6 AttributeNameAddrKeyPrefix")
+
+	// Simulate an orphaned expiration-lookup entry for attr6: one that references attr6's address, name,
+	// and value hash (the parts GetAddrAttributeKeyFromExpireKey uses to find the attribute record), but
+	// with a past expiration time instead of attr6's real (future) one. This mirrors what SetAttribute's
+	// doc comment says can happen if it fails to unmarshal an existing record while overwriting it. This
+	// stale lookup entry should be deleted, but attr6 itself must not be, since it isn't actually expired.
+	attr6ExpireKeySuffix := types.AttributeExpireKey(attr6)[9:]
+	orphanedExpireKey := append(types.GetAttributeExpireTimePrefix(past), attr6ExpireKeySuffix...)
+	store.Set(orphanedExpireKey, []byte{})
+	s.Require().NotNil(store.Get(orphanedExpireKey), "store.Get orphanedExpireKey before DeleteExpiredAttributes")
+
+	// A too-short entry under the expiration key prefix should be deleted and skipped without panicking
+	// (GetAddrAttributeKeyFromExpireKey would otherwise panic trying to slice past the end of the key).
+	shortKey := append([]byte(nil), types.AttributeExpirationKeyPrefix...)
+	store.Set(shortKey, []byte{})
+	s.Require().NotNil(store.Get(shortKey), "store.Get shortKey before DeleteExpiredAttributes")
+
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager()).WithBlockTime(s.startBlockTime)
 	s.app.AttributeKeeper.DeleteExpiredAttributes(s.ctx, 0)
 
@@ -1110,6 +1283,19 @@ func (s *KeeperTestSuite) TestDeleteExpiredAttributes() {
 	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr4.Name, attr4.GetAddressBytes())), "store.Get attr4 AttributeNameAddrKeyPrefix")
 	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr5)), "store.Get attr5 AttributeExpireKey")
 	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr5.Name, attr5.GetAddressBytes())), "store.Get attr5 AttributeNameAddrKeyPrefix")
+
+	// attr6 was not actually expired, so it should survive even though a stale expiration-lookup entry
+	// pointed at it. Its own (non-expired) expiration entry should be untouched.
+	s.Assert().NotNil(store.Get(types.AttributeExpireKey(attr6)), "store.Get attr6 AttributeExpireKey")
+	s.Assert().NotNil(store.Get(types.AttributeNameAddrKeyPrefix(attr6.Name, attr6.GetAddressBytes())), "store.Get attr6 AttributeNameAddrKeyPrefix")
+	s.Assert().Nil(store.Get(orphanedExpireKey), "store.Get orphanedExpireKey: stale entry should have been removed")
+
+	// The malformed short entry should be removed without having caused a panic.
+	s.Assert().Nil(store.Get(shortKey), "store.Get shortKey: malformed entry should have been removed")
+
+	// Only attr1, attr2, and attr3 were actually expired and deleted, so only 3 events should have fired -
+	// the orphaned lookup for attr6 and the malformed short entry must not have produced any of their own.
+	s.Assert().Len(s.ctx.EventManager().Events(), 3, "number of events emitted by DeleteExpiredAttributes")
 }
 
 func (s *KeeperTestSuite) TestGetAccountData() {
