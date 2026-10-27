@@ -8,10 +8,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"cosmossdk.io/store/prefix"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -151,36 +150,17 @@ func (k Keeper) ScopesAll(c context.Context, req *types.ScopesAllRequest) (*type
 		incInfo = !req.ExcludeIdInfo
 	}
 
-	pageRequest := getPageRequest(req)
-
 	ctx := sdk.UnwrapSDKContext(c)
-	kvStore := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(kvStore, types.ScopeKeyPrefix)
-
-	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
-		scope, vErr := k.readScopeBz(value)
-		if vErr == nil {
+	scopes, pageRes, err := query.CollectionPaginate(ctx, k.scopeCollections, getPageRequest(req),
+		func(_ []byte, scope types.Scope) (*types.ScopeWrapper, error) {
+			scope.ValueOwnerAddress = "" // clear — not trusted from state
 			k.PopulateScopeValueOwner(ctx, &scope)
-			retval.Scopes = append(retval.Scopes, types.WrapScope(&scope, incInfo))
-			return nil
-		}
-		// Something's wrong. Let's do what we can to give indications of it.
-		var addr types.MetadataAddress
-		kErr := addr.Unmarshal(key)
-		if kErr == nil {
-			k.Logger(ctx).Error("failed to unmarshal scope", "address", addr, "error", vErr)
-			retval.Scopes = append(retval.Scopes, types.WrapScopeNotFound(addr))
-		} else {
-			k64 := b64.StdEncoding.EncodeToString(key)
-			k.Logger(ctx).Error("failed to unmarshal scope key and value",
-				"key error", kErr, "value error", vErr, "key (base64)", k64)
-			retval.Scopes = append(retval.Scopes, &types.ScopeWrapper{})
-		}
-		return nil // Still want to move on to the next.
-	})
+			return types.WrapScope(&scope, incInfo), nil
+		})
 	if err != nil {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
+	retval.Scopes = scopes
 	retval.Pagination = pageRes
 	return &retval, nil
 }
@@ -349,36 +329,15 @@ func (k Keeper) SessionsAll(c context.Context, req *types.SessionsAllRequest) (*
 		incInfo = !req.ExcludeIdInfo
 	}
 
-	pageRequest := getPageRequest(req)
-
 	ctx := sdk.UnwrapSDKContext(c)
-	kvStore := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(kvStore, types.SessionKeyPrefix)
-
-	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
-		var session types.Session
-		vErr := session.Unmarshal(value)
-		if vErr == nil {
-			retval.Sessions = append(retval.Sessions, types.WrapSession(&session, incInfo))
-			return nil
-		}
-		// Something's wrong. Let's do what we can to give indications of it.
-		var addr types.MetadataAddress
-		kErr := addr.Unmarshal(key)
-		if kErr == nil {
-			k.Logger(ctx).Error("failed to unmarshal session", "address", addr, "error", vErr)
-			retval.Sessions = append(retval.Sessions, types.WrapSessionNotFound(addr))
-		} else {
-			k64 := b64.StdEncoding.EncodeToString(key)
-			k.Logger(ctx).Error("failed to unmarshal session key and value",
-				"key error", kErr, "value error", vErr, "key (base64)", k64)
-			retval.Sessions = append(retval.Sessions, &types.SessionWrapper{})
-		}
-		return nil // Still want to move on to the next.
-	})
+	sessions, pageRes, err := query.CollectionPaginate(ctx, k.sessionCollections, getPageRequest(req),
+		func(_ []byte, session types.Session) (*types.SessionWrapper, error) {
+			return types.WrapSession(&session, incInfo), nil
+		})
 	if err != nil {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
+	retval.Sessions = sessions
 	retval.Pagination = pageRes
 	return &retval, nil
 }
@@ -535,36 +494,15 @@ func (k Keeper) RecordsAll(c context.Context, req *types.RecordsAllRequest) (*ty
 		incInfo = !req.ExcludeIdInfo
 	}
 
-	pageRequest := getPageRequest(req)
-
 	ctx := sdk.UnwrapSDKContext(c)
-	kvStore := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(kvStore, types.RecordKeyPrefix)
-
-	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
-		var record types.Record
-		vErr := record.Unmarshal(value)
-		if vErr == nil {
-			retval.Records = append(retval.Records, types.WrapRecord(&record, incInfo))
-			return nil
-		}
-		// Something's wrong. Let's do what we can to give indications of it.
-		var addr types.MetadataAddress
-		kErr := addr.Unmarshal(key)
-		if kErr == nil {
-			k.Logger(ctx).Error("failed to unmarshal record", "address", addr, "error", vErr)
-			retval.Records = append(retval.Records, types.WrapRecordNotFound(addr))
-		} else {
-			k64 := b64.StdEncoding.EncodeToString(key)
-			k.Logger(ctx).Error("failed to unmarshal record key and value",
-				"key error", kErr, "value error", vErr, "key (base64)", k64)
-			retval.Records = append(retval.Records, &types.RecordWrapper{})
-		}
-		return nil // Still want to move on to the next.
-	})
+	records, pageRes, err := query.CollectionPaginate(ctx, k.recordCollections, getPageRequest(req),
+		func(_ []byte, record types.Record) (*types.RecordWrapper, error) {
+			return types.WrapRecord(&record, incInfo), nil
+		})
 	if err != nil {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
+	retval.Records = records
 	retval.Pagination = pageRes
 	return &retval, nil
 }
@@ -591,24 +529,29 @@ func (k Keeper) Ownership(c context.Context, req *types.OwnershipRequest) (*type
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(k.storeKey)
-	scopeStore := prefix.NewStore(store, types.GetAddressScopeCacheIteratorPrefix(addr))
+	addrPrefix := address.MustLengthPrefix(addr)
 
-	pageRes, err := query.Paginate(scopeStore, req.Pagination, func(key, _ []byte) error {
-		var ma types.MetadataAddress
-		if mErr := ma.Unmarshal(key); mErr != nil {
-			return mErr
-		}
-		scopeUUID, sErr := ma.ScopeUUID()
-		if sErr != nil {
-			return sErr
-		}
-		retval.ScopeUuids = append(retval.ScopeUuids, scopeUUID.String())
-		return nil
-	})
+	uuids, pageRes, err := query.CollectionPaginate(ctx, k.addressScopeIndex, req.Pagination,
+		func(key []byte, _ []byte) (string, error) {
+			scopeIDBytes := key[len(addrPrefix):]
+			var ma types.MetadataAddress
+			if mErr := ma.Unmarshal(scopeIDBytes); mErr != nil {
+				return "", mErr
+			}
+			scopeUUID, sErr := ma.ScopeUUID()
+			if sErr != nil {
+				return "", sErr
+			}
+			return scopeUUID.String(), nil
+		},
+		func(o *query.CollectionsPaginateOptions[[]byte]) {
+			o.Prefix = &addrPrefix
+		},
+	)
 	if err != nil {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("paginate: %v", err)
 	}
+	retval.ScopeUuids = uuids
 	retval.Pagination = pageRes
 
 	return &retval, nil
@@ -721,36 +664,15 @@ func (k Keeper) ScopeSpecificationsAll(c context.Context, req *types.ScopeSpecif
 		incInfo = !req.ExcludeIdInfo
 	}
 
-	pageRequest := getPageRequest(req)
-
 	ctx := sdk.UnwrapSDKContext(c)
-	kvStore := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(kvStore, types.ScopeSpecificationKeyPrefix)
-
-	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
-		var scopeSpec types.ScopeSpecification
-		vErr := scopeSpec.Unmarshal(value)
-		if vErr == nil {
-			retval.ScopeSpecifications = append(retval.ScopeSpecifications, types.WrapScopeSpec(&scopeSpec, incInfo))
-			return nil
-		}
-		// Something's wrong. Let's do what we can to give indications of it.
-		var addr types.MetadataAddress
-		kErr := addr.Unmarshal(key)
-		if kErr == nil {
-			k.Logger(ctx).Error("failed to unmarshal scope spec", "address", addr, "error", vErr)
-			retval.ScopeSpecifications = append(retval.ScopeSpecifications, types.WrapScopeSpecNotFound(addr))
-		} else {
-			k64 := b64.StdEncoding.EncodeToString(key)
-			k.Logger(ctx).Error("failed to unmarshal scope spec key and value",
-				"key error", kErr, "value error", vErr, "key (base64)", k64)
-			retval.ScopeSpecifications = append(retval.ScopeSpecifications, &types.ScopeSpecificationWrapper{})
-		}
-		return nil // Still want to move on to the next.
-	})
+	specs, pageRes, err := query.CollectionPaginate(ctx, k.scopeSpecs, getPageRequest(req),
+		func(_ []byte, spec types.ScopeSpecification) (*types.ScopeSpecificationWrapper, error) {
+			return types.WrapScopeSpec(&spec, incInfo), nil
+		})
 	if err != nil {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
+	retval.ScopeSpecifications = specs
 	retval.Pagination = pageRes
 	return &retval, nil
 }
@@ -808,36 +730,15 @@ func (k Keeper) ContractSpecificationsAll(c context.Context, req *types.Contract
 		incInfo = !req.ExcludeIdInfo
 	}
 
-	pageRequest := getPageRequest(req)
-
 	ctx := sdk.UnwrapSDKContext(c)
-	kvStore := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(kvStore, types.ContractSpecificationKeyPrefix)
-
-	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
-		var contractSpec types.ContractSpecification
-		vErr := contractSpec.Unmarshal(value)
-		if vErr == nil {
-			retval.ContractSpecifications = append(retval.ContractSpecifications, types.WrapContractSpec(&contractSpec, incInfo))
-			return nil
-		}
-		// Something's wrong. Let's do what we can to give indications of it.
-		var addr types.MetadataAddress
-		kErr := addr.Unmarshal(key)
-		if kErr == nil {
-			k.Logger(ctx).Error("failed to unmarshal contract spec", "address", addr, "error", vErr)
-			retval.ContractSpecifications = append(retval.ContractSpecifications, types.WrapContractSpecNotFound(addr))
-		} else {
-			k64 := b64.StdEncoding.EncodeToString(key)
-			k.Logger(ctx).Error("failed to unmarshal contract spec key and value",
-				"key error", kErr, "value error", vErr, "key (base64)", k64)
-			retval.ContractSpecifications = append(retval.ContractSpecifications, &types.ContractSpecificationWrapper{})
-		}
-		return nil // Still want to move on to the next.
-	})
+	specs, pageRes, err := query.CollectionPaginate(ctx, k.contractSpecCollection, getPageRequest(req),
+		func(_ []byte, spec types.ContractSpecification) (*types.ContractSpecificationWrapper, error) {
+			return types.WrapContractSpec(&spec, incInfo), nil
+		})
 	if err != nil {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
+	retval.ContractSpecifications = specs
 	retval.Pagination = pageRes
 	return &retval, nil
 }
@@ -927,37 +828,15 @@ func (k Keeper) RecordSpecificationsAll(c context.Context, req *types.RecordSpec
 		}
 		incInfo = !req.ExcludeIdInfo
 	}
-
-	pageRequest := getPageRequest(req)
-
 	ctx := sdk.UnwrapSDKContext(c)
-	kvStore := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(kvStore, types.RecordSpecificationKeyPrefix)
-
-	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
-		var recordSpec types.RecordSpecification
-		vErr := recordSpec.Unmarshal(value)
-		if vErr == nil {
-			retval.RecordSpecifications = append(retval.RecordSpecifications, types.WrapRecordSpec(&recordSpec, incInfo))
-			return nil
-		}
-		// Something's wrong. Let's do what we can to give indications of it.
-		var addr types.MetadataAddress
-		kErr := addr.Unmarshal(key)
-		if kErr == nil {
-			k.Logger(ctx).Error("failed to unmarshal record spec", "address", addr, "error", vErr)
-			retval.RecordSpecifications = append(retval.RecordSpecifications, types.WrapRecordSpecNotFound(addr))
-		} else {
-			k64 := b64.StdEncoding.EncodeToString(key)
-			k.Logger(ctx).Error("failed to unmarshal record spec key and value",
-				"key error", kErr, "value error", vErr, "key (base64)", k64)
-			retval.RecordSpecifications = append(retval.RecordSpecifications, &types.RecordSpecificationWrapper{})
-		}
-		return nil // Still want to move on to the next.
-	})
+	specs, pageRes, err := query.CollectionPaginate(ctx, k.recordSpecs, getPageRequest(req),
+		func(_ []byte, spec types.RecordSpecification) (*types.RecordSpecificationWrapper, error) {
+			return types.WrapRecordSpec(&spec, incInfo), nil
+		})
 	if err != nil {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
+	retval.RecordSpecifications = specs
 	retval.Pagination = pageRes
 	return &retval, nil
 }
@@ -1076,7 +955,6 @@ func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsBy
 	}
 
 	var sDec []byte
-	// rest request send in base64 encoded uri, using a URL-compatible base64 format.
 	if IsBase64(request.Uri) {
 		sDec, _ = b64.StdEncoding.DecodeString(request.Uri)
 	} else {
@@ -1088,23 +966,22 @@ func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsBy
 	}
 	uriStr := uri.String()
 
-	osLocatorStore := prefix.NewStore(sdk.UnwrapSDKContext(ctx).KVStore(k.storeKey), types.OSLocatorAddressKeyPrefix)
-	retval.Pagination, err = query.FilteredPaginate(osLocatorStore, request.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
-		record := types.ObjectStoreLocator{}
-		if rerr := k.cdc.Unmarshal(value, &record); rerr != nil {
-			return false, rerr
-		}
-		if record.LocatorUri != uriStr {
-			return false, nil
-		}
-		if accumulate {
-			retval.Locators = append(retval.Locators, record)
-		}
-		return true, nil
-	})
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	locators, pageRes, err := query.CollectionFilteredPaginate(sdkCtx, k.osLocators, request.Pagination,
+		// predicate: keep only matching URIs
+		func(_ []byte, locator types.ObjectStoreLocator) (bool, error) {
+			return locator.LocatorUri == uriStr, nil
+		},
+		// transform: return the locator as-is
+		func(_ []byte, locator types.ObjectStoreLocator) (types.ObjectStoreLocator, error) {
+			return locator, nil
+		},
+	)
 	if err != nil {
 		return &retval, err
 	}
+	retval.Locators = locators
+	retval.Pagination = pageRes
 	if len(retval.Locators) == 0 {
 		return &retval, types.ErrNoRecordsFound
 	}
@@ -1146,20 +1023,16 @@ func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsR
 		retval.Request = request
 	}
 
-	osLocatorStore := prefix.NewStore(sdk.UnwrapSDKContext(ctx).KVStore(k.storeKey), types.OSLocatorAddressKeyPrefix)
-	var err error
-	retval.Pagination, err = query.Paginate(osLocatorStore, request.Pagination, func(_ []byte, value []byte) error {
-		record := types.ObjectStoreLocator{}
-		if rerr := k.cdc.Unmarshal(value, &record); rerr != nil {
-			return rerr
-		}
-		retval.Locators = append(retval.Locators, record)
-		return nil
-	})
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	locators, pageRes, err := query.CollectionPaginate(sdkCtx, k.osLocators, request.Pagination,
+		func(_ []byte, locator types.ObjectStoreLocator) (types.ObjectStoreLocator, error) {
+			return locator, nil
+		})
 	if err != nil {
 		return &retval, err
 	}
-
+	retval.Locators = locators
+	retval.Pagination = pageRes
 	return &retval, nil
 }
 
