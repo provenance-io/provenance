@@ -463,7 +463,7 @@ func (s *IntegrationTestSuite) TestListAccountAttributesCmd() {
 		{
 			name:           "should list all attributes for account with json output",
 			args:           []string{s.account1Addr.String(), fmt.Sprintf("--%s=json", cmtcli.OutputFlag)},
-			expectedOutput: fmt.Sprintf(`{"account":"%[1]s","attributes":[{"name":"example.attribute.count","value":"Mg==","attribute_type":"ATTRIBUTE_TYPE_INT","address":"%[1]s","expiration_date":null,"concrete_type":""},{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%[1]s","expiration_date":null,"concrete_type":""},{"name":"accountdata","value":"YWNjb3VudGRhdGEgc2V0IGF0IGdlbmVzaXM=","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%[1]s","expiration_date":null,"concrete_type":""}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String()),
+			expectedOutput: fmt.Sprintf(`{"account":"%[1]s","attributes":[{"name":"accountdata","value":"YWNjb3VudGRhdGEgc2V0IGF0IGdlbmVzaXM=","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%[1]s","expiration_date":null,"concrete_type":""},{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%[1]s","expiration_date":null,"concrete_type":""},{"name":"example.attribute.count","value":"Mg==","attribute_type":"ATTRIBUTE_TYPE_INT","address":"%[1]s","expiration_date":null,"concrete_type":""}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String()),
 		},
 		{
 			name: "should list all attributes for account text output",
@@ -471,11 +471,11 @@ func (s *IntegrationTestSuite) TestListAccountAttributesCmd() {
 			expectedOutput: fmt.Sprintf(`account: %[1]s
 attributes:
 - address: %[1]s
-  attribute_type: ATTRIBUTE_TYPE_INT
+  attribute_type: ATTRIBUTE_TYPE_STRING
   concrete_type: ""
   expiration_date: null
-  name: example.attribute.count
-  value: Mg==
+  name: accountdata
+  value: YWNjb3VudGRhdGEgc2V0IGF0IGdlbmVzaXM=
 - address: %[1]s
   attribute_type: ATTRIBUTE_TYPE_STRING
   concrete_type: ""
@@ -483,11 +483,11 @@ attributes:
   name: example.attribute
   value: ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n
 - address: %[1]s
-  attribute_type: ATTRIBUTE_TYPE_STRING
+  attribute_type: ATTRIBUTE_TYPE_INT
   concrete_type: ""
   expiration_date: null
-  name: accountdata
-  value: YWNjb3VudGRhdGEgc2V0IGF0IGdlbmVzaXM=
+  name: example.attribute.count
+  value: Mg==
 pagination:
   next_key: null
   total: "0"`,
