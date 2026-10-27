@@ -422,6 +422,9 @@ require (
 )
 
 replace (
+	// This can be removed once we bump the SDK to v0.54 or greater.
+	cosmossdk.io/x/feegrant => github.com/provenance-io/cosmos-sdk/x/feegrant v0.2.0-pio-1
+
 	// Use cosmos fork of keyring (because the SDK does).
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 

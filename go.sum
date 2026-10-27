@@ -56,8 +56,6 @@ cosmossdk.io/x/circuit v0.1.1 h1:KPJCnLChWrxD4jLwUiuQaf5mFD/1m7Omyo7oooefBVQ=
 cosmossdk.io/x/circuit v0.1.1/go.mod h1:B6f/urRuQH8gjt4eLIXfZJucrbreuYrKh5CSjaOxr+Q=
 cosmossdk.io/x/evidence v0.2.0 h1:o72zbmgCM7U0v7z7b0XnMB+NqX0tFamqb1HHkQbhrZ0=
 cosmossdk.io/x/evidence v0.2.0/go.mod h1:zx/Xqy+hnGVzkqVuVuvmP9KsO6YCl4SfbAetYi+k+sE=
-cosmossdk.io/x/feegrant v0.2.0 h1:oq3WVpoJdxko/XgWmpib63V1mYy9ZQN/1qxDajwGzJ8=
-cosmossdk.io/x/feegrant v0.2.0/go.mod h1:9CutZbmhulk/Yo6tQSVD5LG8Lk40ZAQ1OX4d1CODWAE=
 cosmossdk.io/x/nft v0.2.0 h1:cd8QGeThxtvspOYGu0WJX0ioI9YnUG4qNwo3/Ac03GM=
 cosmossdk.io/x/nft v0.2.0/go.mod h1:KsJBxkrPvcNRNLQYzlj7MHiJjSMw7MwU7p8/P9EyDwo=
 cosmossdk.io/x/tx v0.14.0 h1:hB3O25kIcyDW/7kMTLMaO8Ripj3yqs5imceVd6c/heA=
@@ -1013,6 +1011,8 @@ github.com/prometheus/procfs v0.21.1 h1:GljZCt+zSTS+NZq88cyQ1LjZ+RCHp3uVuabBWA5+
 github.com/prometheus/procfs v0.21.1/go.mod h1:aB55Cww9pdSJVHk0hUf0inxWyyjPogFIjmHKYgMKmtY=
 github.com/provenance-io/cosmos-sdk v0.53.8-pio-2 h1:H10JaP6Ys62dwafm7uGAtKzhu9PHWe8b90ivK/0dW3Q=
 github.com/provenance-io/cosmos-sdk v0.53.8-pio-2/go.mod h1:b/De6uhCfooGEy4kE5G4C0A+MxK9aPr0nZNMyR+PmY0=
+github.com/provenance-io/cosmos-sdk/x/feegrant v0.2.0-pio-1 h1:ljBpUhViHq1hINAsaYQkgPhsW9rzfDUUAby2cNG7VGY=
+github.com/provenance-io/cosmos-sdk/x/feegrant v0.2.0-pio-1/go.mod h1:RGvg5iww8Usy1Hqb//kkkdbJ1UXnCipsF0azpJaKGsA=
 github.com/provenance-io/wasmd v0.61.15-pio-1 h1:L/CxrLmlLOuiPmVriBjOXBm0cPsj/bdjwgdmgE8J67w=
 github.com/provenance-io/wasmd v0.61.15-pio-1/go.mod h1:1KBJXoJM/ilwbPtiKuUNUx5DoCZ/8pe7d42lW80U6Sg=
 github.com/provlabs/vault v1.2.4 h1:EdcSfMy6uql2mMDv0VpCy5xfpHsUAATB1OH8Gq5wLo0=
