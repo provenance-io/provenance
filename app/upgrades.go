@@ -58,6 +58,8 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
+			fixFeegrantRevokeList(ctx, app)
+
 			return vm, nil
 		},
 	},
@@ -77,6 +79,8 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
+
+			fixFeegrantRevokeList(ctx, app)
 
 			return vm, nil
 		},
