@@ -1111,10 +1111,11 @@ func (s *UpgradeTestSuite) TestFixFeegrantRevokeList() {
 	slices.SortFunc(expQueueKeys, bytes.Compare)
 
 	expInLog := []string{
-		"INF Fixing feegrant revoke list. module=baseapp",
+		"INF Fixing feegrant expiration queue. module=baseapp",
 		"INF Found 2 feegrants with an expiration. module=baseapp",
-		"INF Deleted 2 existing feegrant queue entries. module=baseapp",
-		"INF Done fixing feegrant revoke list. module=baseapp",
+		"INF Deleted all (2) existing feegrant expiration queue entries. module=baseapp",
+		"INF Wrote 2 feegrant expiration queue entries. module=baseapp",
+		"INF Done fixing feegrant expiration queue. module=baseapp",
 	}
 	s.ExecuteAndAssertLogs(func() { fixFeegrantRevokeList(s.ctx, s.app) }, expInLog, nil, true, "fixFeegrantRevokeList")
 

@@ -362,12 +362,13 @@ func fixFeegrantRevokeList(ctx sdk.Context, app *App) {
 	for _, key := range queueKeys {
 		store.Delete(key)
 	}
-	ctx.Logger().Info(fmt.Sprintf("Deleted %d existing feegrant queue entries.", len(queueKeys)))
+	ctx.Logger().Info(fmt.Sprintf("Deleted all (%d) existing feegrant expiration queue entries.", len(queueKeys)))
 
 	// Add the correct queue entry for each allowance with an expiration.
 	for _, entry := range entries {
 		store.Set(feegrant.FeeAllowancePrefixQueue(entry.exp, entry.grantKey), []byte{})
 	}
 
+	ctx.Logger().Info(fmt.Sprintf("Wrote %d feegrant expiration queue entries.", len(entries)))
 	ctx.Logger().Info("Done fixing feegrant expiration queue.")
 }
