@@ -15,6 +15,8 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1039,6 +1041,7 @@ func (s *UpgradeTestSuite) TestHibiscusRC1() {
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
+		"INF Fixing feegrant expiration queue. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("hibiscus-rc1", expInLog, nil)
 }
@@ -1049,6 +1052,80 @@ func (s *UpgradeTestSuite) TestHibiscus() {
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
+		"INF Fixing feegrant expiration queue. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("hibiscus", expInLog, nil)
+}
+
+func (s *UpgradeTestSuite) TestFixFeegrantRevokeList() {
+	newAddr := func() sdk.AccAddress { return sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()) }
+	addr1, addr2, addr3 := newAddr(), newAddr(), newAddr()
+	exp1 := s.startTime.Add(24 * time.Hour).UTC()
+	exp2 := s.startTime.Add(48 * time.Hour).UTC()
+	exp3 := s.startTime.Add(72 * time.Hour).UTC()
+
+	store := s.ctx.KVStore(s.app.GetKey(feegrant.StoreKey))
+	queueKey := func(granter, grantee sdk.AccAddress, exp time.Time) []byte {
+		return feegrant.FeeAllowancePrefixQueue(&exp, feegrant.FeeAllowanceKey(granter, grantee)[1:])
+	}
+	getQueueKeys := func() [][]byte {
+		var rv [][]byte
+		iter := storetypes.KVStorePrefixIterator(store, feegrant.FeeAllowanceQueueKeyPrefix)
+		defer iter.Close()
+		for ; iter.Valid(); iter.Next() {
+			rv = append(rv, bytes.Clone(iter.Key()))
+		}
+		return rv
+	}
+
+	periodic := &feegrant.PeriodicAllowance{
+		Basic:            feegrant.BasicAllowance{Expiration: &exp2},
+		Period:           time.Hour,
+		PeriodSpendLimit: sdk.NewCoins(sdk.NewInt64Coin("nhash", 100)),
+		PeriodCanSpend:   sdk.NewCoins(sdk.NewInt64Coin("nhash", 100)),
+	}
+	allowedMsg, err := feegrant.NewAllowedMsgAllowance(periodic, []string{"/cosmos.bank.v1beta1.MsgSend"})
+	s.Require().NoError(err, "NewAllowedMsgAllowance")
+
+	grants := []struct {
+		granter   sdk.AccAddress
+		grantee   sdk.AccAddress
+		allowance feegrant.FeeAllowanceI
+	}{
+		{granter: addr1, grantee: addr2, allowance: &feegrant.BasicAllowance{Expiration: &exp1}},
+		{granter: addr1, grantee: addr3, allowance: allowedMsg},
+		{granter: addr2, grantee: addr3, allowance: &feegrant.BasicAllowance{}},
+	}
+	for i, g := range grants {
+		s.Require().NoError(s.app.FeeGrantKeeper.GrantAllowance(s.ctx, g.granter, g.grantee, g.allowance), "[%d]: GrantAllowance", i)
+	}
+
+	// Simulate the bug's effects: a stale entry left behind for a revoked grant,
+	// and a missing entry for an existing grant (deleted by someone else's revoke).
+	staleKey := queueKey(addr3, addr1, exp3)
+	store.Set(staleKey, []byte{})
+	store.Delete(queueKey(addr1, addr2, exp1))
+	s.Require().Contains(getQueueKeys(), staleKey, "queue keys before fix")
+
+	expQueueKeys := [][]byte{queueKey(addr1, addr2, exp1), queueKey(addr1, addr3, exp2)}
+	slices.SortFunc(expQueueKeys, bytes.Compare)
+
+	expInLog := []string{
+		"INF Fixing feegrant expiration queue. module=baseapp",
+		"INF Found 2 feegrants with an expiration. module=baseapp",
+		"INF Deleted all (2) existing feegrant expiration queue entries. module=baseapp",
+		"INF Wrote 2 feegrant expiration queue entries. module=baseapp",
+		"INF Done fixing feegrant expiration queue. module=baseapp",
+	}
+	s.ExecuteAndAssertLogs(func() { fixFeegrantRevokeList(s.ctx, s.app) }, expInLog, nil, true, "fixFeegrantRevokeList")
+
+	s.Assert().Equal(expQueueKeys, getQueueKeys(), "queue keys after fix")
+
+	// Make sure the allowances themselves weren't changed.
+	for i, g := range grants {
+		actual, err := s.app.FeeGrantKeeper.GetAllowance(s.ctx, g.granter, g.grantee)
+		if s.Assert().NoError(err, "[%d]: GetAllowance", i) {
+			s.Assert().Equal(g.allowance, actual, "[%d]: GetAllowance", i)
+		}
+	}
 }
