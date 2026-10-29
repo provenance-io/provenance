@@ -183,3 +183,67 @@ func (k Keeper) ValidateAtLeastOneHasAccess(ctx sdk.Context, markerAddr sdk.AccA
 	}
 	return fmt.Errorf("none of %q have permission %s on %s marker (%s)", strs, role, denom, markerAddr)
 }
+
+// mergeAccess adds the permissions that the grant's address already has on the marker to the grant.
+// The grant is updated in place, so afterward, it holds the full set of permissions to store.
+func (k Keeper) mergeAccess(ctx sdk.Context, markerAddr sdk.AccAddress, grant types.AccessGrantI) error {
+	if err := grant.Validate(); err != nil {
+		return err
+	}
+	existing := k.GetAccess(ctx, markerAddr, grant.GetAddress())
+	if len(existing) == 0 {
+		return nil
+	}
+	return grant.MergeAdd(*types.NewAccessGrant(grant.GetAddress(), existing))
+}
+
+// validateGrantForMarker returns an error if the grant's permissions are not allowed on the marker.
+// These are the same checks that MarkerAccount.Validate applies to each entry in its AccessControl.
+func validateGrantForMarker(m types.MarkerAccountI, grant types.AccessGrantI) error {
+	perms := grant.GetAccessList()
+	if err := types.ValidateGrantsForMarkerType(m.GetMarkerType(), *types.NewAccessGrant(grant.GetAddress(), perms)); err != nil {
+		return fmt.Errorf("invalid access privileges granted: %w", err)
+	}
+	if len(perms) > 0 && grant.GetAddress().Equals(m.GetAddress()) {
+		return fmt.Errorf("permissions cannot be granted to '%s' marker account: %v", m.GetDenom(), perms)
+	}
+	return nil
+}
+
+// validateAccessControl checks the marker rules that depend on its permissions, reading the permissions
+// from the store (see MarkerAccount.ValidateWithAccessControl). Any addresses in without are treated as
+// having no permissions, so this can be used before revoking their access.
+func (k Keeper) validateAccessControl(ctx sdk.Context, m types.MarkerAccountI, without ...sdk.AccAddress) error {
+	hasOther := func(role types.Access) (bool, error) {
+		addrs, err := k.AddressesWithAccess(ctx, m.GetAddress(), role)
+		if err != nil {
+			return false, err
+		}
+		for _, addr := range addrs {
+			if !slices.ContainsFunc(without, func(w sdk.AccAddress) bool { return w.Equals(addr) }) {
+				return true, nil
+			}
+		}
+		return false, nil
+	}
+
+	if m.GetStatus() < types.StatusActive && len(m.GetManager()) == 0 {
+		hasAdmin, err := hasOther(types.Access_Admin)
+		if err != nil {
+			return err
+		}
+		if !hasAdmin {
+			return fmt.Errorf("a manager is required if there are no accounts with ACCESS_ADMIN and marker is not ACTIVE")
+		}
+	}
+	if m.GetStatus() == types.StatusFinalized && m.GetSupply().IsZero() {
+		hasMint, err := hasOther(types.Access_Mint)
+		if err != nil {
+			return err
+		}
+		if !hasMint {
+			return fmt.Errorf("cannot create a marker with zero total supply and no authorization for minting more")
+		}
+	}
+	return nil
+}

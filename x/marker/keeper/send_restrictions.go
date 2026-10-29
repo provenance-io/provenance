@@ -56,7 +56,7 @@ func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.Ac
 					fromAddr.String(), fromMarker.GetDenom())
 			}
 			// Need at least one admin that can make withdrawals.
-			if err := k.ValidateAtLeastOneHasAccess(ctx, fromMarker.GetAddress(), admins, types.Access_Withdraw); err != nil {
+			if err := k.ValidateAtLeastOneHasAccess(ctx, fromAddr, admins, types.Access_Withdraw); err != nil {
 				return nil, err
 			}
 		}
@@ -77,11 +77,11 @@ func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.Ac
 	toMarker, _ := k.GetMarker(ctx, toAddr)
 	if toMarker != nil && (toMarker.GetMarkerType() == types.MarkerType_RestrictedCoin || toMarker.RequiresDepositAccess()) {
 		if len(admins) > 0 {
-			if err := k.ValidateAtLeastOneHasAccess(ctx, toMarker.GetAddress(), admins, types.Access_Deposit); err != nil {
+			if err := k.ValidateAtLeastOneHasAccess(ctx, toAddr, admins, types.Access_Deposit); err != nil {
 				return nil, err
 			}
 		} else {
-			if err := k.ValidateHasAccess(ctx, toMarker.GetAddress(), fromAddr, types.Access_Deposit); err != nil {
+			if err := k.ValidateHasAccess(ctx, toAddr, fromAddr, types.Access_Deposit); err != nil {
 				return nil, err
 			}
 		}
@@ -122,7 +122,7 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 	}
 
 	// If there's an admin that has transfer access, it's not a normal bank send and there's nothing more to do here.
-	if len(admins) > 0 && k.AtLeastOneHasAccess(ctx, marker.GetAddress(), admins, types.Access_Transfer) {
+	if len(admins) > 0 && k.AtLeastOneHasAccess(ctx, markerAddr, admins, types.Access_Transfer) {
 		return nil
 	}
 
@@ -135,7 +135,7 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 	}
 
 	// If the fromAddr has transfer access, there's nothing left to check.
-	if k.HasAccess(ctx, marker.GetAddress(), fromAddr, types.Access_Transfer) {
+	if k.HasAccess(ctx, markerAddr, fromAddr, types.Access_Transfer) {
 		return nil
 	}
 
@@ -146,7 +146,7 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 	if toMarker != nil {
 		if len(admins) == 0 {
 			return fmt.Errorf("%s does not have %s on %s marker (%s)",
-				fromAddr, types.Access_Transfer, denom, marker.GetAddress())
+				fromAddr, types.Access_Transfer, denom, markerAddr)
 		}
 		addrs := make([]string, 1+len(admins))
 		addrs[0] = fromAddr.String()
@@ -154,7 +154,7 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 			addrs[i+1] = admin.String()
 		}
 		return fmt.Errorf("none of %q have %s on %s marker (%s)",
-			addrs, types.Access_Transfer, denom, marker.GetAddress())
+			addrs, types.Access_Transfer, denom, markerAddr)
 	}
 
 	// If there aren't any required attributes, transfer permission is required unless coming from a bypass account.

@@ -81,12 +81,13 @@ type Keeper struct {
 	// Key layout: [0x04][len(marker)][marker][denom] → proto(NetAssetValue)
 	navs collections.Map[collections.Pair[sdk.AccAddress, string], types.NetAssetValue]
 
-	// markerPerms stores per-address marker permissions: key = (markerAddr, granteeAddr), value = permission list.
-	// Key layout: [0x01][len(marker)][marker][len(grantee)][grantee] → proto(MarkerPermissions)
-	markerPerms collections.Map[collections.Pair[sdk.AccAddress, sdk.AccAddress], types.MarkerPermissions]
 	// params stores module parameters as a singleton.
 	// Key layout: [0x05] → proto(Params)
 	params collections.Item[types.Params]
+
+	// markerPerms stores per-address marker permissions: key = (markerAddr, granteeAddr), value = permission list.
+	// Key layout: [0x06][len(marker)][marker][len(grantee)][grantee] → proto(MarkerPermissions)
+	markerPerms collections.Map[collections.Pair[sdk.AccAddress, sdk.AccAddress], types.MarkerPermissions]
 
 	// the signing authority for the gov proposals
 	authority string
@@ -153,13 +154,6 @@ func NewKeeper(
 		ibcTransferServer:     ibcTransferServer,
 		reqAttrBypassAddrs:    types.NewImmutableAccAddresses(reqAttrBypassAddrs),
 		groupChecker:          checker,
-		markerPerms: collections.NewMap(
-			sb,
-			collections.NewPrefix(types.MarkerPermsKeyPrefix), // [0x01]
-			"marker_perms",
-			pairAddrCodec,
-			codec.CollValue[types.MarkerPermissions](cdc),
-		),
 		markers: collections.NewMap(
 			sb,
 			collections.NewPrefix(types.MarkerStoreKeyPrefix), // [0x02]
@@ -186,6 +180,13 @@ func NewKeeper(
 			collections.NewPrefix(types.MarkerParamStoreKey), // [0x05]
 			"params",
 			codec.CollValue[types.Params](cdc),
+		),
+		markerPerms: collections.NewMap(
+			sb,
+			collections.NewPrefix(types.MarkerPermsKeyPrefix), // [0x06]
+			"marker_perms",
+			pairAddrCodec,
+			codec.CollValue[types.MarkerPermissions](cdc),
 		),
 	}
 	schema, err := sb.Build()

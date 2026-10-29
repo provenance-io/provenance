@@ -110,7 +110,14 @@ func (k Keeper) HandleSetAdministratorProposal(ctx sdk.Context, denom string, ac
 		return fmt.Errorf("%s marker does not allow governance control", denom)
 	}
 	for _, a := range accessGrants {
-		if err := m.GrantAccess(types.NewAccessGrant(a.GetAddress(), a.Permissions)); err != nil {
+		grant := types.NewAccessGrant(a.GetAddress(), a.Permissions)
+		if err := k.mergeAccess(ctx, addr, grant); err != nil {
+			return err
+		}
+		if err := validateGrantForMarker(m, grant); err != nil {
+			return err
+		}
+		if err := k.SetAccess(ctx, addr, grant.GetAddress(), grant.GetAccessList()); err != nil {
 			return err
 		}
 		logger := k.Logger(ctx)
@@ -133,7 +140,7 @@ func (k Keeper) HandleRemoveAdministratorProposal(ctx sdk.Context, denom string,
 	if err != nil {
 		return err
 	}
-	m, err := k.GetMarkerWithPerms(ctx, addr)
+	m, err := k.GetMarker(ctx, addr)
 	if err != nil {
 		return err
 	}
@@ -149,13 +156,11 @@ func (k Keeper) HandleRemoveAdministratorProposal(ctx sdk.Context, denom string,
 		if err != nil {
 			return err
 		}
-		if err = m.RevokeAccess(removeAddr); err != nil {
-			return err
-		}
+
 		removeAddrs = append(removeAddrs, removeAddr)
 	}
 
-	if err := m.ValidateWithAccessControl(); err != nil {
+	if err := k.validateAccessControl(ctx, m, removeAddrs...); err != nil {
 		return err
 	}
 
@@ -178,7 +183,7 @@ func (k Keeper) HandleChangeStatusProposal(ctx sdk.Context, denom string, status
 	if err != nil {
 		return err
 	}
-	m, err := k.GetMarkerWithPerms(ctx, addr)
+	m, err := k.GetMarker(ctx, addr)
 	if err != nil {
 		return err
 	}
@@ -216,10 +221,9 @@ func (k Keeper) HandleChangeStatusProposal(ctx sdk.Context, denom string, status
 		return err
 	}
 
-	if err := m.ValidateWithAccessControl(); err != nil {
+	if err := m.Validate(); err != nil {
 		return err
 	}
-	m.ClearAccessList()
 	if err := k.SetMarker(ctx, m); err != nil {
 		return err
 	}

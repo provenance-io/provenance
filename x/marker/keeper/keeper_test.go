@@ -1862,8 +1862,8 @@ func TestGrantAllowanceVaultPrincipalMarker(t *testing.T) {
 	admin := testUserAddress("admin")
 
 	principal := types.NewEmptyMarkerAccount(shareDenom, admin.String(), nil)
-	require.NoError(t, principal.GrantAccess(types.NewAccessGrant(admin, []types.Access{types.Access_Admin})))
 	setNewAccount(app, ctx, principal)
+	require.NoError(t, app.MarkerKeeper.SetAccess(ctx, principal.GetAddress(), admin, []types.Access{types.Access_Admin}), "SetAccess admin")
 
 	vault := vaulttypes.NewVaultAccount(
 		authtypes.NewBaseAccountWithAddress(vaulttypes.GetVaultAddress(shareDenom)),

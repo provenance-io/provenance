@@ -93,7 +93,7 @@ func (k Keeper) AddAccess(
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "add_access")
 
 	// (if marker does not exist then fail)
-	m, err := k.GetMarkerByDenomWithPerms(ctx, denom)
+	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", denom, err)
 	}
@@ -101,7 +101,7 @@ func (k Keeper) AddAccess(
 	// marker is fixed/active, assert permission to make changes by checking for Grant Permission
 	case types.StatusFinalized, types.StatusActive:
 		if (!caller.Equals(m.GetManager()) || m.GetStatus() != types.StatusFinalized) &&
-			!m.AddressHasAccess(caller, types.Access_Admin) {
+			!k.HasAccess(ctx, m.GetAddress(), caller, types.Access_Admin) {
 			return fmt.Errorf("%s is not authorized to make access list changes against finalized/active %s marker",
 				caller, m.GetDenom())
 		}
@@ -112,15 +112,13 @@ func (k Keeper) AddAccess(
 		if !mgr.Equals(caller) && m.GetStatus() == types.StatusProposed {
 			return fmt.Errorf("updates to pending marker %s can only be made by %s", m.GetDenom(), mgr)
 		}
-		if err = m.GrantAccess(grant); err != nil {
+		if err = k.mergeAccess(ctx, m.GetAddress(), grant); err != nil {
 			return fmt.Errorf("access grant failed: %w", err)
 		}
-		if err := m.ValidateWithAccessControl(); err != nil {
+		if err = validateGrantForMarker(m, grant); err != nil {
 			return err
 		}
-		// Only the permissions changed, so just update that one record.
-		perms := types.GrantsForAddress(grant.GetAddress(), m.GetAccessList()...).GetAccessList()
-		if err := k.SetAccess(ctx, m.GetAddress(), grant.GetAddress(), perms); err != nil {
+		if err = k.SetAccess(ctx, m.GetAddress(), grant.GetAddress(), grant.GetAccessList()); err != nil {
 			return err
 		}
 	// Undefined, Cancelled, Destroyed -- no modifications are supported in these states
@@ -138,7 +136,7 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	defer telemetry.MeasureSince(telemetry.Now(), types.ModuleName, "remove_access")
 
 	// (if marker does not exist then fail)
-	m, err := k.GetMarkerByDenomWithPerms(ctx, denom)
+	m, err := k.GetMarkerByDenom(ctx, denom)
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", denom, err)
 	}
@@ -146,7 +144,7 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	// marker is fixed/active, assert permission to make changes by checking for Grant Permission
 	case types.StatusFinalized, types.StatusActive:
 		if (!caller.Equals(m.GetManager()) || m.GetStatus() != types.StatusFinalized) &&
-			!m.AddressHasAccess(caller, types.Access_Admin) {
+			!k.HasAccess(ctx, m.GetAddress(), caller, types.Access_Admin) {
 			return fmt.Errorf("%s is not authorized to make access list changes against finalized/active %s marker",
 				caller, m.GetDenom())
 		}
@@ -157,10 +155,10 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		if !mgr.Equals(caller) && m.GetStatus() == types.StatusProposed {
 			return fmt.Errorf("updates to pending marker %s can only be made by %s", m.GetDenom(), mgr.String())
 		}
-		if err = m.RevokeAccess(remove); err != nil {
-			return fmt.Errorf("access revoke failed: %w", err)
+		if err = sdk.VerifyAddressFormat(remove); err != nil {
+			return fmt.Errorf("access revoke failed: can not revoke access for invalid address")
 		}
-		if err := m.ValidateWithAccessControl(); err != nil {
+		if err = k.validateAccessControl(ctx, m, remove); err != nil {
 			return err
 		}
 		// SetMarker only rewrites the perms store when the marker's remaining access list is
@@ -469,6 +467,9 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 	if err = m.SetStatus(types.StatusFinalized); err != nil {
 		return fmt.Errorf("could not transition marker account state to finalized: %w", err)
 	}
+	if err := m.Validate(); err != nil {
+		return err
+	}
 	if err := k.SetMarker(ctx, m); err != nil {
 		return err
 	}
@@ -519,6 +520,9 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 	// this will enable the Invariant supply enforcement constraint.
 	if err = m.SetStatus(types.StatusActive); err != nil {
 		return fmt.Errorf("could not set marker status to active: %w", err)
+	}
+	if err := m.Validate(); err != nil {
+		return err
 	}
 	// record status as active
 	if err := k.SetMarker(ctx, m); err != nil {

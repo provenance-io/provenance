@@ -206,16 +206,22 @@ func (k Keeper) NetAssetValues(c context.Context, req *types.QueryNetAssetValues
 	return &types.QueryNetAssetValuesResponse{NetAssetValues: navs}, nil
 }
 
+// accountForDenomOrAddress attempts to first get a marker by account address and then by denom.
 func accountForDenomOrAddress(ctx sdk.Context, keeper Keeper, lookup string) (types.MarkerAccountI, error) {
+	var addrErr, err error
+	var addr sdk.AccAddress
 	var account types.MarkerAccountI
-	var err error
-	addr, addrErr := sdk.AccAddressFromBech32(lookup)
-	if addrErr != nil {
+
+	// try to parse the argument as an address, if this fails try as a denom string.
+	if addr, addrErr = sdk.AccAddressFromBech32(lookup); addrErr != nil {
 		account, err = keeper.GetMarkerByDenom(ctx, lookup)
 	} else {
 		account, err = keeper.GetMarker(ctx, addr)
 	}
-	return account, err
+	if err != nil {
+		return nil, types.ErrMarkerNotFound.Wrap("invalid denom or address")
+	}
+	return account, nil
 }
 
 // accountForDenomOrAddressWithPerms is the WithPerms variant of accountForDenomOrAddress — use
