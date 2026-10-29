@@ -24,10 +24,6 @@ const (
 )
 
 var (
-	// MarkerPermsKeyPrefix prefix for per-address marker permission entries.
-	// Key layout: [0x01][len(markerAddr)][markerAddr][len(granteeAddr)][granteeAddr] => proto(MarkerPermissions)
-	MarkerPermsKeyPrefix = []byte{0x01}
-
 	// MarkerStoreKeyPrefix prefix for marker-address reference (improves iterator performance over auth accounts)
 	MarkerStoreKeyPrefix = []byte{0x02}
 
@@ -39,6 +35,10 @@ var (
 
 	// MarkerParamStoreKey key for marker module's params
 	MarkerParamStoreKey = []byte{0x05}
+
+	// MarkerPermsKeyPrefix prefix for per-address marker permission entries.
+	// Key layout: [0x06][len(markerAddr)][markerAddr][len(granteeAddr)][granteeAddr] => proto(MarkerPermissions)
+	MarkerPermsKeyPrefix = []byte{0x06}
 )
 
 // MarkerAddress returns the module account address for the given denomination
@@ -106,13 +106,4 @@ func GetMarkerFromNetAssetValueKey(key []byte) sdk.AccAddress {
 	markerKeyLen := key[1]
 	markerAddr := sdk.AccAddress(key[2 : markerKeyLen+2])
 	return markerAddr
-}
-
-// MarkerPermsKey returns the full store key for one address' permissions on a marker.
-func MarkerPermsKey(markerAddr, granteeAddr sdk.AccAddress) []byte {
-	key := make([]byte, 0, len(MarkerPermsKeyPrefix)+len(markerAddr)+len(granteeAddr)+2)
-	key = append(key, MarkerPermsKeyPrefix...)
-	key = append(key, address.MustLengthPrefix(markerAddr)...)
-	key = append(key, address.MustLengthPrefix(granteeAddr)...)
-	return key
 }
