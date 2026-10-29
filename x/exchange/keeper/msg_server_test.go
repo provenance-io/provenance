@@ -4216,7 +4216,8 @@ func (s *TestSuite) TestMsgServer_MarketUpdateAcceptingOrders() {
 		endpoint:     keeper.NewMsgServer(s.k).MarketUpdateAcceptingOrders,
 		expResp:      &exchange.MsgMarketUpdateAcceptingOrdersResponse{},
 		followup: func(msg *exchange.MsgMarketUpdateAcceptingOrdersRequest, _ struct{}) {
-			isEnabled := s.k.IsMarketAcceptingOrders(s.ctx, msg.MarketId)
+			isEnabled, err := s.k.IsMarketAcceptingOrders(s.ctx, msg.MarketId)
+			s.Require().NoError(err, "IsMarketAcceptingOrders(%d)", msg.MarketId)
 			s.Assert().Equal(msg.AcceptingOrders, isEnabled, "IsMarketAcceptingOrders(%d)", msg.MarketId)
 		},
 	}

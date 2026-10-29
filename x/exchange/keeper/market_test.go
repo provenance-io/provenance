@@ -3852,9 +3852,11 @@ func (s *TestSuite) TestKeeper_IsMarketKnown() {
 			}
 
 			var actual bool
+			var err error
 			testFunc := func() {
-				actual = s.k.IsMarketKnown(s.ctx, tc.marketID)
+				actual, err = s.k.IsMarketKnown(s.ctx, tc.marketID)
 			}
+			s.Require().NoError(err, "IsMarketAcceptingOrders(%d)", tc.marketID)
 			s.Require().NotPanics(testFunc, "IsMarketKnown(%d)", tc.marketID)
 			s.Assert().Equal(tc.expected, actual, "IsMarketKnown(%d) result", tc.marketID)
 		})
@@ -3938,9 +3940,11 @@ func (s *TestSuite) TestKeeper_IsMarketAcceptingOrders() {
 			}
 
 			var actual bool
+			var err error
 			testFunc := func() {
-				actual = s.k.IsMarketAcceptingOrders(s.ctx, tc.marketID)
+				actual, err = s.k.IsMarketAcceptingOrders(s.ctx, tc.marketID)
 			}
+			s.Require().NoError(err, "IsMarketAcceptingOrders(%d)", tc.marketID)
 			s.Require().NotPanics(testFunc, "IsMarketAcceptingOrders(%d)", tc.marketID)
 			s.Assert().Equal(tc.expected, actual, "IsMarketAcceptingOrders(%d) result", tc.marketID)
 		})
@@ -4078,7 +4082,8 @@ func (s *TestSuite) TestKeeper_UpdateMarketAcceptingOrders() {
 			s.assertEqualEvents(expEvents, events, "events after UpdateMarketAcceptingOrders")
 
 			if len(tc.expErr) == 0 {
-				isActive := s.k.IsMarketAcceptingOrders(s.ctx, tc.marketID)
+				isActive, err := s.k.IsMarketAcceptingOrders(s.ctx, tc.marketID)
+				s.Require().NoError(err, "IsMarketAcceptingOrders(%d)", tc.marketID)
 				s.Assert().Equal(tc.active, isActive, "IsMarketAcceptingOrders(%d) after UpdateMarketAcceptingOrders(%d, %t, ...)",
 					tc.marketID, tc.marketID, tc.active)
 			}
@@ -7256,7 +7261,7 @@ func (s *TestSuite) TestKeeper_GetMarket() {
 					MarketId:        55,
 					AcceptingOrders: true,
 				}
-				keeper.StoreMarket(s.getStore(), market)
+				s.k.StoreMarket(s.ctx, market)
 				return &market
 			},
 			marketID: 55,
@@ -7274,7 +7279,7 @@ func (s *TestSuite) TestKeeper_GetMarket() {
 						},
 					},
 				}
-				keeper.StoreMarket(s.getStore(), market)
+				s.k.StoreMarket(s.ctx, market)
 				return &market
 			},
 			marketID: 71,
@@ -7359,10 +7364,9 @@ func (s *TestSuite) TestKeeper_GetMarket() {
 					ReqAttrCreateCommitment:  []string{"create-com.my.market", "*.kyc.someone"},
 				}
 
-				store := s.getStore()
-				keeper.StoreMarket(store, otherMarket1)
-				keeper.StoreMarket(store, expMarket)
-				keeper.StoreMarket(store, otherMarket2)
+				s.k.StoreMarket(s.ctx, otherMarket1)
+				s.k.StoreMarket(s.ctx, expMarket)
+				s.k.StoreMarket(s.ctx, otherMarket2)
 
 				return &expMarket
 			},
@@ -7818,7 +7822,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		{
 			name: "seller price denom not in buyer",
 			setup: func() {
-				keeper.StoreMarket(s.getStore(), exchange.Market{
+				s.k.StoreMarket(s.ctx, exchange.Market{
 					MarketId: 1,
 					FeeSellerSettlementRatios: []exchange.FeeRatio{
 						{Price: s.coin("500pear"), Fee: s.coin("3pear")},
@@ -7833,7 +7837,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		{
 			name: "buyer price denom not in seller",
 			setup: func() {
-				keeper.StoreMarket(s.getStore(), exchange.Market{
+				s.k.StoreMarket(s.ctx, exchange.Market{
 					MarketId:                  1,
 					FeeSellerSettlementRatios: []exchange.FeeRatio{{Price: s.coin("500pear"), Fee: s.coin("3pear")}},
 					FeeBuyerSettlementRatios: []exchange.FeeRatio{
@@ -7848,7 +7852,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		{
 			name: "multiple errors",
 			setup: func() {
-				keeper.StoreMarket(s.getStore(), exchange.Market{
+				s.k.StoreMarket(s.ctx, exchange.Market{
 					MarketId: 1,
 					FeeSellerSettlementRatios: []exchange.FeeRatio{
 						{Price: s.coin("600papaya"), Fee: s.coin("1papaya")},
@@ -7871,7 +7875,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		{
 			name: "no ratios",
 			setup: func() {
-				keeper.StoreMarket(s.getStore(), exchange.Market{MarketId: 2})
+				s.k.StoreMarket(s.ctx, exchange.Market{MarketId: 2})
 			},
 			marketID: 2,
 			expErr:   "",
@@ -7879,7 +7883,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		{
 			name: "no buyer ratios",
 			setup: func() {
-				keeper.StoreMarket(s.getStore(), exchange.Market{
+				s.k.StoreMarket(s.ctx, exchange.Market{
 					MarketId:                  2,
 					FeeSellerSettlementRatios: []exchange.FeeRatio{{Price: s.coin("500pear"), Fee: s.coin("3pear")}},
 				})
@@ -7890,7 +7894,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		{
 			name: "no seller ratios",
 			setup: func() {
-				keeper.StoreMarket(s.getStore(), exchange.Market{
+				s.k.StoreMarket(s.ctx, exchange.Market{
 					MarketId:                 2,
 					FeeBuyerSettlementRatios: []exchange.FeeRatio{{Price: s.coin("500pear"), Fee: s.coin("3pear")}},
 				})
@@ -7901,7 +7905,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		{
 			name: "one ratio each, same price denoms",
 			setup: func() {
-				keeper.StoreMarket(s.getStore(), exchange.Market{
+				s.k.StoreMarket(s.ctx, exchange.Market{
 					MarketId:                  2,
 					FeeSellerSettlementRatios: []exchange.FeeRatio{{Price: s.coin("500pear"), Fee: s.coin("3pear")}},
 					FeeBuyerSettlementRatios:  []exchange.FeeRatio{{Price: s.coin("500pear"), Fee: s.coin("2fig")}},
@@ -7913,7 +7917,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		{
 			name: "two seller denoms, four buyer ratios with those denoms",
 			setup: func() {
-				keeper.StoreMarket(s.getStore(), exchange.Market{
+				s.k.StoreMarket(s.ctx, exchange.Market{
 					MarketId: 55,
 					FeeSellerSettlementRatios: []exchange.FeeRatio{
 						{Price: s.coin("300plum"), Fee: s.coin("1plum")},
@@ -7933,7 +7937,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		{
 			name: "commitment bips without denom",
 			setup: func() {
-				keeper.StoreMarket(s.getStore(), exchange.Market{
+				s.k.StoreMarket(s.ctx, exchange.Market{
 					MarketId:                 24,
 					CommitmentSettlementBips: 80,
 				})
@@ -7944,7 +7948,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		{
 			name: "intermediary denom without nav",
 			setup: func() {
-				keeper.StoreMarket(s.getStore(), exchange.Market{
+				s.k.StoreMarket(s.ctx, exchange.Market{
 					MarketId:                 32,
 					CommitmentSettlementBips: 80,
 					IntermediaryDenom:        "cherry",
@@ -7956,7 +7960,7 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		{
 			name: "commitments allowed but no fees defined",
 			setup: func() {
-				keeper.StoreMarket(s.getStore(), exchange.Market{
+				s.k.StoreMarket(s.ctx, exchange.Market{
 					MarketId:             28,
 					AcceptingCommitments: true,
 				})

@@ -28,11 +28,11 @@ func sumAssetsAndPrice(orders []*exchange.Order) (sdk.Coins, sdk.Coins) {
 }
 
 // validateAcceptingOrdersAndCanUserSettle returns an error if the market isn't accepting orders or doesn't allow user settlement.
-func validateAcceptingOrdersAndCanUserSettle(store storetypes.KVStore, marketID uint32) error {
-	if err := validateMarketIsAcceptingOrders(store, marketID); err != nil {
+func (k Keeper) validateAcceptingOrdersAndCanUserSettle(ctx sdk.Context, marketID uint32) error {
+	if err := k.validateMarketIsAcceptingOrders(ctx, marketID); err != nil {
 		return err
 	}
-	if !isUserSettlementAllowed(store, marketID) {
+	if !isUserSettlementAllowed(k.getStore(ctx), marketID) {
 		return fmt.Errorf("market %d does not allow user settlement", marketID)
 	}
 	return nil
@@ -47,7 +47,7 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 	marketID := msg.MarketId
 	store := k.getStore(ctx)
 
-	if err := validateAcceptingOrdersAndCanUserSettle(store, marketID); err != nil {
+	if err := k.validateAcceptingOrdersAndCanUserSettle(ctx, marketID); err != nil {
 		return err
 	}
 	seller := sdk.MustAccAddressFromBech32(msg.Seller)
@@ -143,7 +143,7 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 	marketID := msg.MarketId
 	store := k.getStore(ctx)
 
-	if err := validateAcceptingOrdersAndCanUserSettle(store, marketID); err != nil {
+	if err := k.validateAcceptingOrdersAndCanUserSettle(ctx, marketID); err != nil {
 		return err
 	}
 	buyer := sdk.MustAccAddressFromBech32(msg.Buyer)
@@ -233,7 +233,7 @@ func (k Keeper) SettleOrders(ctx sdk.Context, req *exchange.MsgMarketSettleReque
 	}
 
 	store := k.getStore(ctx)
-	if err := validateMarketExists(store, req.MarketId); err != nil {
+	if err := k.validateMarketExists(ctx, req.MarketId); err != nil {
 		return err
 	}
 

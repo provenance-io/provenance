@@ -3749,7 +3749,7 @@ func (s *TestSuite) TestQueryServer_GetAllMarkets() {
 			name: "market account does not exist",
 			setup: func() {
 				s.requireCreateMarketUnmocked(*newMarket(1))
-				keeper.StoreMarket(s.getStore(), *newMarket(2))
+				s.k.StoreMarket(s.ctx, *newMarket(2))
 				s.requireCreateMarketUnmocked(*newMarket(3))
 			},
 			expResp: &exchange.QueryGetAllMarketsResponse{

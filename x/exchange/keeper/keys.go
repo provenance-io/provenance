@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -151,8 +152,78 @@ const (
 	OrderKeyTypeBid = exchange.OrderTypeByteBid
 
 	// RecordSeparator is the RE ascii control char used to separate records in a byte slice.
-	RecordSeparator = byte(0x1E)
+	// RecordSeparator = byte(0x1E)
+	RecordSeparator = exchange.RecordSeparator
 )
+
+// The collection prefixes. See the comment at the top of this file for the layout of each collection.
+var (
+	// ParamsPrefix is the prefix of the params item.
+	ParamsPrefix = collections.NewPrefix(int(KeyTypeParams))
+	// LastMarketIDPrefix is the prefix of the last auto-selected market id item.
+	LastMarketIDPrefix = collections.NewPrefix(int(KeyTypeLastMarketID))
+	// KnownMarketIDsPrefix is the prefix of the known market ids collection.
+	KnownMarketIDsPrefix = collections.NewPrefix(int(KeyTypeKnownMarketID))
+	// LastOrderIDPrefix is the prefix of the last order id item.
+	LastOrderIDPrefix = collections.NewPrefix(int(KeyTypeLastOrderID))
+
+	// MarketCreateAskFlatFeesPrefix is the prefix of the markets' create-ask flat fees collection.
+	MarketCreateAskFlatFeesPrefix = marketPrefix(MarketKeyTypeCreateAskFlat)
+	// MarketCreateBidFlatFeesPrefix is the prefix of the markets' create-bid flat fees collection.
+	MarketCreateBidFlatFeesPrefix = marketPrefix(MarketKeyTypeCreateBidFlat)
+	// MarketSellerSettlementFlatFeesPrefix is the prefix of the markets' seller settlement flat fees collection.
+	MarketSellerSettlementFlatFeesPrefix = marketPrefix(MarketKeyTypeSellerSettlementFlat)
+	// MarketSellerSettlementRatiosPrefix is the prefix of the markets' seller settlement fee ratios collection.
+	MarketSellerSettlementRatiosPrefix = marketPrefix(MarketKeyTypeSellerSettlementRatio)
+	// MarketBuyerSettlementFlatFeesPrefix is the prefix of the markets' buyer settlement flat fees collection.
+	MarketBuyerSettlementFlatFeesPrefix = marketPrefix(MarketKeyTypeBuyerSettlementFlat)
+	// MarketBuyerSettlementRatiosPrefix is the prefix of the markets' buyer settlement fee ratios collection.
+	MarketBuyerSettlementRatiosPrefix = marketPrefix(MarketKeyTypeBuyerSettlementRatio)
+	// MarketNotAcceptingOrdersPrefix is the prefix of the set of markets that are not accepting orders.
+	MarketNotAcceptingOrdersPrefix = marketPrefix(MarketKeyTypeNotAcceptingOrders)
+	// MarketUserSettlePrefix is the prefix of the set of markets that allow user settlement.
+	MarketUserSettlePrefix = marketPrefix(MarketKeyTypeUserSettle)
+	// MarketPermissionsPrefix is the prefix of the markets' permissions collection.
+	MarketPermissionsPrefix = marketPrefix(MarketKeyTypePermissions)
+	// MarketReqAttrsAskPrefix is the prefix of the markets' required attributes to create an ask order.
+	MarketReqAttrsAskPrefix = marketPrefix(MarketKeyTypeReqAttr, OrderKeyTypeAsk)
+	// MarketReqAttrsBidPrefix is the prefix of the markets' required attributes to create a bid order.
+	MarketReqAttrsBidPrefix = marketPrefix(MarketKeyTypeReqAttr, OrderKeyTypeBid)
+	// MarketReqAttrsCommitmentPrefix is the prefix of the markets' required attributes to create a commitment.
+	MarketReqAttrsCommitmentPrefix = marketPrefix(MarketKeyTypeReqAttr, KeyTypeCommitment)
+	// MarketAcceptingCommitmentsPrefix is the prefix of the set of markets that are accepting commitments.
+	MarketAcceptingCommitmentsPrefix = marketPrefix(MarketKeyTypeAcceptingCommitments)
+	// MarketCreateCommitmentFlatFeesPrefix is the prefix of the markets' create-commitment flat fees collection.
+	MarketCreateCommitmentFlatFeesPrefix = marketPrefix(MarketKeyTypeCreateCommitmentFlat)
+	// MarketCommitmentSettlementBipsPrefix is the prefix of the markets' commitment settlement bips collection.
+	MarketCommitmentSettlementBipsPrefix = marketPrefix(MarketKeyTypeCommitmentSettlementBips)
+	// MarketIntermediaryDenomPrefix is the prefix of the markets' intermediary denom collection.
+	MarketIntermediaryDenomPrefix = marketPrefix(MarketKeyTypeIntermediaryDenom)
+
+	// OrdersPrefix is the prefix of the orders collection.
+	OrdersPrefix = collections.NewPrefix(int(KeyTypeOrder))
+	// MarketToOrderIndexPrefix is the prefix of the market to order index.
+	MarketToOrderIndexPrefix = collections.NewPrefix(int(KeyTypeMarketToOrderIndex))
+	// AddressToOrderIndexPrefix is the prefix of the address to order index.
+	AddressToOrderIndexPrefix = collections.NewPrefix(int(KeyTypeAddressToOrderIndex))
+	// AssetToOrderIndexPrefix is the prefix of the asset denom to order index.
+	AssetToOrderIndexPrefix = collections.NewPrefix(int(KeyTypeAssetToOrderIndex))
+	// MarketExternalIDToOrderIndexPrefix is the prefix of the market and external id to order index.
+	MarketExternalIDToOrderIndexPrefix = collections.NewPrefix(int(KeyTypeMarketExternalIDToOrderIndex))
+
+	// CommitmentsPrefix is the prefix of the commitments collection.
+	CommitmentsPrefix = collections.NewPrefix(int(KeyTypeCommitment))
+
+	// PaymentsPrefix is the prefix of the payments collection.
+	PaymentsPrefix = collections.NewPrefix(int(KeyTypePayment))
+	// TargetToPaymentIndexPrefix is the prefix of the target to payment index.
+	TargetToPaymentIndexPrefix = collections.NewPrefix(int(KeyTypeTargetToPaymentIndex))
+)
+
+// marketPrefix creates a collection prefix for a type of market entry: KeyTypeMarket followed by the provided bytes.
+func marketPrefix(marketKeyType ...byte) collections.Prefix {
+	return collections.NewPrefix(append([]byte{KeyTypeMarket}, marketKeyType...))
+}
 
 // prepKey creates a single byte slice consisting of the type byte and provided byte slice with some extra capacity in the underlying array.
 // The idea is that you can append(...) to the result of this without it needed a new underlying array.

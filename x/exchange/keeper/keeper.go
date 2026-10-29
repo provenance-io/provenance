@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -28,8 +31,8 @@ var (
 
 // Keeper provides the exchange module's state store interactions.
 type Keeper struct {
-	cdc      codec.BinaryCodec
-	storeKey storetypes.StoreKey
+	cdc          codec.BinaryCodec
+	storeService store.KVStoreService
 
 	accountKeeper  exchange.AccountKeeper
 	attrKeeper     exchange.AttributeKeeper
@@ -40,16 +43,84 @@ type Keeper struct {
 
 	authority        string
 	feeCollectorName string
+
+	// The exchange module's collections. See the comment at the top of keys.go for the layout of each one.
+	schema collections.Schema
+
+	// params is the module's params.
+	params collections.Item[exchange.Params]
+	// lastMarketID is the last auto-selected market id.
+	lastMarketID collections.Item[uint32]
+	// knownMarketIDs is the set of ids of all the markets that exist.
+	knownMarketIDs collections.KeySet[uint32]
+	// lastOrderID is the id of the last order created.
+	lastOrderID collections.Item[uint64]
+
+	// marketCreateAskFlatFees maps (market id, denom) to the amount of the create-ask flat fee in that denom.
+	marketCreateAskFlatFees collections.Map[collections.Pair[uint32, string], sdkmath.Int]
+	// marketCreateBidFlatFees maps (market id, denom) to the amount of the create-bid flat fee in that denom.
+	marketCreateBidFlatFees collections.Map[collections.Pair[uint32, string], sdkmath.Int]
+	// marketSellerSettlementFlatFees maps (market id, denom) to the amount of the seller settlement flat fee in that denom.
+	marketSellerSettlementFlatFees collections.Map[collections.Pair[uint32, string], sdkmath.Int]
+	// marketSellerSettlementRatios maps (market id, price denom, fee denom) to a seller settlement fee ratio.
+	marketSellerSettlementRatios collections.Map[collections.Triple[uint32, string, string], exchange.FeeRatio]
+	// marketBuyerSettlementFlatFees maps (market id, denom) to the amount of the buyer settlement flat fee in that denom.
+	marketBuyerSettlementFlatFees collections.Map[collections.Pair[uint32, string], sdkmath.Int]
+	// marketBuyerSettlementRatios maps (market id, price denom, fee denom) to a buyer settlement fee ratio.
+	marketBuyerSettlementRatios collections.Map[collections.Triple[uint32, string, string], exchange.FeeRatio]
+	// marketNotAcceptingOrders is the set of ids of the markets that are not accepting orders.
+	marketNotAcceptingOrders collections.KeySet[uint32]
+	// marketUserSettle is the set of ids of the markets that allow user settlement.
+	marketUserSettle collections.KeySet[uint32]
+	// marketPermissions is the set of (market id, address, permission) permissions granted.
+	marketPermissions collections.KeySet[collections.Triple[uint32, sdk.AccAddress, exchange.Permission]]
+	// marketReqAttrsAsk maps a market id to the attributes required to create an ask order in it.
+	marketReqAttrsAsk collections.Map[uint32, []string]
+	// marketReqAttrsBid maps a market id to the attributes required to create a bid order in it.
+	marketReqAttrsBid collections.Map[uint32, []string]
+	// marketReqAttrsCommitment maps a market id to the attributes required to create a commitment in it.
+	marketReqAttrsCommitment collections.Map[uint32, []string]
+	// marketAcceptingCommitments is the set of ids of the markets that are accepting commitments.
+	marketAcceptingCommitments collections.KeySet[uint32]
+	// marketCreateCommitmentFlatFees maps (market id, denom) to the amount of the create-commitment flat fee in that denom.
+	marketCreateCommitmentFlatFees collections.Map[collections.Pair[uint32, string], sdkmath.Int]
+	// marketCommitmentSettlementBips maps a market id to the bips it is charged for commitment settlements.
+	marketCommitmentSettlementBips collections.Map[uint32, uint32]
+	// marketIntermediaryDenom maps a market id to the intermediary denom it uses in commitment fee calculations.
+	marketIntermediaryDenom collections.Map[uint32, string]
+
+	// orders maps an order id to the order. The order's OrderId is not stored in the value; it's the key.
+	orders collections.Map[uint64, exchange.Order]
+	// marketToOrderIndex maps (market id, order id) to the order's type byte.
+	marketToOrderIndex collections.Map[collections.Pair[uint32, uint64], byte]
+	// addressToOrderIndex maps (owner address, order id) to the order's type byte.
+	addressToOrderIndex collections.Map[collections.Pair[sdk.AccAddress, uint64], byte]
+	// assetToOrderIndex maps (asset denom, order id) to the order's type byte.
+	assetToOrderIndex collections.Map[collections.Pair[string, uint64], byte]
+	// marketExternalIDToOrderIndex maps (market id, external id) to an order id.
+	marketExternalIDToOrderIndex collections.Map[collections.Pair[uint32, string], uint64]
+
+	// commitments maps (market id, address) to the amount the address has committed to the market.
+	commitments collections.Map[collections.Pair[uint32, sdk.AccAddress], sdk.Coins]
+
+	// payments maps (source address, external id) to the payment.
+	payments collections.Map[collections.Pair[sdk.AccAddress, string], exchange.Payment]
+	// targetToPaymentIndex is the set of (target address, source address, external id) of payments with a target.
+	targetToPaymentIndex collections.KeySet[collections.Triple[sdk.AccAddress, sdk.AccAddress, string]]
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollectorName string,
+func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, feeCollectorName string,
 	accountKeeper exchange.AccountKeeper, attrKeeper exchange.AttributeKeeper,
 	bankKeeper exchange.BankKeeper, holdKeeper exchange.HoldKeeper, markerKeeper exchange.MarkerKeeper,
 	metadataKeeper exchange.MetadataKeeper,
 ) Keeper {
+	sb := collections.NewSchemaBuilder(storeService)
+	marketDenomKey := collections.PairKeyCodec(collections.Uint32Key, collections.StringKey)
+	marketRatioKey := collections.TripleKeyCodec(collections.Uint32Key, collections.StringKey, collections.StringKey)
+
 	rv := Keeper{
 		cdc:              cdc,
-		storeKey:         storeKey,
+		storeService:     storeService,
 		accountKeeper:    accountKeeper,
 		attrKeeper:       attrKeeper,
 		bankKeeper:       bankKeeper,
@@ -58,7 +129,75 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollector
 		metadataKeeper:   metadataKeeper,
 		authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		feeCollectorName: feeCollectorName,
+
+		params: collections.NewItem(sb, ParamsPrefix, "params",
+			codec.CollValue[exchange.Params](cdc)),
+		lastMarketID: collections.NewItem(sb, LastMarketIDPrefix, "last_market_id",
+			collections.Uint32Value),
+		knownMarketIDs: collections.NewKeySet(sb, KnownMarketIDsPrefix, "known_market_ids",
+			collections.Uint32Key),
+		lastOrderID: collections.NewItem(sb, LastOrderIDPrefix, "last_order_id",
+			collections.Uint64Value),
+
+		marketCreateAskFlatFees: collections.NewMap(sb, MarketCreateAskFlatFeesPrefix, "market_create_ask_flat_fees",
+			marketDenomKey, sdk.IntValue),
+		marketCreateBidFlatFees: collections.NewMap(sb, MarketCreateBidFlatFeesPrefix, "market_create_bid_flat_fees",
+			marketDenomKey, sdk.IntValue),
+		marketSellerSettlementFlatFees: collections.NewMap(sb, MarketSellerSettlementFlatFeesPrefix, "market_seller_settlement_flat_fees",
+			marketDenomKey, sdk.IntValue),
+		marketSellerSettlementRatios: collections.NewMap(sb, MarketSellerSettlementRatiosPrefix, "market_seller_settlement_ratios",
+			marketRatioKey, codec.CollValue[exchange.FeeRatio](cdc)),
+		marketBuyerSettlementFlatFees: collections.NewMap(sb, MarketBuyerSettlementFlatFeesPrefix, "market_buyer_settlement_flat_fees",
+			marketDenomKey, sdk.IntValue),
+		marketBuyerSettlementRatios: collections.NewMap(sb, MarketBuyerSettlementRatiosPrefix, "market_buyer_settlement_ratios",
+			marketRatioKey, codec.CollValue[exchange.FeeRatio](cdc)),
+		marketNotAcceptingOrders: collections.NewKeySet(sb, MarketNotAcceptingOrdersPrefix, "market_not_accepting_orders",
+			collections.Uint32Key),
+		marketUserSettle: collections.NewKeySet(sb, MarketUserSettlePrefix, "market_user_settle",
+			collections.Uint32Key),
+		marketPermissions: collections.NewKeySet(sb, MarketPermissionsPrefix, "market_permissions",
+			collections.TripleKeyCodec(collections.Uint32Key, sdk.AccAddressKey, collcodec.NewInt32Key[exchange.Permission]())),
+		marketReqAttrsAsk: collections.NewMap(sb, MarketReqAttrsAskPrefix, "market_req_attrs_ask",
+			collections.Uint32Key, exchange.StringSliceValue),
+		marketReqAttrsBid: collections.NewMap(sb, MarketReqAttrsBidPrefix, "market_req_attrs_bid",
+			collections.Uint32Key, exchange.StringSliceValue),
+		marketReqAttrsCommitment: collections.NewMap(sb, MarketReqAttrsCommitmentPrefix, "market_req_attrs_commitment",
+			collections.Uint32Key, exchange.StringSliceValue),
+		marketAcceptingCommitments: collections.NewKeySet(sb, MarketAcceptingCommitmentsPrefix, "market_accepting_commitments",
+			collections.Uint32Key),
+		marketCreateCommitmentFlatFees: collections.NewMap(sb, MarketCreateCommitmentFlatFeesPrefix, "market_create_commitment_flat_fees",
+			marketDenomKey, sdk.IntValue),
+		marketCommitmentSettlementBips: collections.NewMap(sb, MarketCommitmentSettlementBipsPrefix, "market_commitment_settlement_bips",
+			collections.Uint32Key, collections.Uint32Value),
+		marketIntermediaryDenom: collections.NewMap(sb, MarketIntermediaryDenomPrefix, "market_intermediary_denom",
+			collections.Uint32Key, collections.StringValue),
+
+		orders: collections.NewMap(sb, OrdersPrefix, "orders",
+			collections.Uint64Key, exchange.NewOrderValueCodec(cdc)),
+		marketToOrderIndex: collections.NewMap(sb, MarketToOrderIndexPrefix, "market_to_order_index",
+			collections.PairKeyCodec(collections.Uint32Key, collections.Uint64Key), exchange.ByteValue),
+		addressToOrderIndex: collections.NewMap(sb, AddressToOrderIndexPrefix, "address_to_order_index",
+			collections.PairKeyCodec(sdk.AccAddressKey, collections.Uint64Key), exchange.ByteValue),
+		assetToOrderIndex: collections.NewMap(sb, AssetToOrderIndexPrefix, "asset_to_order_index",
+			collections.PairKeyCodec(collections.StringKey, collections.Uint64Key), exchange.ByteValue),
+		marketExternalIDToOrderIndex: collections.NewMap(sb, MarketExternalIDToOrderIndexPrefix, "market_external_id_to_order_index",
+			collections.PairKeyCodec(collections.Uint32Key, collections.StringKey), collections.Uint64Value),
+
+		commitments: collections.NewMap(sb, CommitmentsPrefix, "commitments",
+			collections.PairKeyCodec(collections.Uint32Key, sdk.AccAddressKey), exchange.CoinsValue),
+
+		payments: collections.NewMap(sb, PaymentsPrefix, "payments",
+			collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), codec.CollValue[exchange.Payment](cdc)),
+		targetToPaymentIndex: collections.NewKeySet(sb, TargetToPaymentIndexPrefix, "target_to_payment_index",
+			collections.TripleKeyCodec(sdk.AccAddressKey, sdk.AccAddressKey, collections.StringKey)),
 	}
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(fmt.Errorf("failed to build the exchange collections schema: %w", err))
+	}
+	rv.schema = schema
+
 	return rv
 }
 
@@ -186,7 +325,7 @@ func iterate(store storetypes.KVStore, keyPrefix []byte, cb func(keySuffix, valu
 
 // getStore gets the store for the exchange module.
 func (k Keeper) getStore(ctx sdk.Context) storetypes.KVStore {
-	return ctx.KVStore(k.storeKey)
+	return runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 }
 
 // iterate iterates over all the entries in the store with the given prefix.

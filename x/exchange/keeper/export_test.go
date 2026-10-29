@@ -78,6 +78,42 @@ func (k Keeper) GetCodec() codec.BinaryCodec {
 	return k.cdc
 }
 
+// StoreMarket is a test-only exposure of storeMarket.
+func (k Keeper) StoreMarket(ctx sdk.Context, market exchange.Market) error {
+	return k.storeMarket(ctx, market)
+}
+
+// The last market id, known market ids, and last order id collections use the same keys and values
+// that were used before collections. So these test-only helpers read and write those entries
+// directly in the store, which also checks that the collections match the pre-collections entries.
+
+// GetLastAutoMarketID is a test-only way to read the last auto-selected market id directly from the store.
+func GetLastAutoMarketID(store storetypes.KVStore) uint32 {
+	rv, _ := uint32FromBz(store.Get(MakeKeyLastMarketID()))
+	return rv
+}
+
+// SetLastAutoMarketID is a test-only way to write the last auto-selected market id directly to the store.
+func SetLastAutoMarketID(store storetypes.KVStore, marketID uint32) {
+	store.Set(MakeKeyLastMarketID(), uint32Bz(marketID))
+}
+
+// SetMarketKnown is a test-only way to write a known market id entry directly to the store.
+func SetMarketKnown(store storetypes.KVStore, marketID uint32) {
+	store.Set(MakeKeyKnownMarketID(marketID), []byte{})
+}
+
+// GetLastOrderID is a test-only way to read the last order id directly from the store.
+func GetLastOrderID(store storetypes.KVStore) uint64 {
+	rv, _ := uint64FromBz(store.Get(MakeKeyLastOrderID()))
+	return rv
+}
+
+// SetLastOrderID is a test-only way to write the last order id directly to the store.
+func SetLastOrderID(store storetypes.KVStore, orderID uint64) {
+	store.Set(MakeKeyLastOrderID(), uint64Bz(orderID))
+}
+
 var (
 	// DeleteAll is a test-only exposure of deleteAll.
 	DeleteAll = deleteAll
@@ -99,12 +135,6 @@ var (
 	// SetParamsFeeAcceptPaymentFlat is a test-only exposure of setParamsFeeAcceptPaymentFlat.
 	SetParamsFeeAcceptPaymentFlat = setParamsFeeAcceptPaymentFlat
 
-	// GetLastAutoMarketID is a test-only exposure of getLastAutoMarketID.
-	GetLastAutoMarketID = getLastAutoMarketID
-	// SetLastAutoMarketID is a test-only exposure of setLastAutoMarketID.
-	SetLastAutoMarketID = setLastAutoMarketID
-	// SetMarketKnown is a test-only exposure of setMarketKnown.
-	SetMarketKnown = setMarketKnown
 	// SetCreateAskFlatFees is a test-only exposure of setCreateAskFlatFees.
 	SetCreateAskFlatFees = setCreateAskFlatFees
 	// SetCreateBidFlatFees is a test-only exposure of setCreateBidFlatFees.
@@ -137,13 +167,7 @@ var (
 	SetReqAttrsBid = setReqAttrsBid
 	// SetReqAttrsCommitment is a test-only exposure of setReqAttrsCommitment.
 	SetReqAttrsCommitment = setReqAttrsCommitment
-	// StoreMarket is a test-only exposure of storeMarket.
-	StoreMarket = storeMarket
 
-	// GetLastOrderID is a test-only exposure of getLastOrderID.
-	GetLastOrderID = getLastOrderID
-	// SetLastOrderID is a test-only exposure of setLastOrderID.
-	SetLastOrderID = setLastOrderID
 	// CreateConstantIndexEntries is a test-only exposure of createConstantIndexEntries.
 	CreateConstantIndexEntries = createConstantIndexEntries
 	// CreateMarketExternalIDToOrderEntry is a test-only exposure of createMarketExternalIDToOrderEntry.

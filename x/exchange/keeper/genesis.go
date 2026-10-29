@@ -16,12 +16,15 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *exchange.GenesisState) {
 
 	k.SetParams(ctx, genState.Params)
 
-	store := k.getStore(ctx)
-	for _, market := range genState.Markets {
-		k.initMarket(ctx, store, market)
+	for i, market := range genState.Markets {
+		if err := k.initMarket(ctx, market); err != nil {
+			panic(fmt.Errorf("failed to store Markets[%d]: %w", i, err))
+		}
 	}
 
-	setLastAutoMarketID(store, genState.LastMarketId)
+	if err := k.setLastAutoMarketID(ctx, genState.LastMarketId); err != nil {
+		panic(err)
+	}
 
 	var holdAddrs []string
 	holdAmounts := make(map[string]sdk.Coins)
@@ -35,6 +38,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *exchange.GenesisState) {
 		}
 	}
 
+	store := k.getStore(ctx)
 	var maxOrderID uint64
 	for i, order := range genState.Orders {
 		if err := k.setOrderInStore(store, order); err != nil {
@@ -49,7 +53,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *exchange.GenesisState) {
 	if genState.LastOrderId < maxOrderID {
 		panic(fmt.Errorf("last order id %d is less than largest order id %d", genState.LastOrderId, maxOrderID))
 	}
-	setLastOrderID(store, genState.LastOrderId)
+	if err := k.setLastOrderID(ctx, genState.LastOrderId); err != nil {
+		panic(err)
+	}
 
 	for i, com := range genState.Commitments {
 		addr, err := sdk.AccAddressFromBech32(com.Account)
@@ -85,19 +91,29 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *exchange.GenesisState) {
 
 // ExportGenesis creates a genesis state from the current state store.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *exchange.GenesisState {
-	store := k.getStore(ctx)
+	lastMarketID, err := k.getLastAutoMarketID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	lastOrderID, err := k.getLastOrderID(ctx)
+	if err != nil {
+		panic(err)
+	}
 	genState := &exchange.GenesisState{
 		Params:       k.GetParams(ctx),
-		LastMarketId: getLastAutoMarketID(store),
-		LastOrderId:  getLastOrderID(store),
+		LastMarketId: lastMarketID,
+		LastOrderId:  lastOrderID,
 	}
 
-	k.IterateMarkets(ctx, func(market *exchange.Market) bool {
+	err = k.IterateMarkets(ctx, func(market *exchange.Market) bool {
 		genState.Markets = append(genState.Markets, *market)
 		return false
 	})
+	if err != nil {
+		panic(fmt.Errorf("failed to read markets: %w", err))
+	}
 
-	err := k.IterateOrders(ctx, func(order *exchange.Order) bool {
+	err = k.IterateOrders(ctx, func(order *exchange.Order) bool {
 		genState.Orders = append(genState.Orders, *order)
 		return false
 	})

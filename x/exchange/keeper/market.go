@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -17,61 +18,83 @@ import (
 )
 
 // getLastAutoMarketID gets the last auto-selected market id.
-func getLastAutoMarketID(store storetypes.KVStore) uint32 {
-	key := MakeKeyLastMarketID()
-	value := store.Get(key)
-	rv, _ := uint32FromBz(value)
-	return rv
+func (k Keeper) getLastAutoMarketID(ctx sdk.Context) (uint32, error) {
+	marketID, err := k.lastMarketID.Get(ctx)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return 0, fmt.Errorf("error getting last auto-selected market id: %w", err)
+	}
+	return marketID, nil
 }
 
 // setLastAutoMarketID sets the last auto-selected market id to the provided value.
-func setLastAutoMarketID(store storetypes.KVStore, marketID uint32) {
-	key := MakeKeyLastMarketID()
-	value := uint32Bz(marketID)
-	store.Set(key, value)
+func (k Keeper) setLastAutoMarketID(ctx sdk.Context, marketID uint32) error {
+	if err := k.lastMarketID.Set(ctx, marketID); err != nil {
+		return fmt.Errorf("error setting last auto-selected market id to %d: %w", marketID, err)
+	}
+	return nil
 }
 
 // nextMarketID finds the next available market id, updates the last auto-selected
 // market id store entry, and returns the unused id it found.
-func nextMarketID(store storetypes.KVStore) uint32 {
-	marketID := getLastAutoMarketID(store) + 1
+func (k Keeper) nextMarketID(ctx sdk.Context) (uint32, error) {
+	marketID, err := k.getLastAutoMarketID(ctx)
+	if err != nil {
+		return 0, err
+	}
 	for {
-		key := MakeKeyKnownMarketID(marketID)
-		if !store.Has(key) {
+		marketID++
+		known, kErr := k.isMarketKnown(ctx, marketID)
+		if kErr != nil {
+			return 0, kErr
+		}
+		if !known {
 			break
 		}
-		marketID++
 	}
-	setLastAutoMarketID(store, marketID)
-	return marketID
+	if err = k.setLastAutoMarketID(ctx, marketID); err != nil {
+		return 0, err
+	}
+	return marketID, nil
 }
 
 // isMarketKnown returns true if the provided market id is a market that exists.
-func isMarketKnown(store storetypes.KVStore, marketID uint32) bool {
-	key := MakeKeyKnownMarketID(marketID)
-	return store.Has(key)
+func (k Keeper) isMarketKnown(ctx sdk.Context, marketID uint32) (bool, error) {
+	known, err := k.knownMarketIDs.Has(ctx, marketID)
+	if err != nil {
+		return false, fmt.Errorf("error checking if market %d exists: %w", marketID, err)
+	}
+	return known, nil
 }
 
 // setMarketKnown sets the known market id indicator in the store.
-func setMarketKnown(store storetypes.KVStore, marketID uint32) {
-	key := MakeKeyKnownMarketID(marketID)
-	store.Set(key, []byte{})
+func (k Keeper) setMarketKnown(ctx sdk.Context, marketID uint32) error {
+	if err := k.knownMarketIDs.Set(ctx, marketID); err != nil {
+		return fmt.Errorf("error setting market %d as known: %w", marketID, err)
+	}
+	return nil
 }
 
 // validateMarketExists returns an error if the provided marketID does not exist.
-func validateMarketExists(store storetypes.KVStore, marketID uint32) error {
-	if !isMarketKnown(store, marketID) {
+func (k Keeper) validateMarketExists(ctx sdk.Context, marketID uint32) error {
+	known, err := k.isMarketKnown(ctx, marketID)
+	if err != nil {
+		return err
+	}
+	if !known {
 		return fmt.Errorf("market %d does not exist", marketID)
 	}
 	return nil
 }
 
 // IterateKnownMarketIDs iterates over all known market ids.
-func (k Keeper) IterateKnownMarketIDs(ctx sdk.Context, cb func(marketID uint32) bool) {
-	k.iterate(ctx, GetKeyPrefixKnownMarketID(), func(key, _ []byte) bool {
-		marketID, ok := ParseKeySuffixKnownMarketID(key)
-		return ok && cb(marketID)
+func (k Keeper) IterateKnownMarketIDs(ctx sdk.Context, cb func(marketID uint32) bool) error {
+	err := k.knownMarketIDs.Walk(ctx, nil, func(marketID uint32) (bool, error) {
+		return cb(marketID), nil
 	})
+	if err != nil {
+		return fmt.Errorf("error iterating known market ids: %w", err)
+	}
+	return nil
 }
 
 // flatFeeKeyMakers are the key and prefix maker functions for a specific flat fee entry.
@@ -879,17 +902,17 @@ func setMarketAcceptingCommitments(store storetypes.KVStore, marketID uint32, al
 }
 
 // IsMarketKnown returns true if the provided market id is a known market's id.
-func (k Keeper) IsMarketKnown(ctx sdk.Context, marketID uint32) bool {
-	return isMarketKnown(k.getStore(ctx), marketID)
+func (k Keeper) IsMarketKnown(ctx sdk.Context, marketID uint32) (bool, error) {
+	return k.isMarketKnown(ctx, marketID)
 }
 
 // IsMarketAcceptingOrders returns true if the provided market is accepting orders.
-func (k Keeper) IsMarketAcceptingOrders(ctx sdk.Context, marketID uint32) bool {
+func (k Keeper) IsMarketAcceptingOrders(ctx sdk.Context, marketID uint32) (bool, error) {
 	store := k.getStore(ctx)
 	if !isMarketAcceptingOrders(store, marketID) {
-		return false
+		return false, nil
 	}
-	return isMarketKnown(store, marketID)
+	return k.isMarketKnown(ctx, marketID)
 }
 
 // UpdateMarketAcceptingOrders updates the accepting orders flag for a market.
@@ -1389,9 +1412,12 @@ func (k Keeper) UpdateMarketDetails(ctx sdk.Context, marketID uint32, marketDeta
 }
 
 // storeMarket writes all the market fields to the state store (except MarketDetails which are in the account).
-func storeMarket(store storetypes.KVStore, market exchange.Market) {
+func (k Keeper) storeMarket(ctx sdk.Context, market exchange.Market) error {
 	marketID := market.MarketId
-	setMarketKnown(store, marketID)
+	if err := k.setMarketKnown(ctx, marketID); err != nil {
+		return err
+	}
+	store := k.getStore(ctx)
 	setCreateAskFlatFees(store, marketID, market.FeeCreateAskFlat)
 	setCreateBidFlatFees(store, marketID, market.FeeCreateBidFlat)
 	setCreateCommitmentFlatFees(store, marketID, market.FeeCreateCommitmentFlat)
@@ -1408,13 +1434,18 @@ func storeMarket(store storetypes.KVStore, market exchange.Market) {
 	setMarketAcceptingCommitments(store, marketID, market.AcceptingCommitments)
 	setCommitmentSettlementBips(store, marketID, market.CommitmentSettlementBips)
 	setIntermediaryDenom(store, marketID, market.IntermediaryDenom)
+	return nil
 }
 
 // initMarket is similar to CreateMarket but assumes the market has already been
 // validated and also allows for the market account to already exist.
-func (k Keeper) initMarket(ctx sdk.Context, store storetypes.KVStore, market exchange.Market) {
+func (k Keeper) initMarket(ctx sdk.Context, market exchange.Market) error {
 	if market.MarketId == 0 {
-		market.MarketId = nextMarketID(store)
+		var err error
+		market.MarketId, err = k.nextMarketID(ctx)
+		if err != nil {
+			return err
+		}
 	}
 	marketID := market.MarketId
 
@@ -1435,7 +1466,7 @@ func (k Keeper) initMarket(ctx sdk.Context, store storetypes.KVStore, market exc
 		k.accountKeeper.SetAccount(ctx, marketAcc)
 	}
 
-	storeMarket(store, market)
+	return k.storeMarket(ctx, market)
 }
 
 // CreateMarket saves a new market to the store with all the info provided.
@@ -1450,10 +1481,12 @@ func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (uint32, e
 		return 0, errors.Join(errAsk, errBid, errDets)
 	}
 
-	store := k.getStore(ctx)
-
 	if market.MarketId == 0 {
-		market.MarketId = nextMarketID(store)
+		var err error
+		market.MarketId, err = k.nextMarketID(ctx)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	marketAddr := exchange.GetMarketAddress(market.MarketId)
@@ -1469,7 +1502,9 @@ func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (uint32, e
 	k.accountKeeper.NewAccount(ctx, marketAcc)
 	k.accountKeeper.SetAccount(ctx, marketAcc)
 
-	storeMarket(store, market)
+	if err := k.storeMarket(ctx, market); err != nil {
+		return 0, err
+	}
 	k.emitEvent(ctx, exchange.NewEventMarketCreated(market.MarketId))
 
 	return market.MarketId, nil
@@ -1478,10 +1513,11 @@ func (k Keeper) CreateMarket(ctx sdk.Context, market exchange.Market) (uint32, e
 // GetMarket reads all the market info from state and returns it.
 // Returns nil if the market account doesn't exist or it's not a market account.
 func (k Keeper) GetMarket(ctx sdk.Context, marketID uint32) *exchange.Market {
-	store := k.getStore(ctx)
-	if err := validateMarketExists(store, marketID); err != nil {
+	if err := k.validateMarketExists(ctx, marketID); err != nil {
 		return nil
 	}
+
+	store := k.getStore(ctx)
 
 	market := &exchange.Market{MarketId: marketID}
 	market.FeeCreateAskFlat = getCreateAskFlatFees(store, marketID)
@@ -1510,8 +1546,8 @@ func (k Keeper) GetMarket(ctx sdk.Context, marketID uint32) *exchange.Market {
 
 // IterateMarkets iterates over all markets.
 // The callback should return whether to stop, i.e. true = stop iterating, false = keep going.
-func (k Keeper) IterateMarkets(ctx sdk.Context, cb func(market *exchange.Market) bool) {
-	k.IterateKnownMarketIDs(ctx, func(marketID uint32) bool {
+func (k Keeper) IterateMarkets(ctx sdk.Context, cb func(market *exchange.Market) bool) error {
+	return k.IterateKnownMarketIDs(ctx, func(marketID uint32) bool {
 		market := k.GetMarket(ctx, marketID)
 		return market != nil && cb(market)
 	})
@@ -1554,7 +1590,7 @@ func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk
 // ValidateMarket checks the setup of the provided market, making sure there aren't any possibly problematic settings.
 func (k Keeper) ValidateMarket(ctx sdk.Context, marketID uint32) error {
 	store := k.getStore(ctx)
-	if err := validateMarketExists(store, marketID); err != nil {
+	if err := k.validateMarketExists(ctx, marketID); err != nil {
 		return err
 	}
 

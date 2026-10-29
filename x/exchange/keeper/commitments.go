@@ -70,11 +70,11 @@ func addCommitmentAmount(store storetypes.KVStore, marketID uint32, addr sdk.Acc
 }
 
 // validateMarketIsAcceptingCommitments makes sure the market exists and is accepting commitments.
-func validateMarketIsAcceptingCommitments(store storetypes.KVStore, marketID uint32) error {
-	if err := validateMarketExists(store, marketID); err != nil {
+func (k Keeper) validateMarketIsAcceptingCommitments(ctx sdk.Context, marketID uint32) error {
+	if err := k.validateMarketExists(ctx, marketID); err != nil {
 		return err
 	}
-	if !isMarketAcceptingCommitments(store, marketID) {
+	if !isMarketAcceptingCommitments(k.getStore(ctx), marketID) {
 		return fmt.Errorf("market %d is not accepting commitments", marketID)
 	}
 	return nil
@@ -106,9 +106,8 @@ func (k Keeper) addCommitment(ctx sdk.Context, marketID uint32, addr sdk.AccAddr
 		return fmt.Errorf("cannot add negative commitment amount %q for %s in market %d", amount, addr, marketID)
 	}
 
-	store := k.getStore(ctx)
 	if doMarketChecks {
-		if err := validateMarketIsAcceptingCommitments(store, marketID); err != nil {
+		if err := k.validateMarketIsAcceptingCommitments(ctx, marketID); err != nil {
 			return err
 		}
 		if err := k.validateUserCanCreateCommitment(ctx, marketID, addr); err != nil {
@@ -474,7 +473,7 @@ func (k Keeper) validateTransferCommitments(
 	}
 
 	// Market validity
-	if err := validateMarketIsAcceptingCommitments(store, req.NewMarketId); err != nil {
+	if err := k.validateMarketIsAcceptingCommitments(ctx, req.NewMarketId); err != nil {
 		return fmt.Errorf("new market %d is invalid: %w", req.NewMarketId, err)
 	}
 

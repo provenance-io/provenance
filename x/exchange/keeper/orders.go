@@ -7,6 +7,7 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
@@ -18,26 +19,34 @@ import (
 )
 
 // getLastOrderID gets the id of the last order created.
-func getLastOrderID(store storetypes.KVStore) uint64 {
-	key := MakeKeyLastOrderID()
-	value := store.Get(key)
-	rv, _ := uint64FromBz(value)
-	return rv
+func (k Keeper) getLastOrderID(ctx sdk.Context) (uint64, error) {
+	orderID, err := k.lastOrderID.Get(ctx)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return 0, fmt.Errorf("error getting last order id: %w", err)
+	}
+	return orderID, nil
 }
 
 // setLastOrderID sets the id of the last order created.
-func setLastOrderID(store storetypes.KVStore, orderID uint64) {
-	key := MakeKeyLastOrderID()
-	value := uint64Bz(orderID)
-	store.Set(key, value)
+func (k Keeper) setLastOrderID(ctx sdk.Context, orderID uint64) error {
+	if err := k.lastOrderID.Set(ctx, orderID); err != nil {
+		return fmt.Errorf("error setting last order id to %d: %w", orderID, err)
+	}
+	return nil
 }
 
 // nextOrderID finds the next available order id, updates the last order id
 // store entry, and returns the unused id it found.
-func nextOrderID(store storetypes.KVStore) uint64 {
-	orderID := getLastOrderID(store) + 1
-	setLastOrderID(store, orderID)
-	return orderID
+func (k Keeper) nextOrderID(ctx sdk.Context) (uint64, error) {
+	orderID, err := k.getLastOrderID(ctx)
+	if err != nil {
+		return 0, err
+	}
+	orderID++
+	if err = k.setLastOrderID(ctx, orderID); err != nil {
+		return 0, err
+	}
+	return orderID, nil
 }
 
 // getOrderStoreKeyValue creates the store key and value representing the provided order.
@@ -439,11 +448,11 @@ func getOrderIterator(prefixStore storetypes.KVStore, start []byte, reverse bool
 }
 
 // validateMarketIsAcceptingOrders makes sure the market exists and is accepting orders.
-func validateMarketIsAcceptingOrders(store storetypes.KVStore, marketID uint32) error {
-	if err := validateMarketExists(store, marketID); err != nil {
+func (k Keeper) validateMarketIsAcceptingOrders(ctx sdk.Context, marketID uint32) error {
+	if err := k.validateMarketExists(ctx, marketID); err != nil {
 		return err
 	}
-	if !isMarketAcceptingOrders(store, marketID) {
+	if !isMarketAcceptingOrders(k.getStore(ctx), marketID) {
 		return fmt.Errorf("market %d is not accepting orders", marketID)
 	}
 	return nil
@@ -629,7 +638,7 @@ func (k Keeper) CreateAskOrder(ctx sdk.Context, askOrder exchange.AskOrder, crea
 	store := k.getStore(ctx)
 	marketID := askOrder.MarketId
 
-	if err := validateMarketIsAcceptingOrders(store, marketID); err != nil {
+	if err := k.validateMarketIsAcceptingOrders(ctx, marketID); err != nil {
 		return 0, err
 	}
 	seller := sdk.MustAccAddressFromBech32(askOrder.Seller)
@@ -650,7 +659,10 @@ func (k Keeper) CreateAskOrder(ctx sdk.Context, askOrder exchange.AskOrder, crea
 		}
 	}
 
-	orderID := nextOrderID(store)
+	orderID, idErr := k.nextOrderID(ctx)
+	if idErr != nil {
+		return 0, idErr
+	}
 	order := exchange.NewOrder(orderID).WithAsk(&askOrder)
 	if err := k.setOrderInStore(store, *order); err != nil {
 		return 0, fmt.Errorf("error storing ask order: %w", err)
@@ -673,7 +685,7 @@ func (k Keeper) CreateBidOrder(ctx sdk.Context, bidOrder exchange.BidOrder, crea
 	store := k.getStore(ctx)
 	marketID := bidOrder.MarketId
 
-	if err := validateMarketIsAcceptingOrders(store, marketID); err != nil {
+	if err := k.validateMarketIsAcceptingOrders(ctx, marketID); err != nil {
 		return 0, err
 	}
 	buyer := sdk.MustAccAddressFromBech32(bidOrder.Buyer)
@@ -691,7 +703,10 @@ func (k Keeper) CreateBidOrder(ctx sdk.Context, bidOrder exchange.BidOrder, crea
 		}
 	}
 
-	orderID := nextOrderID(store)
+	orderID, idErr := k.nextOrderID(ctx)
+	if idErr != nil {
+		return 0, idErr
+	}
 	order := exchange.NewOrder(orderID).WithBid(&bidOrder)
 	if err := k.setOrderInStore(store, *order); err != nil {
 		return 0, fmt.Errorf("error storing bid order: %w", err)

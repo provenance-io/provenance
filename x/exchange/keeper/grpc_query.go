@@ -43,7 +43,7 @@ func (k QueryServer) OrderFeeCalc(goCtx context.Context, req *exchange.QueryOrde
 	switch {
 	case req.AskOrder != nil:
 		order := req.AskOrder
-		if err := validateMarketExists(store, order.MarketId); err != nil {
+		if err := k.validateMarketExists(ctx, order.MarketId); err != nil {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 		ratioFee, err := calculateSellerSettlementRatioFee(store, order.MarketId, order.Price)
@@ -57,7 +57,7 @@ func (k QueryServer) OrderFeeCalc(goCtx context.Context, req *exchange.QueryOrde
 		resp.CreationFeeOptions = getCreateAskFlatFees(store, order.MarketId)
 	case req.BidOrder != nil:
 		order := req.BidOrder
-		if err := validateMarketExists(store, order.MarketId); err != nil {
+		if err := k.validateMarketExists(ctx, order.MarketId); err != nil {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 		ratioFees, err := calcBuyerSettlementRatioFeeOptions(store, order.MarketId, order.Price)
@@ -255,7 +255,7 @@ func (k QueryServer) GetAccountCommitments(goCtx context.Context, req *exchange.
 	store := k.getStore(ctx)
 	resp := &exchange.QueryGetAccountCommitmentsResponse{}
 
-	k.IterateKnownMarketIDs(ctx, func(marketID uint32) bool {
+	iterErr := k.IterateKnownMarketIDs(ctx, func(marketID uint32) bool {
 		amount := getCommitmentAmount(store, marketID, addr)
 		if !amount.IsZero() {
 			if req.Denom != "" {
@@ -269,6 +269,9 @@ func (k QueryServer) GetAccountCommitments(goCtx context.Context, req *exchange.
 		}
 		return false
 	})
+	if iterErr != nil {
+		return nil, status.Error(codes.Internal, iterErr.Error())
+	}
 
 	return resp, nil
 }
@@ -496,7 +499,7 @@ func (k QueryServer) ValidateManageFees(goCtx context.Context, req *exchange.Que
 	// The SDK *should* already be using a cache context for queries, but I'm doing it here too just to be on the safe side.
 	ctx, _ := sdk.UnwrapSDKContext(goCtx).CacheContext()
 	store := k.getStore(ctx)
-	if err := validateMarketExists(store, msg.MarketId); err != nil {
+	if err := k.validateMarketExists(ctx, msg.MarketId); err != nil {
 		resp.Error = err.Error()
 		return resp, nil
 	}
