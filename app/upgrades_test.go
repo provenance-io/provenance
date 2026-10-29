@@ -1041,7 +1041,7 @@ func (s *UpgradeTestSuite) TestHibiscusRC1() {
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
-		"INF Fixing feegrant revoke list. module=baseapp",
+		"INF Fixing feegrant expiration queue. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("hibiscus-rc1", expInLog, nil)
 }
@@ -1052,7 +1052,7 @@ func (s *UpgradeTestSuite) TestHibiscus() {
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
-		"INF Fixing feegrant revoke list. module=baseapp",
+		"INF Fixing feegrant expiration queue. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("hibiscus", expInLog, nil)
 }

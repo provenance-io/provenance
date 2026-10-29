@@ -313,7 +313,7 @@ var (
 // fixFeegrantRevokeList rebuilds the x/feegrant expiration queue from the existing allowances.
 // A bug in revokeAllowance deleted the wrong queue entry, leaving stale entries for revoked grants.
 func fixFeegrantRevokeList(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Fixing feegrant revoke list.")
+	ctx.Logger().Info("Fixing feegrant expiration queue.")
 	store := ctx.KVStore(app.GetKey(feegrant.StoreKey))
 
 	// Identify all the allowances that have an expiration.
@@ -369,5 +369,5 @@ func fixFeegrantRevokeList(ctx sdk.Context, app *App) {
 		store.Set(feegrant.FeeAllowancePrefixQueue(entry.exp, entry.grantKey), []byte{})
 	}
 
-	ctx.Logger().Info("Done fixing feegrant revoke list.")
+	ctx.Logger().Info("Done fixing feegrant expiration queue.")
 }
