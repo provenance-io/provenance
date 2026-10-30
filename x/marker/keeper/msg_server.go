@@ -50,6 +50,10 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllo
 	if err = m.ValidateAddressHasAccess(admin, types.Access_Admin); err != nil {
 		return nil, sdkerrors.ErrUnauthorized.Wrap(err.Error())
 	}
+	if k.isVaultPrincipalMarker(ctx, m) {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("cannot grant a fee allowance from vault principal marker account %s (%s)",
+			m.GetAddress().String(), msg.Denom)
+	}
 	allowance, err := msg.GetFeeAllowanceI()
 	if err != nil {
 		return nil, err
