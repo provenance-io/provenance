@@ -91,6 +91,39 @@ func newMockApp() *mockApp {
 	}
 }
 
+// requireErrorAck checks that the result is a failure with an error acknowledgement that has the expected
+// ABCI code, and that an ibc-acknowledgement-error event was emitted for expErr with an error-context
+// that contains expContext.
+func requireErrorAck(t *testing.T, ctx sdk.Context, result channeltypesv2.RecvPacketResult, expErr error, expCode uint32, expContext string) {
+	t.Helper()
+	require.Equal(t, channeltypesv2.PacketStatus_Failure, result.Status, "result status")
+
+	var ack channeltypes.Acknowledgement
+	require.NoError(t, channeltypes.SubModuleCdc.UnmarshalJSON(result.Acknowledgement, &ack), "unmarshal acknowledgement")
+	require.False(t, ack.Success(), "acknowledgement success")
+	expAckErr := fmt.Sprintf("ABCI code: %d: error handling packet: see events for details", expCode)
+	assert.Equal(t, expAckErr, ack.GetError(), "acknowledgement error")
+
+	var errAttrs, ctxAttrs []string
+	for _, event := range ctx.EventManager().Events() {
+		if event.Type != "ibc-acknowledgement-error" {
+			continue
+		}
+		for _, attr := range event.Attributes {
+			switch attr.Key {
+			case "error":
+				errAttrs = append(errAttrs, attr.Value)
+			case "error-context":
+				ctxAttrs = append(ctxAttrs, attr.Value)
+			}
+		}
+	}
+	assert.Equal(t, []string{expErr.Error()}, errAttrs, "ibc-acknowledgement-error event error attributes")
+	if assert.Len(t, ctxAttrs, 1, "ibc-acknowledgement-error event error-context attributes") {
+		assert.Contains(t, ctxAttrs[0], expContext, "ibc-acknowledgement-error event error-context")
+	}
+}
+
 // newTestModule creates a fully-configured IBCModule for testing, backed by real keepers.
 func newTestModule(t *testing.T, app *mockApp) (v2.IBCModule, sdk.Context) {
 	t.Helper()
@@ -353,6 +386,7 @@ func TestOnRecvPacket_WasmMemo_ContractMismatch(t *testing.T) {
 	result := mw.OnRecvPacket(ctx, "src-client", "dst-client", 1, payload, nil)
 	assert.Equal(t, channeltypesv2.PacketStatus_Failure, result.Status, "contract/receiver mismatch should fail")
 	assert.False(t, app.onRecvPacketCalled, "should not delegate on validation error")
+	requireErrorAck(t, ctx, result, types.ErrMsgValidation, 2, `wasm["contract"] should be the same as the receiver of the packet`)
 }
 
 func TestOnRecvPacket_WasmMemo_InvalidContract(t *testing.T) {
@@ -367,6 +401,7 @@ func TestOnRecvPacket_WasmMemo_InvalidContract(t *testing.T) {
 	result := mw.OnRecvPacket(ctx, "src-client", "dst-client", 1, payload, nil)
 	assert.Equal(t, channeltypesv2.PacketStatus_Failure, result.Status, "invalid contract address should fail")
 	assert.False(t, app.onRecvPacketCalled)
+	requireErrorAck(t, ctx, result, types.ErrMsgValidation, 2, `wasm["contract"] is not a valid bech32 address`)
 }
 
 func TestOnRecvPacket_WasmMemo_ModifiesReceiver(t *testing.T) {
@@ -403,6 +438,7 @@ func TestOnRecvPacket_WasmMemo_ModifiesReceiver(t *testing.T) {
 	assert.Equal(t, channeltypesv2.PacketStatus_Failure, result.Status,
 		"should fail because the wasm contract does not exist")
 
+	requireErrorAck(t, ctx, result, types.ErrWasmError, 6, "no such contract")
 	// Verify the receiver was modified to the derived intermediate sender.
 	modifiedData, err := transfertypes.UnmarshalPacketData(
 		mockA.onRecvPayload.Value, mockA.onRecvPayload.Version, mockA.onRecvPayload.Encoding)
