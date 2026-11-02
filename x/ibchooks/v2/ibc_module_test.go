@@ -437,8 +437,8 @@ func TestOnRecvPacket_WasmMemo_ModifiesReceiver(t *testing.T) {
 	// Wasm execution will fail (no real contract deployed), so expect a failure result.
 	assert.Equal(t, channeltypesv2.PacketStatus_Failure, result.Status,
 		"should fail because the wasm contract does not exist")
-
 	requireErrorAck(t, ctx, result, types.ErrWasmError, 6, "no such contract")
+
 	// Verify the receiver was modified to the derived intermediate sender.
 	modifiedData, err := transfertypes.UnmarshalPacketData(
 		mockA.onRecvPayload.Value, mockA.onRecvPayload.Version, mockA.onRecvPayload.Encoding)
