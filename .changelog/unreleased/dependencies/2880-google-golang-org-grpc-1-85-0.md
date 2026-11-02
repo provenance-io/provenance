@@ -1,0 +1,15 @@
+* `cel.dev/expr` bumped to v0.25.3 (from v0.25.2) [PR 2880](https://github.com/provenance-io/provenance/pull/2880).
+* `github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp` bumped to v1.35.0 (from v1.34.0) [PR 2880](https://github.com/provenance-io/provenance/pull/2880).
+* `github.com/envoyproxy/go-control-plane/envoy` bumped to v1.39.1-0.20260819172001-e6e3fd93e4be (from v1.37.0) [PR 2880](https://github.com/provenance-io/provenance/pull/2880).
+* `go.opentelemetry.io/contrib/detectors/gcp` bumped to v1.45.0 (from v1.44.0) [PR 2880](https://github.com/provenance-io/provenance/pull/2880).
+* `golang.org/x/crypto` bumped to v0.57.0 (from v0.55.0) [PR 2880](https://github.com/provenance-io/provenance/pull/2880).
+* `golang.org/x/mod` bumped to v0.41.0 (from v0.38.0) [PR 2880](https://github.com/provenance-io/provenance/pull/2880).
+* `golang.org/x/net` bumped to v0.60.0 (from v0.58.0) [PR 2880](https://github.com/provenance-io/provenance/pull/2880).
+* `golang.org/x/sync` bumped to v0.23.0 (from v0.22.0) [PR 2880](https://github.com/provenance-io/provenance/pull/2880).
+* `golang.org/x/sys` bumped to v0.48.0 (from v0.47.0) [PR 2880](https://github.com/provenance-io/provenance/pull/2880).
+* `golang.org/x/term` bumped to v0.46.0 (from v0.45.0) [PR 2880](https://github.com/provenance-io/provenance/pull/2880).
+* `golang.org/x/text` bumped to v0.42.0 (from v0.41.0) [PR 2880](https://github.com/provenance-io/provenance/pull/2880).
+* `golang.org/x/tools` bumped to v0.49.0 (from v0.48.0) [PR 2880](https://github.com/provenance-io/provenance/pull/2880).
+* `google.golang.org/genproto/googleapis/api` bumped to v0.0.0-20260817212433-ac3dfec99bb1 (from v0.0.0-20260706201446-f0a921348800) [PR 2880](https://github.com/provenance-io/provenance/pull/2880).
+* `google.golang.org/genproto/googleapis/rpc` bumped to v0.0.0-20260817212433-ac3dfec99bb1 (from v0.0.0-20260706201446-f0a921348800) [PR 2880](https://github.com/provenance-io/provenance/pull/2880).
+* `google.golang.org/grpc` bumped to v1.85.0 (from v1.84.0) [PR 2880](https://github.com/provenance-io/provenance/pull/2880).
