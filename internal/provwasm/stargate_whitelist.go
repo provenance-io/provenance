@@ -41,7 +41,6 @@ import (
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	registrytypes "github.com/provenance-io/provenance/x/registry/types"
 	"github.com/provenance-io/provenance/x/sanction"
-	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
 // stargateWhitelist keeps whitelist and its deterministic
@@ -328,10 +327,6 @@ func init() {
 	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/SanctionedAddresses", &sanction.QuerySanctionedAddressesResponse{})
 	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/TemporaryEntries", &sanction.QueryTemporaryEntriesResponse{})
 	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/Params", &sanction.QueryParamsResponse{})
-
-	// trigger
-	setWhitelistedQuery("/provenance.trigger.v1.Query/TriggerByID", &triggertypes.QueryTriggerByIDResponse{})
-	setWhitelistedQuery("/provenance.trigger.v1.Query/Triggers", &triggertypes.QueryTriggersResponse{})
 
 	// vault
 	setWhitelistedQuery("/provlabs.vault.v1.Query/Vaults", &vaulttypes.QueryVaultsResponse{})
