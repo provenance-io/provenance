@@ -3,6 +3,7 @@ package types
 import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/gogoproto/proto"
 )
 
@@ -12,28 +13,13 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	copy(messages, AllRequestMsgs)
 	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
 
-	registry.RegisterImplementations(
+	registry.RegisterInterface(
+		"provenance.trigger.v1.TriggerEventI",
 		(*TriggerEventI)(nil),
 		&TransactionEvent{},
 		&BlockHeightEvent{},
 		&BlockTimeEvent{},
 	)
 
-	registry.RegisterInterface(
-		"provenance.trigger.v1.TransactionEvent",
-		(*TriggerEventI)(nil),
-		&TransactionEvent{},
-	)
-
-	registry.RegisterInterface(
-		"provenance.trigger.v1.BlockHeightEvent",
-		(*TriggerEventI)(nil),
-		&BlockHeightEvent{},
-	)
-
-	registry.RegisterInterface(
-		"provenance.trigger.v1.BlockTimeEvent",
-		(*TriggerEventI)(nil),
-		&BlockTimeEvent{},
-	)
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
