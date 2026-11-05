@@ -32,7 +32,8 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasProposalMsgs     = AppModule{}
 
-	_ appmodule.AppModule = AppModule{}
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
 )
 
 type AppModuleBasic struct {
@@ -131,6 +132,12 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// BeginBlock deletes the temporary entries of any proposals that no longer exist.
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	am.keeper.BeginBlock(sdk.UnwrapSDKContext(ctx))
+	return nil
+}
 
 // ____________________________________________________________________________
 
