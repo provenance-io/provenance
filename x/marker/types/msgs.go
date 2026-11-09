@@ -248,7 +248,7 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 		Amount: msg.Amount.Amount,
 	}
 	if !testCoin.IsValid() {
-		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
+		return fmt.Errorf("invalid marker denom/total supply: %w", error(sdkerrors.ErrInvalidCoins))
 	}
 
 	if msg.AllowForcedTransfer && msg.MarkerType != MarkerType_RestrictedCoin {
@@ -465,7 +465,7 @@ func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
 	}
 	// IsValid validates denom and amount is not negative.
 	if !markerCoin.IsValid() {
-		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
+		return fmt.Errorf("invalid marker denom/total supply: %w", error(sdkerrors.ErrInvalidCoins))
 	}
 
 	_, err := sdk.AccAddressFromBech32(msg.Manager)
