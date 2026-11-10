@@ -71,7 +71,7 @@ jobs:
           build-env: |
             - "WITH_LEDGER=false"
             - "BUILD_TAGS=muslc musl dynamic"
-            - "GO_VERSION=1.25"
+            - "GO_VERSION=1.27"
           skip: ${{ github.event_name == 'pull_request' }}
 
   docker-build:
