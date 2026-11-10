@@ -102,6 +102,7 @@ func (k Keeper) Holding(c context.Context, req *types.QueryHoldingRequest) (*typ
 }
 
 // Supply query for supply of coin on a marker account
+//
 // Deprecated: This endpoint returns the initial/target supply from marker account, not actual circulating supply.
 //
 //nolint:staticcheck // SA1019
