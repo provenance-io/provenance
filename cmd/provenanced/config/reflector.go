@@ -64,7 +64,7 @@ func getFieldValueMap(valIn reflect.Value, fillNilsWithZero bool) FieldValueMap 
 		fVal := deref(objVal.Field(i), fillNilsWithZero)
 		fKind := fVal.Kind()
 		switch {
-		case fKind == reflect.Ptr && fVal.IsNil():
+		case fKind == reflect.Pointer && fVal.IsNil():
 			keys[key] = fVal
 		case squash:
 			for k, v := range getFieldValueMap(fVal, fillNilsWithZero) {
@@ -112,7 +112,7 @@ func getFieldName(field reflect.StructField) (string, bool) {
 // If fillNilsWithZero is false, and the pointer chain ends at a nil, the originally provided v is returned.
 func deref(v reflect.Value, fillNilsWithZero bool) reflect.Value {
 	vOrig := v
-	for v.Kind() == reflect.Ptr {
+	for v.Kind() == reflect.Pointer {
 		if v.IsNil() {
 			if !fillNilsWithZero {
 				return vOrig
