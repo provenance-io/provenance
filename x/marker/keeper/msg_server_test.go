@@ -636,7 +636,7 @@ func (s *MsgServerTestSuite) TestUpdateSendDenyList() {
 
 	rMarkerDenom := "restricted-marker"
 	rMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom), nil, 0, 0)
-	s.app.MarkerKeeper.SetNewMarker(s.ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
+	s.app.MarkerKeeper.SetNewMarker(s.ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Admin}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
 
 	rMarkerGovDenom := "restricted-marker-gov"
 	rMarkerGovAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerGovDenom), nil, 0, 0)
@@ -668,7 +668,7 @@ func (s *MsgServerTestSuite) TestUpdateSendDenyList() {
 		{
 			name:   "should fail, signer does not have admin access",
 			msg:    types.MsgUpdateSendDenyListRequest{Denom: rMarkerDenom, Authority: notAuthUser.String(), RemoveDeniedAddresses: []string{}, AddDeniedAddresses: []string{}},
-			expErr: fmt.Sprintf("%s does not have %s on %s marker (%s)", notAuthUser, types.Access_Transfer, rMarkerDenom, rMarkerAcct.Address),
+			expErr: fmt.Sprintf("%s does not have %s on %s marker (%s)", notAuthUser, types.Access_Admin, rMarkerDenom, rMarkerAcct.Address),
 		},
 		{
 			name:   "should fail, gov not enabled for restricted marker",
