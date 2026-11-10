@@ -1,5 +1,10 @@
 Provenance Blockchain version `v1.32.0` contains some exciting new features, improvements and bug fixes.
 
+Building or installing `provenanced` from source now requires [Go 1.27](https://golang.org/dl/).
+Linting now requires `golangci-lint` v2.15.0.
+
+---
+
 > [!IMPORTANT]
 > **Advance notice: Linux release binaries will require a newer glibc in an upcoming release**
 >
@@ -18,3 +23,5 @@ Provenance Blockchain version `v1.32.0` contains some exciting new features, imp
 > This is especially important if you use Cosmovisor with auto-download, because the failure would happen at the upgrade height.
 >
 > Nodes built from source, or run from the official Docker images, are not affected.
+
+---
