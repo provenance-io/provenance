@@ -10122,7 +10122,7 @@ MsgUpdateRequiredAttributesResponse defines the Msg/UpdateRequiredAttributes res
 
 ### MsgUpdateSendDenyListRequest
 MsgUpdateSendDenyListRequest defines a msg to add/remove addresses to send deny list for a resticted marker
-signer must have transfer authority
+signer must have admin authority
 
 
 | Field | Type | Label | Description |
