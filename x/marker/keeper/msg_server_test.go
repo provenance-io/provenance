@@ -1471,6 +1471,110 @@ func (s *MsgServerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
 	}
 }
 
+func (s *MsgServerTestSuite) TestMaxSupplyEnforcedBeforeActivation() {
+	maxSupply := s.app.MarkerKeeper.GetMaxSupply(s.ctx)
+	overMax := maxSupply.AddRaw(1)
+	expErr := fmt.Sprintf("requested supply %s exceeds maximum allowed value %s", overMax, maxSupply)
+	access := []types.AccessGrant{*types.NewAccessGrant(s.owner1Addr, []types.Access{types.Access_Mint, types.Access_Admin})}
+
+	addMarker := func(denom string, amount sdkmath.Int) {
+		msg := types.NewMsgAddMarkerRequest(denom, amount, s.owner1Addr, s.owner1Addr, types.MarkerType_Coin, false, true, false, []string{}, 0, 0)
+		msg.AccessList = access
+		_, err := s.msgServer.AddMarker(s.ctx, msg)
+		s.Require().NoError(err, "AddMarker(%s)", denom)
+	}
+
+	tests := []struct {
+		name    string
+		denom   string
+		handler func(denom string) error
+		expErr  string
+	}{
+		{
+			name:  "add finalize activate at max supply",
+			denom: "afaatmax",
+			handler: func(denom string) error {
+				msg := types.NewMsgAddFinalizeActivateMarkerRequest(denom, maxSupply, s.owner1Addr, s.owner1Addr, types.MarkerType_Coin, false, true, false, []string{}, access, 0, 0)
+				_, err := s.msgServer.AddFinalizeActivateMarker(s.ctx, msg)
+				return err
+			},
+		},
+		{
+			name:  "add finalize activate over max supply",
+			denom: "afaaovermax",
+			handler: func(denom string) error {
+				msg := types.NewMsgAddFinalizeActivateMarkerRequest(denom, overMax, s.owner1Addr, s.owner1Addr, types.MarkerType_Coin, false, true, false, []string{}, access, 0, 0)
+				_, err := s.msgServer.AddFinalizeActivateMarker(s.ctx, msg)
+				return err
+			},
+			expErr: expErr,
+		},
+		{
+			name:  "activate over max supply",
+			denom: "activateovermax",
+			handler: func(denom string) error {
+				addMarker(denom, overMax)
+				_, err := s.msgServer.Finalize(s.ctx, types.NewMsgFinalizeRequest(denom, s.owner1Addr))
+				s.Require().NoError(err, "Finalize(%s)", denom)
+				_, err = s.msgServer.Activate(s.ctx, types.NewMsgActivateRequest(denom, s.owner1Addr))
+				return err
+			},
+			expErr: expErr,
+		},
+		{
+			name:  "mint on proposed marker over max supply",
+			denom: "mintovermax",
+			handler: func(denom string) error {
+				addMarker(denom, maxSupply)
+				_, err := s.msgServer.Mint(s.ctx, types.NewMsgMintRequest(s.owner1Addr, sdk.NewInt64Coin(denom, 1), sdk.AccAddress{}))
+				return err
+			},
+			expErr: expErr,
+		},
+		{
+			name:  "change status proposal to active over max supply",
+			denom: "statusovermax",
+			handler: func(denom string) error {
+				addMarker(denom, overMax)
+				msg := types.NewMsgChangeStatusProposalRequest(denom, types.StatusActive, s.app.MarkerKeeper.GetAuthority())
+				_, err := s.msgServer.ChangeStatusProposal(s.ctx, msg)
+				return err
+			},
+			expErr: expErr,
+		},
+		{
+			name:  "gov add active marker over max supply",
+			denom: "govaddovermax",
+			handler: func(denom string) error {
+				msg := &types.MsgAddMarkerRequest{
+					Amount:                 sdk.NewCoin(denom, overMax),
+					FromAddress:            s.app.MarkerKeeper.GetAuthority(),
+					Status:                 types.StatusActive,
+					MarkerType:             types.MarkerType_Coin,
+					AccessList:             access,
+					AllowGovernanceControl: true,
+				}
+				_, err := s.msgServer.AddMarker(s.ctx, msg)
+				return err
+			},
+			expErr: expErr,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			err := tc.handler(tc.denom)
+			if len(tc.expErr) > 0 {
+				s.Require().ErrorContains(err, tc.expErr, "handler error")
+				s.Assert().True(s.app.BankKeeper.GetSupply(s.ctx, tc.denom).IsZero(), "bank supply of %s", tc.denom)
+				return
+			}
+			s.Require().NoError(err, "handler error")
+			s.Assert().Equal(maxSupply, s.app.BankKeeper.GetSupply(s.ctx, tc.denom).Amount, "bank supply of %s", tc.denom)
+		})
+	}
+}
+
 func (s *MsgServerTestSuite) TestMsgSetAccountDataRequest() {
 	denomU := "aducoin"
 	denomR := "adrcoin"

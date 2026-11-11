@@ -235,6 +235,9 @@ func (k Keeper) MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	// mint actual coin.
 	case m.GetStatus() == types.StatusProposed || m.GetStatus() == types.StatusFinalized:
 		total := m.GetSupply().Add(coin)
+		if err = k.validateSupplyWithinMax(ctx, total.Amount); err != nil {
+			return err
+		}
 		if err = m.SetSupply(total); err != nil {
 			return err
 		}
@@ -356,10 +359,8 @@ func (k Keeper) IncreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coi
 
 	inCirculation := sdk.NewCoin(marker.GetDenom(), k.bankKeeper.GetSupply(ctx, marker.GetDenom()).Amount)
 	total := inCirculation.Add(coin)
-	maxAllowed := sdk.NewCoin(marker.GetDenom(), k.GetMaxSupply(ctx))
-	if total.Amount.GT(maxAllowed.Amount) {
-		return fmt.Errorf(
-			"requested supply %s exceeds maximum allowed value %s", total.Amount.String(), maxAllowed.Amount.String())
+	if err := k.validateSupplyWithinMax(ctx, total.Amount); err != nil {
+		return err
 	}
 
 	// If the marker has a fixed supply then adjust the supply to match the new total
@@ -500,6 +501,9 @@ func (k Keeper) ActivateMarker(ctx sdk.Context, caller sdk.Address, denom string
 
 	// Amount to mint is typically the defined supply however...
 	supplyRequest := m.GetSupply()
+	if err = k.validateSupplyWithinMax(ctx, supplyRequest.Amount); err != nil {
+		return err
+	}
 
 	// Any pre-existing coin amounts for our denom need to be removed from our amount to mint
 	preexistingCoin := sdk.NewCoin(m.GetDenom(), k.bankKeeper.GetSupply(ctx, m.GetDenom()).Amount)
@@ -881,6 +885,15 @@ func (k Keeper) SetDenomMetaData(ctx sdk.Context, metadata banktypes.Metadata, c
 	)
 
 	return ctx.EventManager().EmitTypedEvent(markerSetDenomMetaEvent)
+}
+
+// validateSupplyWithinMax returns an error if the provided total supply is greater than the max_supply param.
+func (k Keeper) validateSupplyWithinMax(ctx sdk.Context, total sdkmath.Int) error {
+	maxAllowed := k.GetMaxSupply(ctx)
+	if total.GT(maxAllowed) {
+		return fmt.Errorf("requested supply %s exceeds maximum allowed value %s", total, maxAllowed)
+	}
+	return nil
 }
 
 // AddFinalizeAndActivateMarker adds marker, finalizes, and then activates it

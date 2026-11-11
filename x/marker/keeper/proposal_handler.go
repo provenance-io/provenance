@@ -192,6 +192,9 @@ func (k Keeper) HandleChangeStatusProposal(ctx sdk.Context, denom string, status
 
 	// activate (must be pending, finalized currently)
 	if status == types.StatusActive {
+		if err = k.validateSupplyWithinMax(ctx, m.GetSupply().Amount); err != nil {
+			return err
+		}
 		if err = k.AdjustCirculation(ctx, m, m.GetSupply()); err != nil {
 			return fmt.Errorf("could not create marker supply: %w", err)
 		}
