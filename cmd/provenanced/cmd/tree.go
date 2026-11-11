@@ -17,8 +17,9 @@ func GetTreeCmd() *cobra.Command {
 		Hidden: true,
 		Args:   cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) > 0 && args[0] != "provenanced" {
-				args = append([]string{"provenanced"}, args...)
+			rootName := cmd.Root().Name()
+			if len(args) > 0 && args[0] != rootName {
+				args = append([]string{rootName}, args...)
 			}
 
 			incAliases, _ := cmd.Flags().GetBool(aliasesFlag)
