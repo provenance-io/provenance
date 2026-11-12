@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	vaulttypes "github.com/provlabs/vault/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -174,6 +175,21 @@ func TestSendRestrictionFn(t *testing.T) {
 	require.NoError(t,
 		testutil.FundAccount(types.WithBypass(ctx), app.BankKeeper, gMarker.GetAddress(), cz(c(5000, denomOther))),
 		"Adding funds to %s marker account", gDenom)
+
+	vpDenom := "vaultshares"
+	vpMarker := newMarkerAcc(vpDenom, coin, nil)
+	vpMarker.Supply = sdkmath.ZeroInt()
+	vpMarker.AccessControl = gMarker.AccessControl
+	vpMarker = createActiveMarker(vpMarker)
+	vault := vaulttypes.NewVaultAccount(
+		authtypes.NewBaseAccountWithAddress(vaulttypes.GetVaultAddress(vpDenom)),
+		owner.String(), vpDenom, denomOther,
+		0, vaulttypes.DefaultAumFeeBips, "", "", "", "",
+	)
+	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccount(ctx, vault))
+	require.NoError(t,
+		testutil.FundAccount(types.WithBypass(ctx), app.BankKeeper, vpMarker.GetAddress(), cz(c(5000, denomOther))),
+		"Adding funds to %s marker account", vpDenom)
 
 	rDenomNoAttr := "restrictedmarkernoreqattributes" // cosmos1y4lw4mu35znxeuu00t2waemytpprkv9kazmkp2
 	rMarkerNoAttr := newMarker(rDenomNoAttr, restricted, nil)
@@ -574,6 +590,37 @@ func TestSendRestrictionFn(t *testing.T) {
 			to:     addrWithAttrs,
 			amt:    cz(c(6, denomOther)),
 			expErr: "cannot withdraw from marker account " + gMarker.GetAddress().String() + " (" + gDenom + ")",
+		},
+		{
+			name:   "from vault principal marker: no admin, with feegrant in use",
+			ctx:    ctxP(internalsdk.WithFeeGrantInUse(ctx)),
+			from:   vpMarker.GetAddress(),
+			to:     addrWithAttrs,
+			amt:    cz(c(3, denomOther)),
+			expErr: "cannot pay fees from vault principal marker account " + vpMarker.GetAddress().String() + " (" + vpDenom + ")",
+		},
+		{
+			name:   "from vault principal marker: admin with withdraw, with feegrant in use",
+			ctx:    ctxP(types.WithTransferAgents(internalsdk.WithFeeGrantInUse(ctx), owner)),
+			from:   vpMarker.GetAddress(),
+			to:     addrWithAttrs,
+			amt:    cz(c(3, denomOther)),
+			expErr: "cannot pay fees from vault principal marker account " + vpMarker.GetAddress().String() + " (" + vpDenom + ")",
+		},
+		{
+			name:   "from vault principal marker: no admin, without feegrant in use",
+			ctx:    ctxP(internalsdk.WithoutFeeGrantInUse(ctx)),
+			from:   vpMarker.GetAddress(),
+			to:     addrWithAttrs,
+			amt:    cz(c(3, denomOther)),
+			expErr: "cannot withdraw from marker account " + vpMarker.GetAddress().String() + " (" + vpDenom + ")",
+		},
+		{
+			name: "from vault principal marker: admin with withdraw, without feegrant in use",
+			ctx:  ctxP(types.WithTransferAgents(ctx, owner)),
+			from: vpMarker.GetAddress(),
+			to:   addrWithAttrs,
+			amt:  cz(c(3, denomOther)),
 		},
 		{
 			name:   "from marker: admin without withdraw permission",

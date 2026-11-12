@@ -45,7 +45,12 @@ func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.Ac
 		// We also assume that other stuff is handling the actual checking and use of that feegrant,
 		// so we don't need to worry about its details in here, and that HasFeeGrantInUse is only ever
 		// true when collecting fees.
-		if !internalsdk.HasFeeGrantInUse(ctx) {
+		feeGrantInUse := internalsdk.HasFeeGrantInUse(ctx)
+		if feeGrantInUse && k.isVaultPrincipalMarker(ctx, fromMarker) {
+			return nil, fmt.Errorf("cannot pay fees from vault principal marker account %s (%s)",
+				fromAddr.String(), fromMarker.GetDenom())
+		}
+		if !feeGrantInUse {
 			if len(admins) == 0 {
 				return nil, fmt.Errorf("cannot withdraw from marker account %s (%s)",
 					fromAddr.String(), fromMarker.GetDenom())

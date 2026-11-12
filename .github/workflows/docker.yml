@@ -48,7 +48,7 @@ jobs:
             type=ref,event=pr
             type=ref,event=tag
 
-      - uses: docker/login-action@v4.6.0
+      - uses: docker/login-action@v4.8.0
         if: github.event_name != 'pull_request'
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -71,7 +71,7 @@ jobs:
           build-env: |
             - "WITH_LEDGER=false"
             - "BUILD_TAGS=muslc musl dynamic"
-            - "GO_VERSION=1.25"
+            - "GO_VERSION=1.27"
           skip: ${{ github.event_name == 'pull_request' }}
 
   docker-build:
@@ -102,7 +102,7 @@ jobs:
             type=ref,event=pr
             type=ref,event=tag
 
-      - uses: docker/login-action@v4.6.0
+      - uses: docker/login-action@v4.8.0
         if: github.event_name != 'pull_request'
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -164,7 +164,7 @@ jobs:
             type=ref,event=pr
             type=ref,event=tag
 
-      - uses: docker/login-action@v4.6.0
+      - uses: docker/login-action@v4.8.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -214,7 +214,7 @@ jobs:
             org.opencontainers.image.description=Provenance Blockchain Node
             org.opencontainers.image.licenses=Apache-2.0
 
-      - uses: docker/login-action@v4.6.0
+      - uses: docker/login-action@v4.8.0
         if: github.event_name != 'pull_request'
         with:
           registry: ghcr.io
@@ -281,7 +281,7 @@ jobs:
             type=ref,event=pr
             type=ref,event=tag
 
-      - uses: docker/login-action@v4.6.0
+      - uses: docker/login-action@v4.8.0
         with:
           registry: ghcr.io
           username: 129784868+provenanceio-bot@users.noreply.github.com

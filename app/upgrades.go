@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
@@ -14,8 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint/migrations"
-
-	flatfeestypes "github.com/provenance-io/provenance/x/flatfees/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -42,8 +38,7 @@ type appUpgrade struct {
 // Entries should be in chronological/alphabetical order, earliest first.
 // I.e. Brand-new flowers should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
-	"geranium-rc1": { // Upgrade for v1.31.0-rc1
-		Deleted: []string{"quarantine"},
+	"hibiscus-rc1": { // Upgrade for v1.32.0-rc1
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -59,18 +54,11 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
-
-			if err = setContractStoreBundleFees(ctx, app); err != nil {
-				return nil, err
-			}
-
-			updateConversionFactor(ctx, app)
 
 			return vm, nil
 		},
 	},
-	"geranium": { // Upgrade for v1.31.0
-		Deleted: []string{"quarantine"},
+	"hibiscus": { // Upgrade for v1.32.0
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -86,15 +74,6 @@ var upgrades = map[string]appUpgrade{
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
 				return nil, err
 			}
-
-			if err = setContractStoreBundleFees(ctx, app); err != nil {
-				return nil, err
-			}
-
-			updateConversionFactor(ctx, app)
-
-			// geranium only
-			addFlatFeesOracleAddress(ctx, app, "pb1v5cdk7pt6l7f2lete654kvkk3qhzq0nsk35dw0")
 
 			return vm, nil
 		},
@@ -323,55 +302,3 @@ var (
 	_ = convertFinishedVestingAccountsToBase
 	_ = unlockVestingAccounts
 )
-
-// setContractStoreBundleFees sets the flat fees for MsgStoreAndInstantiateContract and
-// MsgStoreAndMigrateContract to $100 (100,000 musd) each.
-func setContractStoreBundleFees(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Setting MsgStoreAndInstantiateContract and MsgStoreAndMigrateContract flat fees.")
-
-	fees := []flatfeestypes.MsgFee{
-		{
-			MsgTypeUrl: sdk.MsgTypeURL(&wasmtypes.MsgStoreAndInstantiateContract{}),
-			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 100000)), // $100, same as MsgStoreCode.
-		},
-		{
-			MsgTypeUrl: sdk.MsgTypeURL(&wasmtypes.MsgStoreAndMigrateContract{}),
-			Cost:       sdk.NewCoins(sdk.NewInt64Coin("musd", 100000)), // $100, same as MsgStoreCode.
-		},
-	}
-
-	for _, fee := range fees {
-		if err := fee.Validate(); err != nil {
-			return fmt.Errorf("invalid msg fee for %q: %w", fee.MsgTypeUrl, err)
-		}
-		if err := app.FlatFeesKeeper.SetMsgFee(ctx, fee); err != nil {
-			return fmt.Errorf("failed to set msg fee for %q: %w", fee.MsgTypeUrl, err)
-		}
-	}
-
-	ctx.Logger().Info("Done setting contract store-bundle flat fees.")
-	return nil
-}
-
-func updateConversionFactor(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Updating flatfees conversion factor.")
-	cf := flatfeestypes.ConversionFactor{
-		DefinitionAmount: sdk.NewInt64Coin("musd", 8),
-		ConvertedAmount:  sdk.NewInt64Coin("nhash", 1_000_000_000),
-	}
-	if err := app.FlatFeesKeeper.SetConversionFactor(ctx, cf); err != nil {
-		ctx.Logger().Error("Failed to update flatfees conversion factor.", "error", err, "cf", cf)
-		return
-	}
-	ctx.Logger().Info("Done updating flatfees conversion factor.")
-}
-
-// addFlatFeesOracleAddress adds the given address to the x/flatfees oracle address list.
-func addFlatFeesOracleAddress(ctx sdk.Context, app *App, address string) {
-	ctx.Logger().Info("Adding flatfees oracle address.", "address", address)
-	if err := app.FlatFeesKeeper.AddOracleAddress(ctx, address); err != nil {
-		ctx.Logger().Error("Could not add flatfees oracle address.", "address", address, "error", err)
-		return
-	}
-	ctx.Logger().Info("Done adding flatfees oracle address.", "address", address)
-}

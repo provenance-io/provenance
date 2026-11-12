@@ -38,7 +38,7 @@ If a restricted marker allows forced transfers, the `force_transfer` permission 
 
 ### Forced Transfers
 
-A restricted coin marker can be configured to allow forced transfers. If allowed, an account with `force_transfer` permission can use a `MsgTransferRequest` to transfer the restricted coins out of almost any account to another. Forced transfer cannot be used to move restricted coins out of module accounts or smart contract accounts, though. Forced transfers can only be made using a `MsgTransferRequest`.
+A restricted coin marker can be configured to allow forced transfers. If allowed, an account with `force_transfer` permission can use a `MsgTransferRequest` to transfer the restricted coins out of almost any account to another. Forced transfer cannot be used to move restricted coins out of module accounts, smart contract accounts, or a vault's principal marker account, though. Forced transfers can only be made using a `MsgTransferRequest`.
 
 ### Required Attributes
 
@@ -157,6 +157,7 @@ flowchart TD
     start[["checkSenderMarker(Sender, Transfer Agents)"]]
     issm{{"Is Sender a marker?"}}
     isfg{{"Is a fee grant in use?"}}
+    isvp{{"Is Sender a vault's\nprincipal marker?"}}
     istaw{{"Does a Transfer Agent\nhave withdraw access?"}}
     isasm{{"Does the Amount have\nthe Sender marker's denom?"}}
     issma{{"Is Sender marker active?"}}
@@ -169,14 +170,16 @@ flowchart TD
     isfg -->|no| istaw
     istaw -.->|no| denied
     istaw -->|yes| isasm
-    isfg -->|yes| isasm
+    isfg -->|yes| isvp
+    isvp -.->|yes| denied
+    isvp -->|no| isasm
     isasm -->|yes| issma
     issma -->|yes| ok
     isasm -.->|no| ok
     issma -.->|no| denied
     issm -.->|no| ok
-    linkStyle 3,9 stroke:#b30000,color:#b30000
-    linkStyle 7,8,10 stroke:#1b8500,color:#1b8500
+    linkStyle 3,6,11 stroke:#b30000,color:#b30000
+    linkStyle 9,10,12 stroke:#1b8500,color:#1b8500
 ```
 
 #### checkReceiverMarker

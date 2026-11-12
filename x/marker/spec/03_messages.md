@@ -333,6 +333,7 @@ This service message is expected to fail if:
 - The given denom value is invalid or does not match an existing marker on the system
 - The administrator or grantee are invalid addresses
 - The administrator does not have `ADMIN` access on the marker.
+- The marker is a vault's principal marker.
 
 ## Msg/RevokeGrantAllowance
 

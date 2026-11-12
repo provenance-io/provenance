@@ -360,7 +360,7 @@ func GetWhitelistedQuery(queryPath string) (proto.Message, error) {
 	}
 	// Build a fresh zero-value instance of the same concrete type.
 	rt := reflect.TypeOf(protoResponseType)
-	if rt.Kind() != reflect.Ptr {
+	if rt.Kind() != reflect.Pointer {
 		return nil, wasmvmtypes.Unknown{}
 	}
 	freshAny := reflect.New(rt.Elem()).Interface()

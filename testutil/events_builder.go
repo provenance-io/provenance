@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/gogoproto/proto"
 )
 
@@ -89,21 +90,21 @@ func SendCoinsEvents(from, to sdk.AccAddress, amount sdk.Coins) sdk.Events {
 // SendCoinsEventsStrs creates the events emitted during SendCoins, but takes in the values as strings.
 func SendCoinsEventsStrs(from, to, amount string) sdk.Events {
 	return sdk.Events{
-		{Type: "coin_spent", Attributes: []abci.EventAttribute{
-			{Key: "spender", Value: from},
-			{Key: "amount", Value: amount},
+		{Type: banktypes.EventTypeCoinSpent, Attributes: []abci.EventAttribute{
+			{Key: banktypes.AttributeKeySpender, Value: from},
+			{Key: sdk.AttributeKeyAmount, Value: amount},
 		}},
-		{Type: "coin_received", Attributes: []abci.EventAttribute{
-			{Key: "receiver", Value: to},
-			{Key: "amount", Value: amount},
+		{Type: banktypes.EventTypeCoinReceived, Attributes: []abci.EventAttribute{
+			{Key: banktypes.AttributeKeyReceiver, Value: to},
+			{Key: sdk.AttributeKeyAmount, Value: amount},
 		}},
-		{Type: "transfer", Attributes: []abci.EventAttribute{
-			{Key: "recipient", Value: to},
-			{Key: "sender", Value: from},
-			{Key: "amount", Value: amount},
+		{Type: banktypes.EventTypeTransfer, Attributes: []abci.EventAttribute{
+			{Key: banktypes.AttributeKeyRecipient, Value: to},
+			{Key: sdk.AttributeKeySender, Value: from},
+			{Key: sdk.AttributeKeyAmount, Value: amount},
 		}},
-		{Type: "message", Attributes: []abci.EventAttribute{
-			{Key: "sender", Value: from},
+		{Type: sdk.EventTypeMessage, Attributes: []abci.EventAttribute{
+			{Key: sdk.AttributeKeySender, Value: from},
 		}},
 	}
 }
@@ -127,9 +128,9 @@ func FailedSendCoinsEvents(from sdk.AccAddress, amount sdk.Coins) sdk.Events {
 // FailedSendCoinsEventsStrs creates the events emitted during SendCoins when there's
 // an error from the send restrictions, but takes in the values as strings.
 func FailedSendCoinsEventsStrs(from, amount string) sdk.Events {
-	return sdk.Events{{Type: "coin_spent", Attributes: []abci.EventAttribute{
-		{Key: "spender", Value: from},
-		{Key: "amount", Value: amount},
+	return sdk.Events{{Type: banktypes.EventTypeCoinSpent, Attributes: []abci.EventAttribute{
+		{Key: banktypes.AttributeKeySpender, Value: from},
+		{Key: sdk.AttributeKeyAmount, Value: amount},
 	}}}
 }
 
@@ -153,13 +154,13 @@ func MintCoinsEvents(moduleName string, amount sdk.Coins) sdk.Events {
 // Note that the first argument should be the bech32 address string of the module account (not the module name).
 func MintCoinsEventsStrs(moduleAddr, amount string) sdk.Events {
 	return sdk.Events{
-		{Type: "coin_received", Attributes: []abci.EventAttribute{
-			{Key: "receiver", Value: moduleAddr},
-			{Key: "amount", Value: amount},
+		{Type: banktypes.EventTypeCoinReceived, Attributes: []abci.EventAttribute{
+			{Key: banktypes.AttributeKeyReceiver, Value: moduleAddr},
+			{Key: sdk.AttributeKeyAmount, Value: amount},
 		}},
-		{Type: "coinbase", Attributes: []abci.EventAttribute{
-			{Key: "minter", Value: moduleAddr},
-			{Key: "amount", Value: amount},
+		{Type: banktypes.EventTypeCoinMint, Attributes: []abci.EventAttribute{
+			{Key: banktypes.AttributeKeyMinter, Value: moduleAddr},
+			{Key: sdk.AttributeKeyAmount, Value: amount},
 		}},
 	}
 }

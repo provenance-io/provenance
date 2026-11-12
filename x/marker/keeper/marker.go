@@ -735,13 +735,7 @@ func (k Keeper) canForceTransferFrom(ctx sdk.Context, from sdk.AccAddress) bool 
 
 	// Allow force transfers out of marker accounts, unless the marker is a vault's principal account.
 	if marker, isMarker := acc.(types.MarkerAccountI); isMarker {
-		// A vault's principal marker uses the vault's share denom, and its address is derived from that denom.
-		vaultAcc := k.authKeeper.GetAccount(ctx, vaulttypes.GetVaultAddress(marker.GetDenom()))
-		if vaultAcc == nil {
-			return true
-		}
-		_, isVault := vaultAcc.(vaulttypes.VaultAccountI)
-		return !isVault
+		return !k.isVaultPrincipalMarker(ctx, marker)
 	}
 
 	// Allow force transfers out of market accounts too.
@@ -750,6 +744,17 @@ func (k Keeper) canForceTransferFrom(ctx sdk.Context, from sdk.AccAddress) bool 
 	}
 
 	return false
+}
+
+// isVaultPrincipalMarker reports whether the marker is a vault's principal account.
+// A vault's principal marker uses the vault's share denom, and the vault's address is derived from that denom.
+func (k Keeper) isVaultPrincipalMarker(ctx sdk.Context, marker types.MarkerAccountI) bool {
+	vaultAcc := k.authKeeper.GetAccount(ctx, vaulttypes.GetVaultAddress(marker.GetDenom()))
+	if vaultAcc == nil {
+		return false
+	}
+	_, isVault := vaultAcc.(vaulttypes.VaultAccountI)
+	return isVault
 }
 
 // IbcTransferCoin transfers restricted coins between two chains when the administrator account holds the transfer

@@ -1852,6 +1852,37 @@ func TestMarkerFeeGrant(t *testing.T) {
 	require.NoError(t, err, "failed to grant basic allowance from admin")
 }
 
+func TestGrantAllowanceVaultPrincipalMarker(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
+
+	shareDenom := "vaultshares"
+	admin := testUserAddress("admin")
+
+	principal := types.NewEmptyMarkerAccount(shareDenom, admin.String(), nil)
+	require.NoError(t, principal.GrantAccess(types.NewAccessGrant(admin, []types.Access{types.Access_Admin})))
+	setNewAccount(app, ctx, principal)
+
+	vault := vaulttypes.NewVaultAccount(
+		authtypes.NewBaseAccountWithAddress(vaulttypes.GetVaultAddress(shareDenom)),
+		admin.String(), shareDenom, "underlying",
+		0, vaulttypes.DefaultAumFeeBips, "", "", "", "",
+	)
+	setNewAccount(app, ctx, vault)
+
+	allowance, err := types.NewMsgGrantAllowance(
+		shareDenom,
+		admin,
+		testUserAddress("grantee"),
+		&feegrant.BasicAllowance{SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("underlying", 1))})
+	require.NoError(t, err, "NewMsgGrantAllowance")
+	_, err = server.GrantAllowance(ctx, allowance)
+	expErr := "cannot grant a fee allowance from vault principal marker account " +
+		principal.GetAddress().String() + " (" + shareDenom + "): invalid request"
+	require.EqualError(t, err, expErr, "GrantAllowance from a vault principal marker")
+}
+
 // testUserAddress gives a quick way to make a valid test address (no keys though)
 func testUserAddress(name string) sdk.AccAddress {
 	addr := types.MustGetMarkerAddress(name)
