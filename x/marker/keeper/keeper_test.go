@@ -26,6 +26,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -3505,6 +3507,69 @@ func TestRemoveMarkerRemovesFeeGrants(t *testing.T) {
 		_, err := app.FeeGrantKeeper.GetAllowance(ctx, markerAddr, grantee)
 		assert.Error(t, err, "GetAllowance(marker, grantee%d) after RemoveMarker", i)
 	}
+}
+
+func TestRemoveMarkerRemovesAuthzGrants(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+
+	user := testUserAddress("test")
+	mac := types.NewEmptyMarkerAccount("authzcoin", user.String(), []types.AccessGrant{
+		*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin}),
+	})
+	setNewAccount(app, ctx, mac)
+	require.NoError(t, app.MarkerKeeper.SetMarker(ctx, mac), "SetMarker")
+	markerAddr := mac.GetAddress()
+
+	sendMsgType := sdk.MsgTypeURL(&banktypes.MsgSend{})
+	multiSendMsgType := sdk.MsgTypeURL(&banktypes.MsgMultiSend{})
+	expiration := ctx.BlockTime().Add(time.Hour)
+
+	// Two grants per grantee: more than the default page size (100) to make sure they all get removed.
+	const numGrantees = 75
+	var grantees []sdk.AccAddress
+	for i := 0; i < numGrantees; i++ {
+		grantee := testUserAddress(fmt.Sprintf("grantee%d", i))
+		grantees = append(grantees, grantee)
+		require.NoError(t, app.AuthzKeeper.SaveGrant(ctx, grantee, markerAddr,
+			authz.NewGenericAuthorization(sendMsgType), nil), "SaveGrant send %d", i)
+		require.NoError(t, app.AuthzKeeper.SaveGrant(ctx, grantee, markerAddr,
+			authz.NewGenericAuthorization(multiSendMsgType), &expiration), "SaveGrant multi-send %d", i)
+	}
+
+	// A grant from a different granter that should not be affected.
+	otherGranter := testUserAddress("othergranter")
+	require.NoError(t, app.AuthzKeeper.SaveGrant(ctx, grantees[0], otherGranter,
+		authz.NewGenericAuthorization(sendMsgType), nil), "SaveGrant from other granter")
+
+	countGrants := func(granter sdk.AccAddress) int {
+		resp, err := app.AuthzKeeper.GranterGrants(ctx, &authz.QueryGranterGrantsRequest{
+			Granter:    granter.String(),
+			Pagination: &query.PageRequest{Limit: numGrantees * 4},
+		})
+		require.NoError(t, err, "GranterGrants(%s)", granter)
+		return len(resp.Grants)
+	}
+	require.Equal(t, numGrantees*2, countGrants(markerAddr), "marker grants before RemoveMarker")
+	require.Equal(t, 1, countGrants(otherGranter), "other granter grants before RemoveMarker")
+
+	app.MarkerKeeper.RemoveMarker(ctx, mac)
+
+	assert.Equal(t, 0, countGrants(markerAddr), "marker grants after RemoveMarker")
+	assert.Equal(t, 1, countGrants(otherGranter), "other granter grants after RemoveMarker")
+
+	// The expiring grants should also have been removed from the grant queue.
+	// The SDK leaves the queue entries in place with an empty list of msg types (they're cleaned up on expiration).
+	queueIter := storetypes.KVStorePrefixIterator(ctx.KVStore(app.GetKey(authzkeeper.StoreKey)), authzkeeper.GrantQueuePrefix)
+	defer queueIter.Close()
+	queueEntries := 0
+	for ; queueIter.Valid(); queueIter.Next() {
+		queueEntries++
+		var queueItem authz.GrantQueueItem
+		require.NoError(t, app.AppCodec().Unmarshal(queueIter.Value(), &queueItem), "Unmarshal GrantQueueItem")
+		assert.Empty(t, queueItem.MsgTypeUrls, "grant queue item msg types after RemoveMarker")
+	}
+	assert.Equal(t, numGrantees, queueEntries, "number of grant queue entries")
 }
 
 func TestIterateMarkersCollections(t *testing.T) {

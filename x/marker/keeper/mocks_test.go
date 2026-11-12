@@ -171,6 +171,10 @@ func (m *MockAuthzKeeper) SaveGrant(_ context.Context, _, _ sdk.AccAddress, _ au
 	return nil
 }
 
+func (m *MockAuthzKeeper) GranterGrants(_ context.Context, _ *authz.QueryGranterGrantsRequest) (*authz.QueryGranterGrantsResponse, error) {
+	return &authz.QueryGranterGrantsResponse{}, nil
+}
+
 // mockAuthorization satisfies the authz.Authorization interface and does what it's told.
 type mockAuthorization struct {
 	RespAccept  bool
