@@ -3457,6 +3457,56 @@ func TestMarkerCollectionsRoundTrip(t *testing.T) {
 	assert.Len(t, navsAfterRemove, 0, "NAVs should be cleared after RemoveMarker")
 }
 
+func TestRemoveMarkerRemovesFeeGrants(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+
+	user := testUserAddress("test")
+	mac := types.NewEmptyMarkerAccount("feegrantcoin", user.String(), []types.AccessGrant{
+		*types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin}),
+	})
+	setNewAccount(app, ctx, mac)
+	require.NoError(t, app.MarkerKeeper.SetMarker(ctx, mac), "SetMarker")
+	markerAddr := mac.GetAddress()
+
+	allowance := func() *feegrant.BasicAllowance {
+		return &feegrant.BasicAllowance{SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("feegrantcoin", 1))}
+	}
+
+	// More than the default page size (100) to make sure they all get removed.
+	const numGrants = 150
+	var grantees []sdk.AccAddress
+	for i := 0; i < numGrants; i++ {
+		grantee := testUserAddress(fmt.Sprintf("grantee%d", i))
+		grantees = append(grantees, grantee)
+		require.NoError(t, app.FeeGrantKeeper.GrantAllowance(ctx, markerAddr, grantee, allowance()), "GrantAllowance %d", i)
+	}
+
+	// A grant from a different granter that should not be affected.
+	otherGranter := testUserAddress("othergranter")
+	require.NoError(t, app.FeeGrantKeeper.GrantAllowance(ctx, otherGranter, grantees[0], allowance()), "GrantAllowance from other granter")
+
+	countGrants := func(granter sdk.AccAddress) int {
+		resp, err := app.FeeGrantKeeper.AllowancesByGranter(ctx, &feegrant.QueryAllowancesByGranterRequest{
+			Granter:    granter.String(),
+			Pagination: &query.PageRequest{Limit: numGrants * 2},
+		})
+		require.NoError(t, err, "AllowancesByGranter(%s)", granter)
+		return len(resp.Allowances)
+	}
+	require.Equal(t, numGrants, countGrants(markerAddr), "marker grants before RemoveMarker")
+	require.Equal(t, 1, countGrants(otherGranter), "other granter grants before RemoveMarker")
+
+	app.MarkerKeeper.RemoveMarker(ctx, mac)
+
+	assert.Equal(t, 0, countGrants(markerAddr), "marker grants after RemoveMarker")
+	assert.Equal(t, 1, countGrants(otherGranter), "other granter grants after RemoveMarker")
+	for i, grantee := range grantees {
+		_, err := app.FeeGrantKeeper.GetAllowance(ctx, markerAddr, grantee)
+		assert.Error(t, err, "GetAllowance(marker, grantee%d) after RemoveMarker", i)
+	}
+}
+
 func TestIterateMarkersCollections(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
