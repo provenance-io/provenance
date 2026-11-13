@@ -71,6 +71,13 @@ func (k Keeper) AddMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) e
 		return err
 	}
 
+	// Get rid of any denom metadata that might exist from a previous incarnation of this marker.
+	// We do this here (instead of when canceling or deleting a marker) so that the old one
+	// sticks around, in case we need the info from it.
+	if err := k.bankKeeper.DeleteDenomMetaData(ctx, marker.GetDenom()); err != nil {
+		return err
+	}
+
 	if err := k.SetMarker(ctx, marker); err != nil {
 		return err
 	}

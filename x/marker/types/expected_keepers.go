@@ -48,8 +48,7 @@ type BankKeeper interface {
 
 	GetDenomMetaData(ctx context.Context, denom string) (banktypes.Metadata, bool)
 	SetDenomMetaData(ctx context.Context, denomMetaData banktypes.Metadata)
-	HasDenomMetaData(ctx context.Context, denom string) bool
-	DeleteDenomMetadata(ctx context.Context, denom string) error
+	DeleteDenomMetaData(ctx context.Context, denom string) error
 }
 
 // FeeGrantKeeper defines the fee-grant functionality needed by the marker module.

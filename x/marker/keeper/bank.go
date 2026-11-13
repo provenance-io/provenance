@@ -23,7 +23,7 @@ func NewWrappedBankKeeper(kpr *bankkeeper.BaseKeeper) WrappedBankKeeper {
 var _ types.BankKeeper = (*WrappedBankKeeper)(nil)
 
 // DeleteDenomMetadata deletes the provided denom's metadata from the state store.
-func (k WrappedBankKeeper) DeleteDenomMetadata(ctx context.Context, denom string) error {
+func (k WrappedBankKeeper) DeleteDenomMetaData(ctx context.Context, denom string) error {
 	err := k.BaseViewKeeper.DenomMetadata.Remove(ctx, denom)
 	if err != nil {
 		return fmt.Errorf("could not remove denom metadata for %q: %w", denom, err)

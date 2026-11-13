@@ -3279,11 +3279,7 @@ func (d dummyBankKeeper) GetDenomMetaData(_ context.Context, _ string) (banktype
 
 func (d dummyBankKeeper) SetDenomMetaData(_ context.Context, _ banktypes.Metadata) {}
 
-func (d dummyBankKeeper) HasDenomMetaData(_ context.Context, _ string) bool {
-	return false
-}
-
-func (d dummyBankKeeper) DeleteDenomMetadata(_ context.Context, _ string) error {
+func (d dummyBankKeeper) DeleteDenomMetaData(_ context.Context, _ string) error {
 	return nil
 }
 
@@ -3519,6 +3515,47 @@ func TestDeleteMarkerRemovesFeeGrants(t *testing.T) {
 		_, err = app.FeeGrantKeeper.GetAllowance(ctx, markerAddr, grantee)
 		assert.Error(t, err, "GetAllowance(marker, grantee%d) after Delete", i)
 	}
+}
+
+func TestAddMarkerAccountDeletesDenomMetadata(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+
+	user := testUserAddress("test")
+	newMarker := func(denom string) *types.MarkerAccount {
+		mac := types.NewEmptyMarkerAccount(denom, user.String(), []types.AccessGrant{
+			*types.NewAccessGrant(user, []types.Access{types.Access_Admin}),
+		})
+		require.NoError(t, mac.SetSupply(sdk.NewInt64Coin(denom, 1)), "SetSupply(%q)", denom)
+		return mac
+	}
+	newMetadata := func(denom string) banktypes.Metadata {
+		return banktypes.Metadata{
+			Description: "metadata for " + denom,
+			DenomUnits:  []*banktypes.DenomUnit{{Denom: denom, Exponent: 0}},
+			Base:        denom,
+			Display:     denom,
+			Name:        denom,
+			Symbol:      strings.ToUpper(denom),
+		}
+	}
+
+	// Leftover metadata for the denom of the marker being created, and metadata for an unrelated denom.
+	app.BankKeeper.SetDenomMetaData(ctx, newMetadata("leftovercoin"))
+	app.BankKeeper.SetDenomMetaData(ctx, newMetadata("othercoin"))
+
+	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, newMarker("leftovercoin")), "AddMarkerAccount(leftovercoin)")
+	assert.False(t, app.BankKeeper.HasDenomMetaData(ctx, "leftovercoin"), "HasDenomMetaData(leftovercoin) after AddMarkerAccount")
+	assert.True(t, app.BankKeeper.HasDenomMetaData(ctx, "othercoin"), "HasDenomMetaData(othercoin) after AddMarkerAccount")
+
+	// Creating a marker that doesn't have any metadata is fine too.
+	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, newMarker("freshcoin")), "AddMarkerAccount(freshcoin)")
+	assert.False(t, app.BankKeeper.HasDenomMetaData(ctx, "freshcoin"), "HasDenomMetaData(freshcoin) after AddMarkerAccount")
+
+	// A failed attempt to re-add an existing marker should not delete its metadata.
+	app.BankKeeper.SetDenomMetaData(ctx, newMetadata("leftovercoin"))
+	require.Error(t, app.MarkerKeeper.AddMarkerAccount(ctx, newMarker("leftovercoin")), "AddMarkerAccount(leftovercoin) again")
+	assert.True(t, app.BankKeeper.HasDenomMetaData(ctx, "leftovercoin"), "HasDenomMetaData(leftovercoin) after failed AddMarkerAccount")
 }
 
 func TestIterateMarkersCollections(t *testing.T) {
