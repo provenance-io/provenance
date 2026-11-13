@@ -110,14 +110,21 @@ func (k Keeper) HandleSetAdministratorProposal(ctx sdk.Context, denom string, ac
 		return fmt.Errorf("%s marker does not allow governance control", denom)
 	}
 	for _, a := range accessGrants {
-		if err := m.GrantAccess(types.NewAccessGrant(a.GetAddress(), a.Permissions)); err != nil {
+		grant := types.NewAccessGrant(a.GetAddress(), a.Permissions)
+		if err := k.mergeAccess(ctx, addr, grant); err != nil {
+			return err
+		}
+		if err := validateGrantForMarker(m, grant); err != nil {
+			return err
+		}
+		if err := k.SetAccess(ctx, addr, grant.GetAddress(), grant.GetAccessList()); err != nil {
 			return err
 		}
 		logger := k.Logger(ctx)
 		logger.Info("controlling access to marker assigned ", "marker", denom, "access", a.String())
 	}
 
-	if err := m.Validate(); err != nil {
+	if err := m.ValidateWithAccessControl(); err != nil {
 		return err
 	}
 
@@ -143,22 +150,25 @@ func (k Keeper) HandleRemoveAdministratorProposal(ctx sdk.Context, denom string,
 	if !m.HasGovernanceEnabled() {
 		return fmt.Errorf("%s marker does not allow governance control", denom)
 	}
+	removeAddrs := make([]sdk.AccAddress, 0, len(removedAddress))
 	for _, a := range removedAddress {
-		addr, err := sdk.AccAddressFromBech32(a)
+		removeAddr, err := sdk.AccAddressFromBech32(a)
 		if err != nil {
 			return err
 		}
-		if err = m.RevokeAccess(addr); err != nil {
+
+		removeAddrs = append(removeAddrs, removeAddr)
+	}
+
+	if err := k.validateAccessControl(ctx, m, removeAddrs...); err != nil {
+		return err
+	}
+
+	// Only the permissions changed, so just delete those records.
+	for _, removeAddr := range removeAddrs {
+		if err := k.RevokeAccessEntry(ctx, addr, removeAddr); err != nil {
 			return err
 		}
-	}
-
-	if err := m.Validate(); err != nil {
-		return err
-	}
-
-	if err := k.SetMarker(ctx, m); err != nil {
-		return err
 	}
 
 	logger := k.Logger(ctx)
@@ -214,7 +224,6 @@ func (k Keeper) HandleChangeStatusProposal(ctx sdk.Context, denom string, status
 	if err := m.Validate(); err != nil {
 		return err
 	}
-
 	if err := k.SetMarker(ctx, m); err != nil {
 		return err
 	}

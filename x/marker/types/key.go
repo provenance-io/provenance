@@ -35,6 +35,10 @@ var (
 
 	// MarkerParamStoreKey key for marker module's params
 	MarkerParamStoreKey = []byte{0x05}
+
+	// MarkerPermsKeyPrefix prefix for per-address marker permission entries.
+	// Key layout: [0x06][len(markerAddr)][markerAddr][len(granteeAddr)][granteeAddr] => proto(MarkerPermissions)
+	MarkerPermsKeyPrefix = []byte{0x06}
 )
 
 // MarkerAddress returns the module account address for the given denomination

@@ -28,9 +28,9 @@ func TestMarkerInvariant(t *testing.T) {
 	// create account and check default values
 	mac := markertypes.NewEmptyMarkerAccount("testcoin", user.String(),
 		[]markertypes.AccessGrant{
-			*markertypes.NewAccessGrant(
-				user, []markertypes.Access{markertypes.Access_Burn, markertypes.Access_Mint, markertypes.Access_Withdraw}),
-			*markertypes.NewAccessGrant(user, []markertypes.Access{markertypes.Access_Admin}),
+			*markertypes.NewAccessGrant(user, []markertypes.Access{
+				markertypes.Access_Burn, markertypes.Access_Mint, markertypes.Access_Withdraw, markertypes.Access_Admin,
+			}),
 		})
 
 	require.NoError(t, mac.SetManager(user))
