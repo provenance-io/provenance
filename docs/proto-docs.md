@@ -10091,7 +10091,7 @@ MsgUpdateRequireDepositAccessResponse defines the Msg/UpdateRequireDepositAccess
 <a name="provenance-marker-v1-MsgUpdateRequiredAttributesRequest"></a>
 
 ### MsgUpdateRequiredAttributesRequest
-MsgUpdateRequiredAttributesRequest defines a msg to update/add/remove required attributes from a resticted marker
+MsgUpdateRequiredAttributesRequest defines a msg to update/add/remove required attributes from a restricted marker
 signer must have transfer authority to change attributes, to update attribute add current to remove list and new to
 add list
 
@@ -10121,8 +10121,8 @@ MsgUpdateRequiredAttributesResponse defines the Msg/UpdateRequiredAttributes res
 <a name="provenance-marker-v1-MsgUpdateSendDenyListRequest"></a>
 
 ### MsgUpdateSendDenyListRequest
-MsgUpdateSendDenyListRequest defines a msg to add/remove addresses to send deny list for a resticted marker
-signer must have admin authority
+MsgUpdateSendDenyListRequest defines a msg to add/remove addresses to send deny list for a restricted marker.
+Signer must have transfer authority.
 
 
 | Field | Type | Label | Description |
@@ -10130,7 +10130,7 @@ signer must have admin authority
 | `denom` | [string](#string) |  | The denomination of the marker to update. |
 | `remove_denied_addresses` | [string](#string) | repeated | List of bech32 addresses to remove from the deny send list. |
 | `add_denied_addresses` | [string](#string) | repeated | List of bech32 addresses to add to the deny send list. |
-| `authority` | [string](#string) |  | The signer of the message. Must have admin authority to marker or be governance module account address. |
+| `authority` | [string](#string) |  | The signer of the message. Must have transfer authority to marker or be governance module account address. |
 
 
 
@@ -10239,7 +10239,7 @@ Msg defines the Marker Msg service.
 | `UpdateForcedTransfer` | [MsgUpdateForcedTransferRequest](#provenance-marker-v1-MsgUpdateForcedTransferRequest) | [MsgUpdateForcedTransferResponse](#provenance-marker-v1-MsgUpdateForcedTransferResponse) | UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal. |
 | `UpdateRequireDepositAccess` | [MsgUpdateRequireDepositAccessRequest](#provenance-marker-v1-MsgUpdateRequireDepositAccessRequest) | [MsgUpdateRequireDepositAccessResponse](#provenance-marker-v1-MsgUpdateRequireDepositAccessResponse) | UpdateRequireDepositAccess updates the require_deposit_access field of a marker. Signer must have admin access or be the governance module account. |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance-marker-v1-MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance-marker-v1-MsgSetAccountDataResponse) | SetAccountData sets the accountdata for a denom. Signer must have deposit authority. |
-| `UpdateSendDenyList` | [MsgUpdateSendDenyListRequest](#provenance-marker-v1-MsgUpdateSendDenyListRequest) | [MsgUpdateSendDenyListResponse](#provenance-marker-v1-MsgUpdateSendDenyListResponse) | UpdateSendDenyList will only succeed if signer has admin authority |
+| `UpdateSendDenyList` | [MsgUpdateSendDenyListRequest](#provenance-marker-v1-MsgUpdateSendDenyListRequest) | [MsgUpdateSendDenyListResponse](#provenance-marker-v1-MsgUpdateSendDenyListResponse) | UpdateSendDenyList will only succeed if signer has transfer authority. |
 | `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance-marker-v1-MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance-marker-v1-MsgAddNetAssetValuesResponse) | AddNetAssetValues sets the net asset value for a marker. |
 | `SetAdministratorProposal` | [MsgSetAdministratorProposalRequest](#provenance-marker-v1-MsgSetAdministratorProposalRequest) | [MsgSetAdministratorProposalResponse](#provenance-marker-v1-MsgSetAdministratorProposalResponse) | SetAdministratorProposal sets administrators with specific access on the marker |
 | `RemoveAdministratorProposal` | [MsgRemoveAdministratorProposalRequest](#provenance-marker-v1-MsgRemoveAdministratorProposalRequest) | [MsgRemoveAdministratorProposalResponse](#provenance-marker-v1-MsgRemoveAdministratorProposalResponse) | RemoveAdministratorProposal removes administrators with specific access on the marker |
