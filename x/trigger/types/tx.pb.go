@@ -32,6 +32,7 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MsgCreateTriggerRequest is the request type for creating a trigger RPC
+// Deprecated: The trigger module has been removed.
 type MsgCreateTriggerRequest struct {
 	// The signing authorities for the request
 	Authorities []string `protobuf:"bytes,1,rep,name=authorities,proto3" json:"authorities,omitempty"`
@@ -96,6 +97,7 @@ func (m *MsgCreateTriggerRequest) GetActions() []*types.Any {
 }
 
 // MsgCreateTriggerResponse is the response type for creating a trigger RPC
+// Deprecated: The trigger module has been removed.
 type MsgCreateTriggerResponse struct {
 	// trigger id that is generated on creation.
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -142,6 +144,7 @@ func (m *MsgCreateTriggerResponse) GetId() uint64 {
 }
 
 // MsgDestroyTriggerRequest is the request type for creating a trigger RPC
+// Deprecated: The trigger module has been removed.
 type MsgDestroyTriggerRequest struct {
 	// the id of the trigger to destroy.
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -197,6 +200,7 @@ func (m *MsgDestroyTriggerRequest) GetAuthority() string {
 }
 
 // MsgDestroyTriggerResponse is the response type for creating a trigger RPC
+// Deprecated: The trigger module has been removed.
 type MsgDestroyTriggerResponse struct {
 }
 
@@ -356,8 +360,10 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
 	// CreateTrigger is the RPC endpoint for creating a trigger
+	// Deprecated: The trigger module has been removed.
 	CreateTrigger(ctx context.Context, in *MsgCreateTriggerRequest, opts ...grpc.CallOption) (*MsgCreateTriggerResponse, error)
 	// DestroyTrigger is the RPC endpoint for creating a trigger
+	// Deprecated: The trigger module has been removed.
 	DestroyTrigger(ctx context.Context, in *MsgDestroyTriggerRequest, opts ...grpc.CallOption) (*MsgDestroyTriggerResponse, error)
 }
 
@@ -390,8 +396,10 @@ func (c *msgClient) DestroyTrigger(ctx context.Context, in *MsgDestroyTriggerReq
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// CreateTrigger is the RPC endpoint for creating a trigger
+	// Deprecated: The trigger module has been removed.
 	CreateTrigger(context.Context, *MsgCreateTriggerRequest) (*MsgCreateTriggerResponse, error)
 	// DestroyTrigger is the RPC endpoint for creating a trigger
+	// Deprecated: The trigger module has been removed.
 	DestroyTrigger(context.Context, *MsgDestroyTriggerRequest) (*MsgDestroyTriggerResponse, error)
 }
 

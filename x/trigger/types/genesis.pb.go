@@ -24,6 +24,7 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the trigger module's genesis state.
+// Deprecated: The trigger module has been removed.
 type GenesisState struct {
 	// Trigger id is the next auto incremented id to be assigned to the next created trigger
 	TriggerId uint64 `protobuf:"varint,1,opt,name=trigger_id,json=triggerId,proto3" json:"trigger_id,omitempty"`
