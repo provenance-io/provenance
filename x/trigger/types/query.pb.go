@@ -278,8 +278,10 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
 	// TriggerByID returns a trigger matching the ID.
+	// Deprecated: The trigger module has been removed.
 	TriggerByID(ctx context.Context, in *QueryTriggerByIDRequest, opts ...grpc.CallOption) (*QueryTriggerByIDResponse, error)
 	// Triggers returns the list of triggers.
+	// Deprecated: The trigger module has been removed.
 	Triggers(ctx context.Context, in *QueryTriggersRequest, opts ...grpc.CallOption) (*QueryTriggersResponse, error)
 }
 
@@ -312,8 +314,10 @@ func (c *queryClient) Triggers(ctx context.Context, in *QueryTriggersRequest, op
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// TriggerByID returns a trigger matching the ID.
+	// Deprecated: The trigger module has been removed.
 	TriggerByID(context.Context, *QueryTriggerByIDRequest) (*QueryTriggerByIDResponse, error)
 	// Triggers returns the list of triggers.
+	// Deprecated: The trigger module has been removed.
 	Triggers(context.Context, *QueryTriggersRequest) (*QueryTriggersResponse, error)
 }
 

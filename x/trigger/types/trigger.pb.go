@@ -30,6 +30,7 @@ var _ = time.Kitchen
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Trigger
+// Deprecated: The trigger module has been removed.
 type Trigger struct {
 	// An integer to uniquely identify the trigger.
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`

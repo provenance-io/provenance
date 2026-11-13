@@ -21,9 +21,7 @@ const (
 	DefaultWeightMsgAddFinalizeActivateMarker int = 10
 	DefaultWeightMsgAddMarkerProposal         int = 40
 	DefaultWeightMsgUpdateDenySendList        int = 10
-	// Trigger
-	DefaultWeightSubmitCreateTrigger  int = 95
-	DefaultWeightSubmitDestroyTrigger int = 5
+
 	// Oracle
 	DefaultWeightUpdateOracle    int = 25
 	DefaultWeightSendOracleQuery int = 75
