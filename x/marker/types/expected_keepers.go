@@ -46,8 +46,10 @@ type BankKeeper interface {
 	AppendSendRestriction(restriction banktypes.SendRestrictionFn)
 	BlockedAddr(addr sdk.AccAddress) bool
 
-	GetDenomMetaData(context context.Context, denom string) (banktypes.Metadata, bool)
-	SetDenomMetaData(context context.Context, denomMetaData banktypes.Metadata)
+	GetDenomMetaData(ctx context.Context, denom string) (banktypes.Metadata, bool)
+	SetDenomMetaData(ctx context.Context, denomMetaData banktypes.Metadata)
+	HasDenomMetaData(ctx context.Context, denom string) bool
+	DeleteDenomMetadata(ctx context.Context, denom string) error
 }
 
 // FeeGrantKeeper defines the fee-grant functionality needed by the marker module.

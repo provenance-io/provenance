@@ -25,9 +25,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -809,7 +809,7 @@ func TestWithdrawCoins(t *testing.T) {
 
 			kpr := *app.MarkerKeeper
 			if tc.bankKeeper != nil {
-				kpr = kpr.WithBankKeeper(tc.bankKeeper.WithParent(app.BankKeeper))
+				kpr = kpr.WithBankKeeper(tc.bankKeeper.WithParent(markerkeeper.NewWrappedBankKeeper(&app.BankKeeper)))
 			}
 
 			em := sdk.NewEventManager()
@@ -1477,7 +1477,7 @@ func TestTransferCoin(t *testing.T) {
 			}
 			kpr := app.MarkerKeeper.WithAuthzKeeper(tc.authzKeeper)
 			if tc.bankKeeper != nil {
-				kpr = kpr.WithBankKeeper(tc.bankKeeper.WithParent(app.BankKeeper))
+				kpr = kpr.WithBankKeeper(tc.bankKeeper.WithParent(markerkeeper.NewWrappedBankKeeper(&app.BankKeeper)))
 			}
 
 			origFromBal := app.BankKeeper.GetAllBalances(ctx, tc.from)
@@ -3280,6 +3280,14 @@ func (d dummyBankKeeper) GetDenomMetaData(_ context.Context, _ string) (banktype
 }
 
 func (d dummyBankKeeper) SetDenomMetaData(_ context.Context, _ banktypes.Metadata) {}
+
+func (d dummyBankKeeper) HasDenomMetaData(_ context.Context, _ string) bool {
+	return false
+}
+
+func (d dummyBankKeeper) DeleteDenomMetadata(ctx context.Context, denom string) error {
+	return nil
+}
 
 func (d dummyBankKeeper) IterateAllBalances(_ context.Context, _ func(sdk.AccAddress, sdk.Coin) bool) {
 }
