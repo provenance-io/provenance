@@ -2,13 +2,17 @@ package keeper
 
 import (
 	"fmt"
+	"math"
 
 	vaulttypes "github.com/provlabs/vault/types"
 
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/feegrant"
+	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ibctypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
@@ -599,12 +603,13 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 
 	// status must currently be set to cancelled
 	if m.GetStatus() != types.StatusCancelled {
-		return fmt.Errorf("can only delete markeraccounts in the Cancelled status")
+		return fmt.Errorf("can only delete marker accounts in the Cancelled status")
 	}
 
 	// require full supply of coin for marker to be contained within the marker account (no outstanding delegations)
+	mAddr := m.GetAddress()
 	totalSupply := k.bankKeeper.GetSupply(ctx, denom).Amount
-	escrow := k.bankKeeper.GetAllBalances(ctx, m.GetAddress())
+	escrow := k.bankKeeper.GetAllBalances(ctx, mAddr)
 	inCirculation := totalSupply.Sub(escrow.AmountOf(denom))
 	if inCirculation.GT(sdkmath.ZeroInt()) {
 		// use %v since %d doesn't apply to Int (wraps big.Int)
@@ -617,9 +622,14 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		return fmt.Errorf("could not decrease marker supply %s: %w", denom, err)
 	}
 
-	escrow = k.bankKeeper.GetAllBalances(ctx, m.GetAddress())
+	escrow = k.bankKeeper.GetAllBalances(ctx, mAddr)
 	if !escrow.IsZero() {
 		return fmt.Errorf("can not destroy marker due to balances in escrow: %s", escrow)
+	}
+
+	// Delete all the feegrants and authz grants issued by the marker.
+	if err = k.removeFeeGrantsFromMarker(ctx, mAddr); err != nil {
+		return fmt.Errorf("failed to remove fee grants issued by marker %s: %w", mAddr, err)
 	}
 
 	// get the updated state of the marker after supply burn...
@@ -640,6 +650,33 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	markerDeleteEvent := types.NewEventMarkerDelete(denom, caller.String())
 
 	return ctx.EventManager().EmitTypedEvent(markerDeleteEvent)
+}
+
+// removeFeeGrantsFromMarker revokes all fee allowances that were granted by the given marker address.
+func (k Keeper) removeFeeGrantsFromMarker(ctx sdk.Context, markerAddr sdk.AccAddress) error {
+	granter := markerAddr.String()
+
+	resp, err := k.feegrantKeeper.AllowancesByGranter(ctx, &feegrant.QueryAllowancesByGranterRequest{
+		Granter:    granter,
+		Pagination: &query.PageRequest{Limit: math.MaxUint64},
+	})
+	if err != nil {
+		return fmt.Errorf("could not look up fee allowances: %w", err)
+	}
+
+	if len(resp.Allowances) == 0 {
+		return nil
+	}
+
+	server := feegrantkeeper.NewMsgServerImpl(k.feegrantKeeper)
+	for _, grant := range resp.Allowances {
+		msg := &feegrant.MsgRevokeAllowance{Granter: granter, Grantee: grant.Grantee}
+		if _, err = server.RevokeAllowance(ctx, msg); err != nil {
+			return fmt.Errorf("could not revoke fee allowance to %s: %w", grant.Grantee, err)
+		}
+	}
+
+	return nil
 }
 
 // TransferCoin transfers restricted coins between to accounts when the administrator account holds the transfer

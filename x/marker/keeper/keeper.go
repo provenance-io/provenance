@@ -3,20 +3,16 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"math"
 	"strings"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/feegrant"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	ibctypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 
@@ -240,72 +236,11 @@ func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) error {
 // likely cause an invariant constraint violation for the coin supply
 func (k Keeper) RemoveMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 	k.authKeeper.RemoveAccount(ctx, marker)
-	if err := k.removeFeeGrantsFromMarker(ctx, marker.GetAddress()); err != nil {
-		panic(fmt.Errorf("failed to remove fee grants issued by marker %s: %w", marker.GetAddress(), err))
-	}
-	if err := k.removeAuthzGrantsFromMarker(ctx, marker.GetAddress()); err != nil {
-		panic(fmt.Errorf("failed to remove authz grants issued by marker %s: %w", marker.GetAddress(), err))
-	}
 	k.RemoveNetAssetValues(ctx, marker.GetAddress())
 	k.ClearSendDeny(ctx, marker.GetAddress())
 	if err := k.markers.Remove(ctx, marker.GetAddress()); err != nil {
 		panic(fmt.Errorf("failed to remove marker index: %w", err))
 	}
-}
-
-// removeFeeGrantsFromMarker revokes all fee allowances that were granted by the given marker address.
-func (k Keeper) removeFeeGrantsFromMarker(ctx sdk.Context, markerAddr sdk.AccAddress) error {
-	granter := markerAddr.String()
-
-	resp, err := k.feegrantKeeper.AllowancesByGranter(ctx, &feegrant.QueryAllowancesByGranterRequest{
-		Granter:    granter,
-		Pagination: &query.PageRequest{Limit: math.MaxUint64},
-	})
-	if err != nil {
-		return fmt.Errorf("could not look up fee allowances: %w", err)
-	}
-
-	if len(resp.Allowances) == 0 {
-		return nil
-	}
-
-	server := feegrantkeeper.NewMsgServerImpl(k.feegrantKeeper)
-	for _, grant := range resp.Allowances {
-		msg := &feegrant.MsgRevokeAllowance{Granter: granter, Grantee: grant.Grantee}
-		if _, err = server.RevokeAllowance(ctx, msg); err != nil {
-			return fmt.Errorf("could not revoke fee allowance to %s: %w", grant.Grantee, err)
-		}
-	}
-
-	return nil
-}
-
-// removeAuthzGrantsFromMarker deletes all authz grants that were granted by the given marker address.
-func (k Keeper) removeAuthzGrantsFromMarker(ctx sdk.Context, markerAddr sdk.AccAddress) error {
-	resp, err := k.authzKeeper.GranterGrants(ctx, &authz.QueryGranterGrantsRequest{
-		Granter:    markerAddr.String(),
-		Pagination: &query.PageRequest{Limit: math.MaxUint64},
-	})
-	if err != nil {
-		return fmt.Errorf("could not look up authz grants: %w", err)
-	}
-
-	for _, grant := range resp.Grants {
-		grantee, err := sdk.AccAddressFromBech32(grant.Grantee)
-		if err != nil {
-			return fmt.Errorf("invalid grantee %q: %w", grant.Grantee, err)
-		}
-		var authorization authz.Authorization
-		if err = k.cdc.UnpackAny(grant.Authorization, &authorization); err != nil {
-			return fmt.Errorf("could not unpack authorization granted to %s: %w", grant.Grantee, err)
-		}
-		msgType := authorization.MsgTypeURL()
-		if err = k.authzKeeper.DeleteGrant(ctx, grantee, markerAddr, msgType); err != nil {
-			return fmt.Errorf("could not delete %s authz grant to %s: %w", msgType, grant.Grantee, err)
-		}
-	}
-
-	return nil
 }
 
 // IterateMarkers iterates all markers with the given handler function.
