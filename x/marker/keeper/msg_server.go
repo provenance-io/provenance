@@ -768,7 +768,7 @@ func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdat
 		if !marker.HasGovernanceEnabled() {
 			return nil, fmt.Errorf("%s marker does not allow governance control", msg.Denom)
 		}
-	} else if err = marker.ValidateHasAccess(msg.Authority, types.Access_Admin); err != nil {
+	} else if err = marker.ValidateHasAccess(msg.Authority, types.Access_Transfer); err != nil {
 		return nil, err
 	}
 
