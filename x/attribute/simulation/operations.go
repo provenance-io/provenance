@@ -298,7 +298,7 @@ func getRandomNameRecord(r *rand.Rand, ctx sdk.Context, nk types.NameKeeper, acc
 // The sim account returned is the one that owns the name record for the attribute.
 func getRandomAttribute(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, nk types.NameKeeper, accs []simtypes.Account) (types.Attribute, simtypes.Account, bool, error) {
 	var attributes []types.Attribute
-	err := k.IterateRecords(ctx, types.AttributeKeyPrefix, func(attribute types.Attribute) error {
+	err := k.IterateRecords(ctx, func(attribute types.Attribute) error {
 		attributes = append(attributes, attribute)
 		return nil
 	})
