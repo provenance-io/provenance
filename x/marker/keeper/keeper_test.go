@@ -2001,7 +2001,7 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 	user := testUserAddress("test")
 
 	// Require a long unrestricted denom
-	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: "[a-z]{12,20}"})
+	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: "[a-z]{12,20}", MaxSupply: types.StringToBigInt(types.DefaultMaxSupply)})
 
 	_, err := server.AddFinalizeActivateMarker(ctx,
 		types.NewMsgAddFinalizeActivateMarkerRequest(
@@ -2038,7 +2038,7 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 	require.NoError(t, err, "should allow a marker with a sufficiently long denom")
 
 	// Set to an empty string (returns to default expression)
-	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: ""})
+	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: "", MaxSupply: types.StringToBigInt(types.DefaultMaxSupply)})
 	_, err = server.AddFinalizeActivateMarker(ctx, types.NewMsgAddFinalizeActivateMarkerRequest(
 		"short",
 		sdkmath.NewInt(30),

@@ -136,6 +136,9 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 	// Note: The status can only be Active if this is being done via gov prop.
 	if ma.Status == types.StatusActive {
 		// Active markers should have supply set.
+		if err = k.validateSupplyWithinMax(ctx, msg.Amount.Amount); err != nil {
+			return nil, err
+		}
 		if err = k.AdjustCirculation(ctx, ma, msg.Amount); err != nil {
 			return nil, err
 		}
