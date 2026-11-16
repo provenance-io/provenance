@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"slices"
 
 	vaulttypes "github.com/provlabs/vault/types"
 
@@ -155,16 +156,9 @@ func (k Keeper) RemoveAccess(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		if !mgr.Equals(caller) && m.GetStatus() == types.StatusProposed {
 			return fmt.Errorf("updates to pending marker %s can only be made by %s", m.GetDenom(), mgr.String())
 		}
-		if err = sdk.VerifyAddressFormat(remove); err != nil {
-			return fmt.Errorf("access revoke failed: can not revoke access for invalid address")
-		}
 		if err = k.validateAccessControl(ctx, m, remove); err != nil {
 			return err
 		}
-		// SetMarker only rewrites the perms store when the marker's remaining access list is
-		// non-empty — it can't distinguish "nothing was touched" from "everything was
-		// intentionally revoked" just from an empty list. Explicitly clear this address's
-		// entry so revoking someone's last grant doesn't leave them with stale access.
 		if err := k.RevokeAccessEntry(ctx, m.GetAddress(), remove); err != nil {
 			return err
 		}
@@ -291,6 +285,9 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 			return err
 		}
 		if err = m.Validate(); err != nil {
+			return err
+		}
+		if err = k.validateAccessControl(ctx, m); err != nil {
 			return err
 		}
 		if err := k.SetMarker(ctx, m); err != nil {
@@ -469,6 +466,9 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 		return fmt.Errorf("could not transition marker account state to finalized: %w", err)
 	}
 	if err := m.Validate(); err != nil {
+		return err
+	}
+	if err := k.validateAccessControl(ctx, m); err != nil {
 		return err
 	}
 	if err := k.SetMarker(ctx, m); err != nil {
@@ -801,12 +801,11 @@ func (k Keeper) IbcTransferCoin(
 
 	// checking if escrow account has transfer auth, if not add it
 	escrowAccount := ibctypes.GetEscrowAddress(sourcePort, sourceChannel)
-	if !k.HasAccess(ctx, m.GetAddress(), escrowAccount, types.Access_Transfer) {
-		err = k.SetAccess(ctx, m.GetAddress(), escrowAccount, types.AccessList{types.Access_Transfer})
+	escrowPerms := k.GetAccess(ctx, m.GetAddress(), escrowAccount)
+	if !slices.Contains(escrowPerms, types.Access_Transfer) {
+		// Add transfer to whatever the escrow account already has (don't overwrite it).
+		err = k.SetAccess(ctx, m.GetAddress(), escrowAccount, append(escrowPerms, types.Access_Transfer))
 		if err != nil {
-			return err
-		}
-		if err := k.SetMarker(ctx, m); err != nil {
 			return err
 		}
 	}

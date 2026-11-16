@@ -281,7 +281,17 @@ func ValidateIbcDenom(ma MarkerAccount) error {
 	if ma.SupplyFixed {
 		return errors.New("fixed supply is not supported for ibc marker")
 	}
-	for _, grant := range ma.AccessControl {
+	return ValidateIbcGrants(ma.Denom, ma.AccessControl...)
+}
+
+// ValidateIbcGrants returns an error if the denom is an ibc denom and any of the grants have Mint or Burn.
+// Since a marker's AccessControl is usually empty (permissions are stored separately), this should be
+// used on any grant before it's stored.
+func ValidateIbcGrants(denom string, grants ...AccessGrant) error {
+	if !strings.HasPrefix(denom, "ibc/") {
+		return nil
+	}
+	for _, grant := range grants {
 		for _, access := range grant.Permissions {
 			if access.IsOneOf(Access_Burn, Access_Mint) {
 				return fmt.Errorf("%v is not supported for ibc marker", access)

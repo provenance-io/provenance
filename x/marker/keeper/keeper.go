@@ -3,7 +3,6 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 
 	"cosmossdk.io/collections"
@@ -266,44 +265,19 @@ func (k Keeper) setMarkerAccount(ctx sdk.Context, marker types.MarkerAccountI) {
 	}
 }
 
-// setMarkerAccessList fully replaces the given marker's stored permission list with
-// accessList, merging any duplicate per-address entries first so nothing is silently
-// dropped. Only ever called from SetMarker.
+// setMarkerAccessList fully replaces the given marker's stored permission list with accessList.
+// Only ever called from SetMarker, after the marker (and so its access list) has been validated,
+// which guarantees no address is in the list twice.
 func (k Keeper) setMarkerAccessList(ctx sdk.Context, markerAddr sdk.AccAddress, accessList []types.AccessGrant) error {
 	if err := k.RemoveAllAccessForMarker(ctx, markerAddr); err != nil {
 		return err
 	}
-
-	type mergedGrant struct {
-		addr  sdk.AccAddress
-		perms map[types.Access]bool
-	}
-	order := make([]string, 0, len(accessList))
-	merged := make(map[string]*mergedGrant)
 	for _, g := range accessList {
-		mg, ok := merged[g.Address]
-		if !ok {
-			gAddr, err := sdk.AccAddressFromBech32(g.Address)
-			if err != nil {
-				return fmt.Errorf("invalid access grant address %q: %w", g.Address, err)
-			}
-			mg = &mergedGrant{addr: gAddr, perms: map[types.Access]bool{}}
-			merged[g.Address] = mg
-			order = append(order, g.Address)
+		gAddr, err := sdk.AccAddressFromBech32(g.Address)
+		if err != nil {
+			return fmt.Errorf("invalid access grant address %q: %w", g.Address, err)
 		}
-		for _, p := range g.Permissions {
-			mg.perms[p] = true
-		}
-	}
-
-	for _, addrStr := range order {
-		mg := merged[addrStr]
-		perms := make(types.AccessList, 0, len(mg.perms))
-		for p := range mg.perms {
-			perms = append(perms, p)
-		}
-		sort.Slice(perms, func(i, j int) bool { return perms[i] < perms[j] })
-		if err := k.SetAccess(ctx, markerAddr, mg.addr, perms); err != nil {
+		if err = k.SetAccess(ctx, markerAddr, gAddr, g.Permissions); err != nil {
 			return err
 		}
 	}

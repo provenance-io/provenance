@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"slices"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -49,7 +50,10 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 			if err != nil {
 				return fmt.Errorf("marker %s: invalid grant address %q: %w", ma.Denom, g.Address, err)
 			}
-			if err := m.keeper.SetAccess(ctx, addr, gAddr, g.Permissions); err != nil {
+			// An address can appear in the old access list more than once, so merge with what's
+			// already been stored for it instead of overwriting it. SetAccess sorts and dedupes.
+			perms := slices.Concat(m.keeper.GetAccess(ctx, addr, gAddr), g.Permissions)
+			if err := m.keeper.SetAccess(ctx, addr, gAddr, perms); err != nil {
 				return err
 			}
 		}

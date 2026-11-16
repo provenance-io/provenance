@@ -32,6 +32,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/exchange"
@@ -3504,4 +3506,26 @@ func TestClearSendDenyCollections(t *testing.T) {
 	assert.Len(t, list, 0, "deny list should be empty after clear")
 	assert.False(t, app.MarkerKeeper.IsSendDeny(ctx, markerAddr, sender1), "sender1 should not be denied after clear")
 	assert.False(t, app.MarkerKeeper.IsSendDeny(ctx, markerAddr, sender2), "sender2 should not be denied after clear")
+}
+func TestIbcTransferCoinAddsToEscrowPerms(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+	manager := testUserAddress("manager")
+	denom := "ibcescrowtest"
+
+	mac := types.NewEmptyMarkerAccount(denom, manager.String(),
+		[]types.AccessGrant{*types.NewAccessGrant(manager, []types.Access{types.Access_Admin, types.Access_Transfer})})
+	mac.MarkerType = types.MarkerType_RestrictedCoin
+	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac), "AddMarkerAccount")
+
+	escrow := ibctransfertypes.GetEscrowAddress("transfer", "channel-0")
+	require.NoError(t, app.MarkerKeeper.SetAccess(ctx, mac.GetAddress(), escrow, types.AccessList{types.Access_Deposit}),
+		"SetAccess escrow deposit")
+
+	// The transfer itself fails (there’s no channel), but the escrow’s permissions are updated first.
+	err := app.MarkerKeeper.IbcTransferCoin(ctx, "transfer", "channel-0", sdk.NewInt64Coin(denom, 1),
+		manager, manager, manager.String(), clienttypes.NewHeight(1, 1000), 0, "")
+	require.Error(t, err, "IbcTransferCoin without a channel")
+	assert.Equal(t, types.AccessList{types.Access_Deposit, types.Access_Transfer},
+		app.MarkerKeeper.GetAccess(ctx, mac.GetAddress(), escrow), "escrow access after IbcTransferCoin")
 }

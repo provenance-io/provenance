@@ -124,7 +124,7 @@ func (k Keeper) HandleSetAdministratorProposal(ctx sdk.Context, denom string, ac
 		logger.Info("controlling access to marker assigned ", "marker", denom, "access", a.String())
 	}
 
-	if err := m.ValidateWithAccessControl(); err != nil {
+	if err := k.validateAccessControl(ctx, m); err != nil {
 		return err
 	}
 
@@ -225,6 +225,9 @@ func (k Keeper) HandleChangeStatusProposal(ctx sdk.Context, denom string, status
 	}
 
 	if err := m.Validate(); err != nil {
+		return err
+	}
+	if err := k.validateAccessControl(ctx, m); err != nil {
 		return err
 	}
 	if err := k.SetMarker(ctx, m); err != nil {
