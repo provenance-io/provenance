@@ -499,6 +499,7 @@ func TestWithdrawCoins(t *testing.T) {
 	denomCoinDepProtected := "quinn"
 	denomToDeposit := "dana"
 	denomInactive := "indigo"
+	denomCancelled := "carmen"
 	denomNoMarker := "noah"
 
 	allAccessExcept := func(addr sdk.AccAddress, perms ...types.Access) types.AccessGrant {
@@ -631,7 +632,17 @@ func TestWithdrawCoins(t *testing.T) {
 		SupplyFixed:            true,
 		AllowGovernanceControl: true,
 	}
-	createProposedMarker(denomInactive, markerInactive)
+	addrMarkerInactive := createProposedMarker(denomInactive, markerInactive)
+	fundAcct(addrMarkerInactive, sdk.NewCoins(coin(1_000_000, denomCoin), coin(1_000_000, denomNoMarker)))
+
+	markerCancelled := &types.MarkerAccount{
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+	}
+	addrMarkerCancelled := createMarker(denomCancelled, markerCancelled)
+	fundAcct(addrMarkerCancelled, sdk.NewCoins(coin(1_000_000, denomCoin), coin(1_000_000, denomNoMarker)))
+	err := app.MarkerKeeper.CancelMarker(ctx, addrManager, denomCancelled)
+	require.NoError(t, err, "CancelMarker(%q)", denomCancelled)
 
 	// Marker needs:
 	// a non-restricted marker
@@ -723,6 +734,48 @@ func TestWithdrawCoins(t *testing.T) {
 			denom:     denomInactive,
 			coins:     sdk.NewCoins(coin(4, denomInactive)),
 			expErr:    "cannot withdraw marker created coins from a marker that is not in Active status",
+		},
+		{
+			name:                  "proposed marker: other coins",
+			caller:                addrManager,
+			recipient:             addr3,
+			denom:                 denomInactive,
+			coins:                 sdk.NewCoins(coin(5, denomCoin), coin(6, denomNoMarker)),
+			expEventTo:            addr3,
+			expRecipientGetsCoins: true,
+		},
+		{
+			name:      "proposed marker: marker coins with other coins",
+			caller:    addrManager,
+			recipient: addr3,
+			denom:     denomInactive,
+			coins:     sdk.NewCoins(coin(1, denomInactive), coin(5, denomCoin)),
+			expErr:    "cannot withdraw marker created coins from a marker that is not in Active status",
+		},
+		{
+			name:      "cancelled marker: marker coins",
+			caller:    addrManager,
+			recipient: addr3,
+			denom:     denomCancelled,
+			coins:     sdk.NewCoins(coin(4, denomCancelled)),
+			expErr:    "cannot withdraw marker created coins from a marker that is not in Active status",
+		},
+		{
+			name:      "cancelled marker: marker coins with other coins",
+			caller:    addrManager,
+			recipient: addr3,
+			denom:     denomCancelled,
+			coins:     sdk.NewCoins(coin(4, denomCancelled), coin(7, denomNoMarker)),
+			expErr:    "cannot withdraw marker created coins from a marker that is not in Active status",
+		},
+		{
+			name:                  "cancelled marker: other coins",
+			caller:                addrManager,
+			recipient:             addr3,
+			denom:                 denomCancelled,
+			coins:                 sdk.NewCoins(coin(8, denomCoin), coin(9, denomNoMarker)),
+			expEventTo:            addr3,
+			expRecipientGetsCoins: true,
 		},
 		{
 			name:       "to addr blocked by bank module",
