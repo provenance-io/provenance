@@ -23,6 +23,8 @@ const (
 	addedLeadUpdated = "Updated"
 	// addedLeadChanged is an added lead for a header to indicate that the section represents values different from their defaults.
 	addedLeadChanged = "Differences from Defaults"
+	// cmtConfigKey is a key (like "cometbft", "comet", or "cmt") that identifies the CometBFT config section.
+	cmtConfigKey = "config"
 )
 
 var configCmdStart = fmt.Sprintf("%s config", version.AppName)
@@ -273,7 +275,7 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 			cmd.Printf("The %q option is deprecated and will be removed in a future version.\n", key)
 			cmd.Println("Use one of \"cometbft\", \"comet\", or \"cmt\" instead.")
 			fallthrough
-		case "config", "cometbft", "comet", "cmt":
+		case cmtConfigKey, "cometbft", "comet", "cmt":
 			cmtToOutput.AddEntriesFrom(cmtFields)
 		case "client":
 			clientToOutput.AddEntriesFrom(clientFields)
@@ -503,7 +505,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 			cmd.Printf("The %q option is deprecated and will be removed in a future version.\n", key)
 			cmd.Println("Use one of \"cometbft\", \"comet\", or \"cmt\" instead.")
 			fallthrough
-		case "config", "cometbft", "comet", "cmt":
+		case cmtConfigKey, "cometbft", "comet", "cmt":
 			showCmt = true
 			cmtDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, cmtFields, true))
 		case "client":

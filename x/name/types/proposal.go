@@ -68,12 +68,12 @@ func (crnp CreateRootNameProposal) ValidateBasic() error {
 // String implements the Stringer interface.
 func (crnp CreateRootNameProposal) String() string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Create Root Name Proposal:
+	fmt.Fprintf(&b, `Create Root Name Proposal:
   Title:       %s
   Description: %s
   Owner:       %s
   Name:        %s
   Restricted:  %v
-`, crnp.Title, crnp.Description, crnp.Owner, crnp.Name, crnp.Restricted))
+`, crnp.Title, crnp.Description, crnp.Owner, crnp.Name, crnp.Restricted)
 	return b.String()
 }

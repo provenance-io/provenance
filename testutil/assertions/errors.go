@@ -26,7 +26,7 @@ func AssertErrorContents(t TB, theError error, contains []string, msgAndArgs ...
 		} else {
 			var sb strings.Builder
 			for _, c := range contains {
-				sb.WriteString(fmt.Sprintf("\n\t\t%q", c))
+				fmt.Fprintf(&sb, "\n\t\t%q", c)
 			}
 			t.Logf("Error was expected to contain:%s", sb.String())
 		}
@@ -42,11 +42,11 @@ func AssertErrorContents(t TB, theError error, contains []string, msgAndArgs ...
 	}
 	if len(missing) > 0 {
 		var failureMsg strings.Builder
-		failureMsg.WriteString(fmt.Sprintf("%d expected substring(s) missing from error.", len(missing)))
-		failureMsg.WriteString(fmt.Sprintf("\nActual:\t%q", errMsg))
+		fmt.Fprintf(&failureMsg, "%d expected substring(s) missing from error.", len(missing))
+		fmt.Fprintf(&failureMsg, "\nActual:\t%q", errMsg)
 		failureMsg.WriteString("\nMissing:")
 		for i, m := range missing {
-			failureMsg.WriteString(fmt.Sprintf("\n\t%d: %q", i+1, m))
+			fmt.Fprintf(&failureMsg, "\n\t%d: %q", i+1, m)
 		}
 		return assert.Fail(t, failureMsg.String(), msgAndArgs...)
 	}

@@ -112,7 +112,7 @@ func (k Keeper) RemoveMsgFee(ctx sdk.Context, msgType string) error {
 	case err != nil:
 		return fmt.Errorf("cannot remove msg fee for %q: invalid key: %w", msgType, err)
 	case !has:
-		return fmt.Errorf("cannot remove msg fee for %q: %w", msgType, types.ErrMsgFeeDoesNotExist)
+		return fmt.Errorf("cannot remove msg fee for %q: %w", msgType, error(types.ErrMsgFeeDoesNotExist))
 	}
 
 	err = k.msgFees.Remove(ctx, msgType)
@@ -284,13 +284,13 @@ func (k Keeper) IsOracleAddress(ctx sdk.Context, address string) bool {
 // AddOracleAddress adds an oracle address to the params
 func (k Keeper) AddOracleAddress(ctx sdk.Context, address string) error {
 	if _, err := sdk.AccAddressFromBech32(address); err != nil {
-		return fmt.Errorf("%w: invalid address format: %w", types.ErrInvalidOracleAddr, err)
+		return fmt.Errorf("%w: invalid address format: %w", error(types.ErrInvalidOracleAddr), err)
 	}
 
 	params := k.GetParams(ctx)
 
 	if params.IsOracleAddress(address) {
-		return fmt.Errorf("%w: address: %s", types.ErrOracleAlreadyExists, address)
+		return fmt.Errorf("%w: address: %s", error(types.ErrOracleAlreadyExists), address)
 	}
 
 	if params.OracleAddresses == nil {
@@ -317,7 +317,7 @@ func (k Keeper) RemoveOracleAddress(ctx sdk.Context, address string) error {
 	}
 
 	if !found {
-		return fmt.Errorf("%w: address: %s", types.ErrOracleNotFound, address)
+		return fmt.Errorf("%w: address: %s", error(types.ErrOracleNotFound), address)
 	}
 
 	params.OracleAddresses = newOracles

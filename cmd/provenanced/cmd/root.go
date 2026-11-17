@@ -291,7 +291,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
 		// fallback to genesis chain-id
-		reader, err := os.Open(filepath.Join(homeDir, "config", "genesis.json")) //nolint:gosec // G304: safe file open, path controlled.
+		reader, err := os.Open(filepath.Join(homeDir, cmtconfig.DefaultConfigDir, "genesis.json")) //nolint:gosec // G304: safe file open, path controlled.
 		if err != nil {
 			panic(err)
 		}

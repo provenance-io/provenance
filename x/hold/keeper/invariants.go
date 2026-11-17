@@ -68,9 +68,9 @@ func holdAccountBalancesInvariantHelper(ctx sdk.Context, keeper Keeper) (string,
 	case 0:
 		msg.WriteString("No accounts have funds on hold.")
 	case 1:
-		msg.WriteString(fmt.Sprintf("1 account has %s on hold.", total))
+		fmt.Fprintf(&msg, "1 account has %s on hold.", total)
 	default:
-		msg.WriteString(fmt.Sprintf("%d accounts have %s on hold.", allCount, total))
+		fmt.Fprintf(&msg, "%d accounts have %s on hold.", allCount, total)
 	}
 
 	msg.WriteByte(' ')
@@ -80,11 +80,11 @@ func holdAccountBalancesInvariantHelper(ctx sdk.Context, keeper Keeper) (string,
 	case 0:
 		msg.WriteString("No problems detected.")
 	case 1:
-		msg.WriteString(fmt.Sprintf("1 problem detected: %v", errs[0]))
+		fmt.Fprintf(&msg, "1 problem detected: %v", errs[0])
 	default:
-		msg.WriteString(fmt.Sprintf("%d problems detected:", errCount))
+		fmt.Fprintf(&msg, "%d problems detected:", errCount)
 		for i, er := range errs {
-			msg.WriteString(fmt.Sprintf("\n%d: %v", i+1, er))
+			fmt.Fprintf(&msg, "\n%d: %v", i+1, er)
 		}
 	}
 
