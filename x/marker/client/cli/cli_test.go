@@ -1173,7 +1173,7 @@ func (s *IntegrationTestSuite) TestMarkerIbcTransfer() {
 			receiver:             "receiver",
 			amount:               "10jackthecat",
 			flagAbsoluteTimeouts: "not-a-bool",
-			expectedErr:          `invalid argument "not-a-bool" for "--absolute-timeouts" flag: strconv.ParseBool: parsing "not-a-bool": invalid syntax`,
+			expectedErr:          `invalid argument "not-a-bool" for "--absolute-timeouts" flag: must be true or false`,
 		},
 		{
 			name:        "should pass basic validation with optional flag memo",

@@ -2140,7 +2140,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 				fmt.Sprintf("--%s=%s", cli.FlagUsdMills, "blah"),
 			},
-			expectErrMsg: `invalid argument "blah" for "--usd-mills" flag: strconv.ParseUint: parsing "blah": invalid syntax`,
+			expectErrMsg: `invalid argument "blah" for "--usd-mills" flag: must be a non-negative integer`,
 		},
 		{
 			name: "should successfully write scope with optional party and rollup",
