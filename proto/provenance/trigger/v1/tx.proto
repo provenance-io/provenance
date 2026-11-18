@@ -11,16 +11,20 @@ option java_package        = "io.provenance.trigger.v1";
 option java_multiple_files = true;
 
 // Msg
+// Deprecated: The trigger module has been removed.
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
   // CreateTrigger is the RPC endpoint for creating a trigger
+  // Deprecated: The trigger module has been removed.
   rpc CreateTrigger(MsgCreateTriggerRequest) returns (MsgCreateTriggerResponse);
   // DestroyTrigger is the RPC endpoint for creating a trigger
+  // Deprecated: The trigger module has been removed.
   rpc DestroyTrigger(MsgDestroyTriggerRequest) returns (MsgDestroyTriggerResponse);
 }
 
 // MsgCreateTriggerRequest is the request type for creating a trigger RPC
+// Deprecated: The trigger module has been removed.
 message MsgCreateTriggerRequest {
   option (cosmos.msg.v1.signer) = "authorities";
   option (gogoproto.equal)      = true;
@@ -34,12 +38,14 @@ message MsgCreateTriggerRequest {
 }
 
 // MsgCreateTriggerResponse is the response type for creating a trigger RPC
+// Deprecated: The trigger module has been removed.
 message MsgCreateTriggerResponse {
   // trigger id that is generated on creation.
   uint64 id = 1;
 }
 
 // MsgDestroyTriggerRequest is the request type for creating a trigger RPC
+// Deprecated: The trigger module has been removed.
 message MsgDestroyTriggerRequest {
   option (cosmos.msg.v1.signer) = "authority";
   option (gogoproto.equal)      = true;
@@ -51,4 +57,5 @@ message MsgDestroyTriggerRequest {
 }
 
 // MsgDestroyTriggerResponse is the response type for creating a trigger RPC
+// Deprecated: The trigger module has been removed.
 message MsgDestroyTriggerResponse {}
