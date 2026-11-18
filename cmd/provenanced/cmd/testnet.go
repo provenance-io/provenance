@@ -147,8 +147,8 @@ func InitTestnet(
 		genAccounts []authtypes.GenesisAccount
 		genBalances []banktypes.Balance
 		genFiles    []string
-		genMarkers  []markertypes.MarkerAccount
-		genMarkets  []exchange.Market
+		genMarkers  = make([]markertypes.MarkerAccount, 0, 1)
+		genMarkets  = make([]exchange.Market, 0, 1)
 	)
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
@@ -161,7 +161,7 @@ func InitTestnet(
 		nodeConfig.SetRoot(nodeDir)
 		nodeConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
 
-		if err := os.MkdirAll(filepath.Join(nodeDir, "config"), nodeDirPerm); err != nil {
+		if err := os.MkdirAll(filepath.Join(nodeDir, cmtconfig.DefaultConfigDir), nodeDirPerm); err != nil {
 			_ = os.RemoveAll(outputDir)
 			return err
 		}
@@ -337,7 +337,7 @@ func initGenFiles(
 
 	nhashDenomUnit := banktypes.DenomUnit{
 		Exponent: 0,
-		Denom:    "nhash",
+		Denom:    nhashDenom,
 		Aliases:  []string{"nanohash"},
 	}
 	hashDenomUnit := banktypes.DenomUnit{
@@ -351,7 +351,7 @@ func initGenFiles(
 	denomMetadata := banktypes.Metadata{
 		Description: "The native staking token of the Provenance Blockchain.",
 		Display:     "hash",
-		Base:        "nhash",
+		Base:        nhashDenom,
 		DenomUnits:  denomUnits,
 	}
 	bankGenState.DenomMetadata = []banktypes.Metadata{denomMetadata}

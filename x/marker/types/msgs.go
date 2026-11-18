@@ -248,7 +248,7 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 		Amount: msg.Amount.Amount,
 	}
 	if !testCoin.IsValid() {
-		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
+		return fmt.Errorf("invalid marker denom/total supply: %w", error(sdkerrors.ErrInvalidCoins))
 	}
 
 	if msg.AllowForcedTransfer && msg.MarkerType != MarkerType_RestrictedCoin {
@@ -465,7 +465,7 @@ func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
 	}
 	// IsValid validates denom and amount is not negative.
 	if !markerCoin.IsValid() {
-		return fmt.Errorf("invalid marker denom/total supply: %w", sdkerrors.ErrInvalidCoins)
+		return fmt.Errorf("invalid marker denom/total supply: %w", error(sdkerrors.ErrInvalidCoins))
 	}
 
 	_, err := sdk.AccAddressFromBech32(msg.Manager)
@@ -535,7 +535,7 @@ func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
 		return fmt.Errorf("both add and remove lists cannot be empty")
 	}
 
-	combined := []string{}
+	combined := make([]string, 0, len(msg.AddRequiredAttributes)+len(msg.RemoveRequiredAttributes))
 	combined = append(combined, msg.AddRequiredAttributes...)
 	combined = append(combined, msg.RemoveRequiredAttributes...)
 	seen := make(map[string]bool)
@@ -621,7 +621,7 @@ func (msg MsgUpdateSendDenyListRequest) ValidateBasic() error {
 		return fmt.Errorf("both add and remove lists cannot be empty")
 	}
 
-	combined := []string{}
+	combined := make([]string, 0, len(msg.AddDeniedAddresses)+len(msg.RemoveDeniedAddresses))
 	combined = append(combined, msg.AddDeniedAddresses...)
 	combined = append(combined, msg.RemoveDeniedAddresses...)
 	seen := make(map[string]bool)

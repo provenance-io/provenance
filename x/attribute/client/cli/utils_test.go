@@ -56,17 +56,17 @@ func TestAddAccountDataFlagsToCmd(t *testing.T) {
 		{
 			name:  "value",
 			usage: "The value to set the account data to",
-			arg:   "string",
+			arg:   " string",
 		},
 		{
 			name:  "file",
 			usage: "A file containing the value to set the account data to",
-			arg:   "string",
+			arg:   " string",
 		},
 		{
 			name:  "delete",
 			usage: "The account data should be deleted",
-			arg:   "",
+			arg:   "[=true|false]",
 		},
 	}
 
@@ -78,11 +78,7 @@ func TestAddAccountDataFlagsToCmd(t *testing.T) {
 				assert.Equal(t, tc.usage, f.Usage, "flag usage")
 			}
 
-			flagUse := "--" + tc.name
-			if len(tc.arg) > 0 {
-				flagUse = flagUse + " " + tc.arg
-			}
-			useLine := fmt.Sprintf("%s %s", flagUse, tc.usage)
+			useLine := fmt.Sprintf("--%s%s %s", tc.name, tc.arg, tc.usage)
 			assert.Contains(t, flagUses, useLine, "cleaned flag usage lines")
 		})
 	}
@@ -244,7 +240,7 @@ func TestReadAccountDataFlags(t *testing.T) {
 				cmd.Flags().Bool("delete", false, "delete")
 				return cmd
 			},
-			expErr: "failed to read --value <value> flag: flag accessed but not defined: value",
+			expErr: "failed to read --value <value> flag: flag \"value\" does not exist",
 		},
 		{
 			name: "file flag not defined",
@@ -256,7 +252,7 @@ func TestReadAccountDataFlags(t *testing.T) {
 				cmd.Flags().Bool("delete", false, "delete")
 				return cmd
 			},
-			expErr: "failed to read --file <file> flag: flag accessed but not defined: file",
+			expErr: "failed to read --file <file> flag: flag \"file\" does not exist",
 		},
 		{
 			name: "delete flag not defined",
@@ -268,7 +264,7 @@ func TestReadAccountDataFlags(t *testing.T) {
 				cmd.Flags().String("file", "", "a file")
 				return cmd
 			},
-			expErr: "failed to read --delete flag: flag accessed but not defined: delete",
+			expErr: "failed to read --delete flag: flag \"delete\" does not exist",
 		},
 	}
 

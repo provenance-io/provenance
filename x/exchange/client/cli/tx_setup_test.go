@@ -1223,10 +1223,10 @@ func TestReadFlagsMarketDetails(t *testing.T) {
 			name:      "no setup",
 			skipSetup: true,
 			expErr: joinErrs(
-				"flag accessed but not defined: name",
-				"flag accessed but not defined: description",
-				"flag accessed but not defined: url",
-				"flag accessed but not defined: icon",
+				"flag \"name\" does not exist",
+				"flag \"description\" does not exist",
+				"flag \"url\" does not exist",
+				"flag \"icon\" does not exist",
 			),
 		},
 		{

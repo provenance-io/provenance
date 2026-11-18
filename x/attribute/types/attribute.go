@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	fmt "fmt"
+	"math"
 	"math/big"
 	"net/url"
 	"strings"
@@ -207,6 +208,9 @@ func ValidAttributeType(attributeType AttributeType) bool {
 
 // Marshal needed for protobuf compatibility.
 func (at AttributeType) Marshal() ([]byte, error) {
+	if at < 0 || at > math.MaxUint8 {
+		return nil, fmt.Errorf("attribute type %d cannot be marshaled as a single byte", at)
+	}
 	return []byte{byte(at)}, nil
 }
 

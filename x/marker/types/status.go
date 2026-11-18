@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	math "math"
 	"slices"
 	"strings"
 )
@@ -50,6 +51,9 @@ func ValidMarkerStatus(markerStatus MarkerStatus) bool {
 
 // Marshal needed for protobuf compatibility.
 func (rt MarkerStatus) Marshal() ([]byte, error) {
+	if rt < 0 || rt > math.MaxUint8 {
+		return nil, fmt.Errorf("marker status %d cannot be marshaled as a single byte", rt)
+	}
 	return []byte{byte(rt)}, nil
 }
 

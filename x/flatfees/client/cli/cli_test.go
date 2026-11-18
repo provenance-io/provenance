@@ -621,7 +621,7 @@ func (s *CLITestSuite) TestNewCmdGetAllMsgFees() {
 		{
 			Name:      "invalid pagination flag",
 			Args:      []string{"--limit", "a"},
-			ExpErrMsg: "invalid argument \"a\" for \"--limit\" flag: strconv.ParseUint: parsing \"a\": invalid syntax",
+			ExpErrMsg: "invalid argument \"a\" for \"--limit\" flag: must be a non-negative integer",
 		},
 		{
 			Name: "limit 1 with count",
