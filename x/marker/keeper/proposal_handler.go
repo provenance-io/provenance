@@ -127,10 +127,6 @@ func (k Keeper) HandleSetAdministratorProposal(ctx sdk.Context, denom string, ac
 	if err := k.validateAccessControl(ctx, m); err != nil {
 		return err
 	}
-
-	if err := k.SetMarker(ctx, m); err != nil {
-		return err
-	}
 	return nil
 }
 
