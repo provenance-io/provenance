@@ -138,16 +138,17 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			&attributetypes.QueryAttributesResponse{
 				Account: s.accountAddr.String(),
 				Attributes: []attributetypes.Attribute{
-					attributetypes.NewAttribute("example.attribute",
-						s.accountStr,
-						attributetypes.AttributeType_String,
-						[]byte("example attribute value string"),
-						nil, ""),
+					// Reversed-name order: "accountdata" sorts before "attribute.example".
 					attributetypes.NewAttribute(
 						attributetypes.AccountDataName,
 						s.accountStr,
 						attributetypes.AttributeType_String,
 						[]byte("example accountdata value string"),
+						nil, ""),
+					attributetypes.NewAttribute("example.attribute",
+						s.accountStr,
+						attributetypes.AttributeType_String,
+						[]byte("example attribute value string"),
 						nil, ""),
 				},
 				Pagination: &query.PageResponse{NextKey: nil, Total: 2},
