@@ -4,7 +4,8 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
+
+	"cosmossdk.io/core/store"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -45,7 +46,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 
 	tests := []struct {
 		name      string
-		setup     func(s *TestSuite, store storetypes.KVStore)
+		setup     func(s *TestSuite, store store.KVStore)
 		time      time.Time
 		expMsg    string
 		expBroken bool
@@ -57,7 +58,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "error in an entry",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
 				s.setHoldCoinAmountRaw(store, s.addr1, "badcoin", "badvalue")
 			},
@@ -68,7 +69,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "one addr has none of a denom",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr4, "banana", s.int(5))
 			},
 			expMsg:    "1 account has 5banana on hold. 1 problem detected: " + errIns(s.addr4, "0banana", "5banana"),
@@ -76,7 +77,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "one addr has insufficient of a denom",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr2, "banana", s.int(13))
 			},
 			expMsg:    "1 account has 13banana on hold. 1 problem detected: " + errIns(s.addr2, "12banana", "13banana"),
@@ -84,7 +85,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "one addr has insufficient of two denoms",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(101))
 				s.requireSetHoldCoinAmount(store, s.addr1, "cucumber", s.int(4))
 			},
@@ -94,7 +95,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "two addrs have insufficient",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(101))
 				s.requireSetHoldCoinAmount(store, s.addr2, "banana", s.int(14))
 			},
@@ -105,7 +106,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "one addr has exact amount",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr1, "cucumber", s.int(3))
 			},
 			expMsg:    "1 account has 3cucumber on hold. No problems detected.",
@@ -113,7 +114,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "one addr has more than hold",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(95))
 			},
 			expMsg:    "1 account has 95banana on hold. No problems detected.",
@@ -121,7 +122,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "five addrs all have everything on hold",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				for _, addr := range []sdk.AccAddress{s.addr1, s.addr2, s.addr3, s.addr4, s.addr5} {
 					for _, coin := range s.bankKeeper.GetAllBalances(s.ctx, addr) {
 						s.requireSetHoldCoinAmount(store, addr, coin.Denom, coin.Amount)
@@ -135,7 +136,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "five addrs all have everything on hold one has too much though",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				for _, addr := range []sdk.AccAddress{s.addr1, s.addr2, s.addr3, s.addr4, s.addr5} {
 					for _, coin := range s.bankKeeper.GetAllBalances(s.ctx, addr) {
 						s.requireSetHoldCoinAmount(store, addr, coin.Denom, coin.Amount)
@@ -151,7 +152,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "five addrs all have holds but none have enough funds",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				for _, addr := range []sdk.AccAddress{s.addr1, s.addr2, s.addr3, s.addr4, s.addr5} {
 					for _, coin := range s.bankKeeper.GetAllBalances(s.ctx, addr) {
 						s.requireSetHoldCoinAmount(store, addr, coin.Denom, coin.Amount.Add(sdkmath.OneInt()))
@@ -170,7 +171,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "vesting account has lock on some unvested funds",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr4, s.bondDenom, s.int(5))
 			},
 			time:      startTime,
@@ -179,7 +180,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "vesting account has lock on all vested funds",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr4, s.bondDenom, s.int(5))
 			},
 			time:      startTime.Add(5 * time.Second),
@@ -188,7 +189,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "vesting account has lock on some unvested funds at time zero",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr4, s.bondDenom, s.int(5))
 			},
 			time:      zeroTime,
@@ -197,7 +198,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "vesting account has lock on extra funds",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr5, s.bondDenom, s.int(5000))
 			},
 			time:      startTime,
@@ -206,7 +207,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "vesting account has lock on extra funds and some unvested funds",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr5, s.bondDenom, s.int(5001))
 			},
 			time:      startTime,
@@ -215,7 +216,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "vesting account has lock on extra funds and all vested funds",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr5, s.bondDenom, s.int(5001))
 			},
 			time:      startTime.Add(1 * time.Second),
@@ -224,7 +225,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "vesting account has lock on extra funds plus some at time zero",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr5, s.bondDenom, s.int(5001))
 			},
 			time:      zeroTime,
@@ -233,7 +234,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "vesting account has lock on too much at time zero",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr5, s.bondDenom, s.int(s.initAmount+5001))
 			},
 			time:      zeroTime,
@@ -242,7 +243,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "vesting account has lock on too much after end time",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr5, s.bondDenom, s.int(s.initAmount+5001))
 			},
 			time:      endTime.Add(1 * time.Second),
@@ -251,7 +252,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "vesting account has lock on everything after end time",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr5, s.bondDenom, s.int(s.initAmount+5000))
 			},
 			time:      endTime.Add(1 * time.Second),
@@ -260,7 +261,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 		},
 		{
 			name: "vesting account has lock on everything after time zero",
-			setup: func(s *TestSuite, store storetypes.KVStore) {
+			setup: func(s *TestSuite, store store.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr5, s.bondDenom, s.int(s.initAmount+5000))
 			},
 			time:      zeroTime,
