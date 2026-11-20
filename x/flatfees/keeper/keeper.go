@@ -16,7 +16,6 @@ import (
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/x/flatfees/types"
-	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
 // Keeper of the x/flatfees store
@@ -198,9 +197,6 @@ func (k Keeper) expandMsgs(msgs []sdk.Msg, depthLeft int) ([]sdk.Msg, error) {
 		case *govv1.MsgSubmitProposal:
 			// Pay for the gov prop msgs at the time it's submitted because there's no way to collect it later.
 			subMsgs, err = k.anysToMsgs(m.Messages)
-		case *triggertypes.MsgCreateTriggerRequest:
-			// Gotta pay the trigger costs upon creation too.
-			subMsgs, err = k.anysToMsgs(m.Actions)
 		default:
 			continue
 		}
