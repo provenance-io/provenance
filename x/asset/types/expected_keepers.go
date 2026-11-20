@@ -16,7 +16,7 @@ type MarkerKeeper interface {
 	AddFinalizeAndActivateMarker(ctx sdk.Context, marker markertypes.MarkerAccountI) error
 	MarkerExists(ctx sdk.Context, denom string) bool
 	HasAccess(ctx sdk.Context, markerAddr, addr sdk.AccAddress, role markertypes.Access) bool
-	SetAccess(ctx sdk.Context, markerAddr, addr sdk.AccAddress, perms markertypes.AccessList) error
+	ValidateAndSetAccess(ctx sdk.Context, markerAddr, addr sdk.AccAddress, perms markertypes.AccessList) error
 	SetMarker(ctx sdk.Context, marker markertypes.MarkerAccountI) error
 	RemoveAllAccessForMarker(ctx sdk.Context, markerAddr sdk.AccAddress) error
 	ValidateUnrestrictedDenom(ctx sdk.Context, denom string) error

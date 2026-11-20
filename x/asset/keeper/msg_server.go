@@ -305,7 +305,7 @@ func (m msgServer) CreateSecuritization(goCtx context.Context, msg *types.MsgCre
 			markertypes.Access_Withdraw,
 			markertypes.Access_Transfer,
 		}
-		if err := m.markerKeeper.SetAccess(ctx, poolAddr, m.GetModuleAddress(), modulePerms); err != nil {
+		if err := m.markerKeeper.ValidateAndSetAccess(ctx, poolAddr, m.GetModuleAddress(), modulePerms); err != nil {
 			return nil, types.NewErrCodeInternal(fmt.Sprintf("failed to update pool marker access: %s", err))
 		}
 		poolCount++

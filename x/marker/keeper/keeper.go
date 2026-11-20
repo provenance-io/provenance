@@ -241,9 +241,9 @@ func (k Keeper) SetMarker(ctx sdk.Context, marker types.MarkerAccountI) error {
 		return err
 	}
 
-	accessList := marker.GetAccessList()
-	marker.ClearAccessList()
-	defer marker.SetAccessList(accessList)
+	accessList := marker.GetAccessList()   //nolint:staticcheck // SetMarker moves the in-memory list to the perms store.
+	marker.ClearAccessList()               //nolint:staticcheck // Keeps the perms out of the stored account.
+	defer marker.SetAccessList(accessList) //nolint:staticcheck // Gives the caller back its marker unchanged.
 
 	k.setMarkerAccount(ctx, marker)
 

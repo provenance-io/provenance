@@ -53,6 +53,23 @@ func (k Keeper) SetAccess(ctx sdk.Context, markerAddr, addr sdk.AccAddress, perm
 	return nil
 }
 
+// ValidateAndSetAccess is like SetAccess, but first checks that the perms are allowed on the marker
+// (marker type, IBC denom rules, and no perms for the marker's own address).
+// Use this when the perms come from outside the marker module.
+func (k Keeper) ValidateAndSetAccess(ctx sdk.Context, markerAddr, addr sdk.AccAddress, perms types.AccessList) error {
+	m, err := k.GetMarker(ctx, markerAddr)
+	if err != nil {
+		return err
+	}
+	if m == nil {
+		return fmt.Errorf("marker %s not found", markerAddr)
+	}
+	if err = validateGrantForMarker(m, types.NewAccessGrant(addr, perms)); err != nil {
+		return err
+	}
+	return k.SetAccess(ctx, markerAddr, addr, perms)
+}
+
 // RevokeAccessEntry removes all permissions addr has on a marker.
 func (k Keeper) RevokeAccessEntry(ctx sdk.Context, markerAddr, addr sdk.AccAddress) error {
 	return k.SetAccess(ctx, markerAddr, addr, nil)
@@ -136,7 +153,7 @@ func (k Keeper) PopulateMarkerPerms(ctx sdk.Context, ma types.MarkerAccountI) er
 	if err != nil {
 		return fmt.Errorf("could not populate the permissions on marker %s: %w", ma.GetAddress(), err)
 	}
-	ma.SetAccessList(grants)
+	ma.SetAccessList(grants) //nolint:staticcheck // Fills the in-memory list from the perms store.
 	return nil
 }
 

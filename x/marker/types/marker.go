@@ -41,17 +41,45 @@ type MarkerAccountI interface {
 	GetSupply() sdk.Coin
 	SetSupply(sdk.Coin) error
 	HasFixedSupply() bool
-
+	// GrantAccess adds a grant to the in-memory access list.
+	//
+	// Deprecated: Use the marker keeper's AddAccess or SetAccess instead.
 	GrantAccess(AccessGrantI) error
+	// RevokeAccess removes an address from the in-memory access list.
+	//
+	// Deprecated: Use the marker keeper's RevokeAccessEntry instead.
 	RevokeAccess(sdk.AccAddress) error
+	// GetAccessList returns the in-memory access list.
+	//
+	// Deprecated: Use the marker keeper's GetMarkerAccessList or GetAccess instead.
 	GetAccessList() []AccessGrant
+	// SetAccessList replaces the in-memory access list.
+	//
+	// Deprecated: Use the marker keeper's SetAccess instead.
 	SetAccessList([]AccessGrant)
+	// ClearAccessList empties the in-memory access list.
+	//
+	// Deprecated: Use the marker keeper's RemoveAllAccessForMarker instead.
 	ClearAccessList()
-
+	// HasAccess returns true if the address has the role in the in-memory access list.
+	//
+	// Deprecated: Use the marker keeper's HasAccess instead.
 	HasAccess(string, Access) bool
+	// ValidateHasAccess returns an error if the address lacks the role in the in-memory access list.
+	//
+	// Deprecated: Use the marker keeper's ValidateHasAccess instead.
 	ValidateHasAccess(string, Access) error
+	// AddressHasAccess returns true if the address has the role in the in-memory access list.
+	//
+	// Deprecated: Use the marker keeper's HasAccess instead.
 	AddressHasAccess(sdk.AccAddress, Access) bool
+	// ValidateAddressHasAccess returns an error if the address lacks the role in the in-memory access list.
+	//
+	// Deprecated: Use the marker keeper's ValidateHasAccess instead.
 	ValidateAddressHasAccess(sdk.AccAddress, Access) error
+	// AddressListForPermission returns the addresses with the role in the in-memory access list.
+	//
+	// Deprecated: Use the marker keeper's AddressesWithAccess instead.
 	AddressListForPermission(Access) []sdk.AccAddress
 
 	HasGovernanceEnabled() bool

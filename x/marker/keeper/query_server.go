@@ -115,7 +115,7 @@ func (k Keeper) Supply(c context.Context, req *types.QuerySupplyRequest) (*types
 	if err != nil {
 		return nil, err
 	}
-	return &types.QuerySupplyResponse{Amount: marker.GetSupply()}, nil
+	return &types.QuerySupplyResponse{Amount: marker.GetSupply()}, nil //nolint:staticcheck // Filled from the perms store above.
 }
 
 // Escrow query for coins on a marker account
@@ -143,7 +143,7 @@ func (k Keeper) Access(c context.Context, req *types.QueryAccessRequest) (*types
 	if err != nil {
 		return nil, err
 	}
-	return &types.QueryAccessResponse{Accounts: marker.GetAccessList()}, nil
+	return &types.QueryAccessResponse{Accounts: marker.GetAccessList()}, nil //nolint:staticcheck // Filled from the perms store above.
 }
 
 // DenomMetadata query for metadata on denom
