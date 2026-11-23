@@ -43,6 +43,8 @@ const (
 	flagFinalize = "finalize"
 
 	flagDenom = "denom"
+	// nhashDenom is the base denom of the hash coin.
+	nhashDenom = "nhash"
 )
 
 // genCmdStart is the first part of the command that gets you to one of the ones in here.
@@ -638,7 +640,7 @@ $ ` + genCmdStart + ` add-custom-market \
 				}
 			}
 			if len(feeDenom) == 0 {
-				feeDenom = "nhash"
+				feeDenom = nhashDenom
 			}
 			if err = sdk.ValidateDenom(feeDenom); err != nil {
 				return err

@@ -469,7 +469,7 @@ func TestReadAddrFlagOrFrom(t *testing.T) {
 		{
 			testName: "unknown flag",
 			name:     "notsetup",
-			expErr:   "flag accessed but not defined: notsetup",
+			expErr:   "flag \"notsetup\" does not exist",
 		},
 		{
 			testName: "wrong flag type",
@@ -527,14 +527,14 @@ func TestReadAddrFlagOrFromOrDefault(t *testing.T) {
 		{
 			testName: "unknown flag, no default",
 			name:     "notsetup",
-			expErr:   "flag accessed but not defined: notsetup",
+			expErr:   "flag \"notsetup\" does not exist",
 		},
 		{
 			testName: "unknown flag, with default",
 			name:     "notsetup",
 			def:      "justathing",
 			expAddr:  "justathing",
-			expErr:   "flag accessed but not defined: notsetup",
+			expErr:   "flag \"notsetup\" does not exist",
 		},
 		{
 			testName: "wrong flag type, no default",
@@ -829,7 +829,7 @@ func TestReadFlagOrderOrArg(t *testing.T) {
 		{
 			name:    "unknown flag",
 			flagSet: pflag.NewFlagSet("", pflag.ContinueOnError),
-			expErr:  "flag accessed but not defined: " + theFlag,
+			expErr:  "flag \"" + theFlag + "\" does not exist",
 		},
 		{
 			name:    "wrong flag type",
@@ -920,7 +920,7 @@ func TestReadFlagMarketOrArg(t *testing.T) {
 		{
 			name:    "unknown flag",
 			flagSet: pflag.NewFlagSet("", pflag.ContinueOnError),
-			expErr:  "flag accessed but not defined: " + theFlag,
+			expErr:  "flag \"" + theFlag + "\" does not exist",
 		},
 		{
 			name:    "wrong flag type",
@@ -998,7 +998,7 @@ func TestReadCoinsFlag(t *testing.T) {
 		{
 			testName: "unknown flag",
 			name:     "unknown",
-			expErr:   "flag accessed but not defined: unknown",
+			expErr:   "flag \"unknown\" does not exist",
 		},
 		{
 			testName: "wrong flag type",
@@ -1068,14 +1068,14 @@ func TestReadCoinsFlagOrDefault(t *testing.T) {
 		{
 			testName: "unknown flag, no default",
 			name:     "unknown",
-			expErr:   "flag accessed but not defined: unknown",
+			expErr:   "flag \"unknown\" does not exist",
 		},
 		{
 			testName: "unknown flag, with default",
 			name:     "unknown",
 			def:      coins("12orange"),
 			expCoins: coins("12orange"),
-			expErr:   "flag accessed but not defined: unknown",
+			expErr:   "flag \"unknown\" does not exist",
 		},
 		{
 			testName: "wrong flag type, no default",
@@ -1175,7 +1175,7 @@ func TestReadReqCoinsFlag(t *testing.T) {
 		{
 			testName: "unknown flag",
 			name:     "unknown",
-			expErr:   "flag accessed but not defined: unknown",
+			expErr:   "flag \"unknown\" does not exist",
 		},
 		{
 			testName: "wrong flag type",
@@ -1302,7 +1302,7 @@ func TestReadCoinFlag(t *testing.T) {
 		{
 			testName: "unknown flag",
 			name:     "unknown",
-			expErr:   "flag accessed but not defined: unknown",
+			expErr:   "flag \"unknown\" does not exist",
 		},
 		{
 			testName: "wrong flag type",
@@ -1367,7 +1367,7 @@ func TestReadReqCoinFlag(t *testing.T) {
 		{
 			testName: "unknown flag",
 			name:     "unknown",
-			expErr:   "flag accessed but not defined: unknown",
+			expErr:   "flag \"unknown\" does not exist",
 		},
 		{
 			testName: "wrong flag type",
@@ -1429,7 +1429,7 @@ func TestReadOrderIDsFlag(t *testing.T) {
 		{
 			testName: "unknown flag",
 			name:     "unknown",
-			expErr:   "flag accessed but not defined: unknown",
+			expErr:   "flag \"unknown\" does not exist",
 		},
 		{
 			testName: "wrong flag type",
@@ -1485,7 +1485,7 @@ func TestReadAccessGrantsFlag(t *testing.T) {
 		{
 			testName: "unknown flag",
 			name:     "unknown",
-			expErr:   "flag accessed but not defined: unknown",
+			expErr:   "flag \"unknown\" does not exist",
 		},
 		{
 			testName: "wrong flag type",
@@ -1774,7 +1774,7 @@ func TestReadFlatFeeFlag(t *testing.T) {
 		{
 			testName: "unknown flag",
 			name:     "unknown",
-			expErr:   "flag accessed but not defined: unknown",
+			expErr:   "flag \"unknown\" does not exist",
 		},
 		{
 			testName: "wrong flag type",
@@ -1924,7 +1924,7 @@ func TestReadFeeRatiosFlag(t *testing.T) {
 		{
 			testName: "unknown flag",
 			name:     "unknown",
-			expErr:   "flag accessed but not defined: unknown",
+			expErr:   "flag \"unknown\" does not exist",
 		},
 		{
 			testName: "wrong flag type",
@@ -2082,7 +2082,7 @@ func TestReadSplitsFlag(t *testing.T) {
 		{
 			testName: "unknown flag",
 			name:     "unknown",
-			expErr:   "flag accessed but not defined: unknown",
+			expErr:   "flag \"unknown\" does not exist",
 		},
 		{
 			testName: "wrong flag type",
@@ -2298,7 +2298,7 @@ func TestReadStringFlagOrArg(t *testing.T) {
 			name:     "unknown flag name",
 			flagName: "other",
 			varName:  "nope",
-			expErr:   "flag accessed but not defined: other",
+			expErr:   "flag \"other\" does not exist",
 		},
 		{
 			name:     "wrong flag type",
@@ -2369,7 +2369,7 @@ func TestReadOptStringFlagOrArg(t *testing.T) {
 			name:     "unknown flag name",
 			flagName: "other",
 			varName:  "nope",
-			expErr:   "flag accessed but not defined: other",
+			expErr:   "flag \"other\" does not exist",
 		},
 		{
 			name:     "wrong flag type",
@@ -2442,7 +2442,7 @@ func TestReadTxFileFlag(t *testing.T) {
 			},
 			flagSet:  pflag.NewFlagSet("", pflag.ContinueOnError),
 			fileFlag: "fruits",
-			expInErr: []string{"flag accessed but not defined: fruits"},
+			expInErr: []string{"flag \"fruits\" does not exist"},
 		},
 		{
 			name: "flag not provided",
@@ -2598,7 +2598,7 @@ func TestReadProposalFlag(t *testing.T) {
 				return "", nil
 			},
 			flagSet:  pflag.NewFlagSet("", pflag.ContinueOnError),
-			expInErr: []string{"flag accessed but not defined: proposal"},
+			expInErr: []string{"flag \"proposal\" does not exist"},
 		},
 		{
 			name: "no flag given",
@@ -3835,7 +3835,7 @@ func TestReadFlagAccountAmounts(t *testing.T) {
 		{
 			testName: "unknown flag",
 			name:     "unknown",
-			expErr:   "flag accessed but not defined: unknown",
+			expErr:   "flag \"unknown\" does not exist",
 		},
 		{
 			testName: "wrong flag type",
@@ -3898,7 +3898,7 @@ func TestReadFlagAccountAmountsOrDefault(t *testing.T) {
 			name:     "unknown",
 			def:      []exchange.AccountAmount{{Account: "alex", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 4))}},
 			exp:      []exchange.AccountAmount{{Account: "alex", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 4))}},
-			expErr:   "flag accessed but not defined: unknown",
+			expErr:   "flag \"unknown\" does not exist",
 		},
 		{
 			testName: "wrong flag type",
@@ -3965,7 +3965,7 @@ func TestReadFlagAccountsWithoutAmounts(t *testing.T) {
 		{
 			testName: "unknown flag",
 			name:     "unknown",
-			expErr:   "flag accessed but not defined: unknown",
+			expErr:   "flag \"unknown\" does not exist",
 		},
 		{
 			testName: "wrong flag type",
@@ -4177,7 +4177,7 @@ func TestReadFlagNetAssetPrices(t *testing.T) {
 		{
 			testName: "unknown flag",
 			name:     "unknown",
-			expErr:   "flag accessed but not defined: unknown",
+			expErr:   "flag \"unknown\" does not exist",
 		},
 		{
 			testName: "wrong flag type",
@@ -4245,7 +4245,7 @@ func TestReadFlagNetAssetPricesOrDefault(t *testing.T) {
 			name:     "unknown",
 			def:      []exchange.NetAssetPrice{{Assets: coin("10apple"), Price: coin("11banana")}},
 			exp:      []exchange.NetAssetPrice{{Assets: coin("10apple"), Price: coin("11banana")}},
-			expErr:   "flag accessed but not defined: unknown",
+			expErr:   "flag \"unknown\" does not exist",
 		},
 		{
 			testName: "wrong flag type",

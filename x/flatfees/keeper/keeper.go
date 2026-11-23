@@ -16,7 +16,6 @@ import (
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/x/flatfees/types"
-	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
 // Keeper of the x/flatfees store
@@ -112,7 +111,7 @@ func (k Keeper) RemoveMsgFee(ctx sdk.Context, msgType string) error {
 	case err != nil:
 		return fmt.Errorf("cannot remove msg fee for %q: invalid key: %w", msgType, err)
 	case !has:
-		return fmt.Errorf("cannot remove msg fee for %q: %w", msgType, types.ErrMsgFeeDoesNotExist)
+		return fmt.Errorf("cannot remove msg fee for %q: %w", msgType, error(types.ErrMsgFeeDoesNotExist))
 	}
 
 	err = k.msgFees.Remove(ctx, msgType)
@@ -198,9 +197,6 @@ func (k Keeper) expandMsgs(msgs []sdk.Msg, depthLeft int) ([]sdk.Msg, error) {
 		case *govv1.MsgSubmitProposal:
 			// Pay for the gov prop msgs at the time it's submitted because there's no way to collect it later.
 			subMsgs, err = k.anysToMsgs(m.Messages)
-		case *triggertypes.MsgCreateTriggerRequest:
-			// Gotta pay the trigger costs upon creation too.
-			subMsgs, err = k.anysToMsgs(m.Actions)
 		default:
 			continue
 		}
@@ -284,13 +280,13 @@ func (k Keeper) IsOracleAddress(ctx sdk.Context, address string) bool {
 // AddOracleAddress adds an oracle address to the params
 func (k Keeper) AddOracleAddress(ctx sdk.Context, address string) error {
 	if _, err := sdk.AccAddressFromBech32(address); err != nil {
-		return fmt.Errorf("%w: invalid address format: %w", types.ErrInvalidOracleAddr, err)
+		return fmt.Errorf("%w: invalid address format: %w", error(types.ErrInvalidOracleAddr), err)
 	}
 
 	params := k.GetParams(ctx)
 
 	if params.IsOracleAddress(address) {
-		return fmt.Errorf("%w: address: %s", types.ErrOracleAlreadyExists, address)
+		return fmt.Errorf("%w: address: %s", error(types.ErrOracleAlreadyExists), address)
 	}
 
 	if params.OracleAddresses == nil {
@@ -317,7 +313,7 @@ func (k Keeper) RemoveOracleAddress(ctx sdk.Context, address string) error {
 	}
 
 	if !found {
-		return fmt.Errorf("%w: address: %s", types.ErrOracleNotFound, address)
+		return fmt.Errorf("%w: address: %s", error(types.ErrOracleNotFound), address)
 	}
 
 	params.OracleAddresses = newOracles

@@ -141,7 +141,7 @@ func AssertEventsContains(t TB, expected, actual sdk.Events, msgAndArgs ...inter
 	}
 
 	var failureMsg strings.Builder
-	failureMsg.WriteString(fmt.Sprintf("%d (of %d) expected events missing from %d actual events", len(notFound), len(expected), len(actual)))
+	fmt.Fprintf(&failureMsg, "%d (of %d) expected events missing from %d actual events", len(notFound), len(expected), len(actual))
 	failureMsg.WriteString("\nActual:")
 	switch {
 	case actual == nil:
@@ -155,7 +155,7 @@ func AssertEventsContains(t TB, expected, actual sdk.Events, msgAndArgs ...inter
 	failureMsg.WriteString("\nMissing:")
 	for i, event := range notFound {
 		for _, line := range EventToStrings(event) {
-			failureMsg.WriteString(fmt.Sprintf("\n\t%d: %s", i, line))
+			fmt.Fprintf(&failureMsg, "\n\t%d: %s", i, line)
 		}
 	}
 	return assert.Fail(t, failureMsg.String(), msgAndArgs...)
