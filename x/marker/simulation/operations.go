@@ -151,13 +151,13 @@ func SimulateMsgChangeStatus(k keeper.Keeper, args *WeightedOpsArgs) simtypes.Op
 				return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "manager account does not exist"), nil, nil
 			}
 		case types.StatusActive:
-			simAccount, found = randomAccWithAccess(r, m, accs, types.Access_Delete)
+			simAccount, found = randomAccWithAccess(r, ctx, k, m, accs, types.Access_Delete)
 			if !found {
 				return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCancelRequest{}), "no account has cancel access"), nil, nil
 			}
 			msg = types.NewMsgCancelRequest(m.GetDenom(), simAccount.Address)
 		case types.StatusCancelled:
-			simAccount, found = randomAccWithAccess(r, m, accs, types.Access_Delete)
+			simAccount, found = randomAccWithAccess(r, ctx, k, m, accs, types.Access_Delete)
 			if !found {
 				return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDeleteRequest{}), "no account has delete access"), nil, nil
 			}
@@ -500,7 +500,7 @@ func randomMarkerWithAccessSigner(r *rand.Rand, ctx sdk.Context, k keeper.Keeper
 	})
 
 	for _, marker := range markers {
-		acc, found := randomAccWithAccess(r, marker, accs, access)
+		acc, found := randomAccWithAccess(r, ctx, k, marker, accs, access)
 		if found {
 			return marker, acc
 		}
@@ -509,10 +509,9 @@ func randomMarkerWithAccessSigner(r *rand.Rand, ctx sdk.Context, k keeper.Keeper
 	return nil, simtypes.Account{}
 }
 
-func randomAccWithAccess(r *rand.Rand, marker types.MarkerAccountI, accs []simtypes.Account, access types.Access) (simtypes.Account, bool) {
-	addrs := marker.AddressListForPermission(access)
-
-	if len(addrs) == 0 {
+func randomAccWithAccess(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, marker types.MarkerAccountI, accs []simtypes.Account, access types.Access) (simtypes.Account, bool) {
+	addrs, err := k.AddressesWithAccess(ctx, marker.GetAddress(), access)
+	if err != nil || len(addrs) == 0 {
 		return simtypes.Account{}, false
 	}
 

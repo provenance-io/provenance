@@ -12,13 +12,16 @@ option java_package        = "io.provenance.trigger.v1";
 option java_multiple_files = true;
 
 // Query defines the gRPC querier service for trigger module.
+// Deprecated: The trigger module has been removed.
 service Query {
   // TriggerByID returns a trigger matching the ID.
+  // Deprecated: The trigger module has been removed.
   rpc TriggerByID(QueryTriggerByIDRequest) returns (QueryTriggerByIDResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/provenance/trigger/v1/triggers/{id}";
   }
   // Triggers returns the list of triggers.
+  // Deprecated: The trigger module has been removed.
   rpc Triggers(QueryTriggersRequest) returns (QueryTriggersResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/provenance/trigger/v1/triggers";
