@@ -60,3 +60,18 @@ func (k Keeper) SetNewMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 		panic(err)
 	}
 }
+
+// MergeAccess is a TEST ONLY exposure of mergeAccess.
+func (k Keeper) MergeAccess(ctx sdk.Context, markerAddr sdk.AccAddress, grant types.AccessGrantI) error {
+	return k.mergeAccess(ctx, markerAddr, grant)
+}
+
+// ValidateGrantForMarker is a TEST ONLY exposure of validateGrantForMarker.
+func ValidateGrantForMarker(m types.MarkerAccountI, grant types.AccessGrantI) error {
+	return validateGrantForMarker(m, grant)
+}
+
+// ValidateAccessControl is a TEST ONLY exposure of validateAccessControl.
+func (k Keeper) ValidateAccessControl(ctx sdk.Context, m types.MarkerAccountI, without ...sdk.AccAddress) error {
+	return k.validateAccessControl(ctx, m, without...)
+}

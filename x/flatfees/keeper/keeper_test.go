@@ -26,7 +26,6 @@ import (
 	"github.com/provenance-io/provenance/testutil/mocks"
 	"github.com/provenance-io/provenance/x/flatfees/keeper"
 	"github.com/provenance-io/provenance/x/flatfees/types"
-	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -867,13 +866,6 @@ func (s *KeeperTestSuite) TestKeeper_ExpandMsgs() {
 			expMsgs: []sdk.Msg{&govv1.MsgSubmitProposal{}, &govv1.MsgVote{}, &govv1.MsgVote{}},
 		},
 		{
-			name: "one msg: triggertypes.MsgCreateTriggerRequest",
-			msgs: []sdk.Msg{&triggertypes.MsgCreateTriggerRequest{
-				Actions: anys(asAnyWithCache(&govv1.MsgVote{}), asAnyWithCache(&govv1.MsgDeposit{})),
-			}},
-			expMsgs: []sdk.Msg{&triggertypes.MsgCreateTriggerRequest{}, &govv1.MsgVote{}, &govv1.MsgDeposit{}},
-		},
-		{
 			name: "one msg: just under max depth",
 			msgs: []sdk.Msg{nestedProp(codectypes.MaxUnpackAnyRecursionDepth, asAnyWithCache(&govv1.MsgVote{}))},
 			expMsgs: []sdk.Msg{
@@ -920,19 +912,6 @@ func (s *KeeperTestSuite) TestKeeper_ExpandMsgs() {
 			expMsgs: []sdk.Msg{&govv1.MsgVote{}, &govv1.MsgDeposit{}},
 		},
 		{
-			name: "two msgs: normal, expand",
-			msgs: []sdk.Msg{
-				&govv1.MsgVote{},
-				&triggertypes.MsgCreateTriggerRequest{
-					Actions: anys(asAnyWithCache(&govv1.MsgUpdateParams{}), asAnyWithCache(&govv1.MsgDeposit{})),
-				},
-			},
-			expMsgs: []sdk.Msg{
-				&govv1.MsgVote{},
-				&triggertypes.MsgCreateTriggerRequest{}, &govv1.MsgUpdateParams{}, &govv1.MsgDeposit{},
-			},
-		},
-		{
 			name: "two msgs: expand, normal",
 			msgs: []sdk.Msg{
 				&authztypes.MsgExec{Msgs: anys(asAnyWithCache(&govv1.MsgVote{}), asAnyWithCache(&govv1.MsgVote{}))},
@@ -943,21 +922,6 @@ func (s *KeeperTestSuite) TestKeeper_ExpandMsgs() {
 				&govv1.MsgVote{},
 				&govv1.MsgVote{},
 				&govv1.MsgDeposit{},
-			},
-		},
-		{
-			name: "three msgs: all expand",
-			msgs: []sdk.Msg{
-				&authztypes.MsgExec{Msgs: anys(asAnyWithCache(&govv1.MsgVote{}), asAnyWithCache(&govv1.MsgCancelProposal{}))},
-				&govv1.MsgSubmitProposal{Messages: anys(asAnyWithCache(&govv1.MsgVote{}))},
-				&triggertypes.MsgCreateTriggerRequest{
-					Actions: anys(asAnyWithCache(&govv1.MsgUpdateParams{}), asAnyWithCache(&govv1.MsgDeposit{})),
-				},
-			},
-			expMsgs: []sdk.Msg{
-				&authztypes.MsgExec{}, &govv1.MsgVote{}, &govv1.MsgCancelProposal{},
-				&govv1.MsgSubmitProposal{}, &govv1.MsgVote{},
-				&triggertypes.MsgCreateTriggerRequest{}, &govv1.MsgUpdateParams{}, &govv1.MsgDeposit{},
 			},
 		},
 		{

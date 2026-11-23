@@ -9,6 +9,7 @@ option java_package        = "io.provenance.trigger.v1";
 option java_multiple_files = true;
 
 // GenesisState defines the trigger module's genesis state.
+// Deprecated: The trigger module has been removed.
 message GenesisState {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;

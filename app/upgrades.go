@@ -1,8 +1,10 @@
 package app
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"time"
 
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
@@ -41,6 +43,7 @@ type appUpgrade struct {
 // I.e. Brand-new flowers should be added to the bottom with the rcs first, then the non-rc.
 var upgrades = map[string]appUpgrade{
 	"hibiscus-rc1": { // Upgrade for v1.32.0-rc1
+		Deleted: []string{"trigger"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -57,14 +60,18 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
+			// TODO: Delete one of these.
 			if err = removeOrphanedFeeGrants(ctx, app); err != nil {
 				return nil, err
 			}
+
+			fixFeegrantRevokeList(ctx, app)
 
 			return vm, nil
 		},
 	},
 	"hibiscus": { // Upgrade for v1.32.0
+		Deleted: []string{"trigger"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			if vm, err = runModuleMigrations(ctx, app, vm); err != nil {
@@ -81,9 +88,12 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
+			// TODO: Delete one of these.
 			if err = removeOrphanedFeeGrants(ctx, app); err != nil {
 				return nil, err
 			}
+
+			fixFeegrantRevokeList(ctx, app)
 
 			return vm, nil
 		},
@@ -354,3 +364,66 @@ var (
 	_ = convertFinishedVestingAccountsToBase
 	_ = unlockVestingAccounts
 )
+
+// fixFeegrantRevokeList rebuilds the x/feegrant expiration queue from the existing allowances.
+// A bug in revokeAllowance deleted the wrong queue entry, leaving stale entries for revoked grants.
+func fixFeegrantRevokeList(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Fixing feegrant expiration queue.")
+	store := ctx.KVStore(app.GetKey(feegrant.StoreKey))
+
+	// Identify all the allowances that have an expiration.
+	type queueEntry struct {
+		grantKey []byte
+		exp      *time.Time
+	}
+	var entries []queueEntry
+	allowanceIter := storetypes.KVStorePrefixIterator(store, feegrant.FeeAllowanceKeyPrefix)
+	for ; allowanceIter.Valid(); allowanceIter.Next() {
+		var grant feegrant.Grant
+		if err := app.appCodec.Unmarshal(allowanceIter.Value(), &grant); err != nil {
+			ctx.Logger().Error("Could not unmarshal feegrant.", "key", allowanceIter.Key(), "error", err)
+			continue
+		}
+		allowance, err := grant.GetGrant()
+		if err != nil {
+			ctx.Logger().Error("Could not get feegrant allowance.", "granter", grant.Granter, "grantee", grant.Grantee, "error", err)
+			continue
+		}
+		exp, err := allowance.ExpiresAt()
+		if err != nil {
+			ctx.Logger().Error("Could not get feegrant expiration.", "granter", grant.Granter, "grantee", grant.Grantee, "error", err)
+			continue
+		}
+		if exp != nil {
+			// The queue entry uses the allowance key without its prefix byte.
+			grantKey := bytes.Clone(allowanceIter.Key()[len(feegrant.FeeAllowanceKeyPrefix):])
+			entries = append(entries, queueEntry{grantKey: grantKey, exp: exp})
+		}
+	}
+	if err := allowanceIter.Close(); err != nil {
+		ctx.Logger().Error("Could not close feegrant allowance iterator.", "error", err)
+	}
+	ctx.Logger().Info(fmt.Sprintf("Found %d feegrants with an expiration.", len(entries)))
+
+	// Delete all existing queue entries.
+	var queueKeys [][]byte
+	queueIter := storetypes.KVStorePrefixIterator(store, feegrant.FeeAllowanceQueueKeyPrefix)
+	for ; queueIter.Valid(); queueIter.Next() {
+		queueKeys = append(queueKeys, bytes.Clone(queueIter.Key()))
+	}
+	if err := queueIter.Close(); err != nil {
+		ctx.Logger().Error("Could not close feegrant queue iterator.", "error", err)
+	}
+	for _, key := range queueKeys {
+		store.Delete(key)
+	}
+	ctx.Logger().Info(fmt.Sprintf("Deleted all (%d) existing feegrant expiration queue entries.", len(queueKeys)))
+
+	// Add the correct queue entry for each allowance with an expiration.
+	for _, entry := range entries {
+		store.Set(feegrant.FeeAllowancePrefixQueue(entry.exp, entry.grantKey), []byte{})
+	}
+
+	ctx.Logger().Info(fmt.Sprintf("Wrote %d feegrant expiration queue entries.", len(entries)))
+	ctx.Logger().Info("Done fixing feegrant expiration queue.")
+}

@@ -11,6 +11,7 @@ option java_package        = "io.provenance.trigger.v1";
 option java_multiple_files = true;
 
 // Trigger
+// Deprecated: The trigger module has been removed.
 message Trigger {
   option (gogoproto.equal) = true;
 
