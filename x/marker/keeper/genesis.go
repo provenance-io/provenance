@@ -17,12 +17,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 		panic(err)
 	}
 
-	// ensure our store contains references to any marker accounts in auth genesis
+	// ensure our store contains references to any marker accounts in auth genesis.
+	// SetMarker also moves any permissions in the account's access list into the permissions store.
 	acc := k.authKeeper.GetAllAccounts(ctx)
 	for i := range acc {
 		if m, ok := acc[i].(types.MarkerAccountI); ok {
 			if err := m.Validate(); err == nil {
-				if err := k.markers.Set(ctx, m.GetAddress(), m.GetAddress()); err != nil {
+				if err := k.SetMarker(ctx, m); err != nil {
 					panic(err)
 				}
 			}
@@ -71,6 +72,10 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 
 	var markers []types.MarkerAccount
 	appendToMarkers := func(marker types.MarkerAccountI) bool {
+		accessList, err := k.GetMarkerAccessList(ctx, marker.GetAddress())
+		if err != nil {
+			panic(err)
+		}
 		markers = append(markers, types.MarkerAccount{
 			BaseAccount: &authtypes.BaseAccount{
 				Address:       marker.GetAddress().String(),
@@ -78,7 +83,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 				Sequence:      0,
 			},
 			Manager:                marker.GetManager().String(),
-			AccessControl:          marker.GetAccessList(),
+			AccessControl:          accessList,
 			Status:                 marker.GetStatus(),
 			Denom:                  marker.GetDenom(),
 			Supply:                 marker.GetSupply().Amount,

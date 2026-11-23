@@ -31,7 +31,7 @@ func (k Keeper) AllMarkers(c context.Context, req *types.QueryAllMarkersRequest)
 	markers, pageRes, err := query.CollectionPaginate(
 		ctx, k.markers, req.Pagination,
 		func(_ sdk.AccAddress, value []byte) (*codectypes.Any, error) {
-			result, getErr := k.GetMarker(ctx, sdk.AccAddress(value))
+			result, getErr := k.GetMarkerWithPerms(ctx, sdk.AccAddress(value))
 			if getErr != nil {
 				return nil, getErr
 			}
@@ -56,7 +56,7 @@ func (k Keeper) Marker(c context.Context, req *types.QueryMarkerRequest) (*types
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	marker, err := accountForDenomOrAddress(ctx, k, req.Id)
+	marker, err := accountForDenomOrAddressWithPerms(ctx, k, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (k Keeper) Supply(c context.Context, req *types.QuerySupplyRequest) (*types
 	if err != nil {
 		return nil, err
 	}
-	return &types.QuerySupplyResponse{Amount: marker.GetSupply()}, nil
+	return &types.QuerySupplyResponse{Amount: marker.GetSupply()}, nil //nolint:staticcheck // Filled from the perms store above.
 }
 
 // Escrow query for coins on a marker account
@@ -139,11 +139,11 @@ func (k Keeper) Access(c context.Context, req *types.QueryAccessRequest) (*types
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	marker, err := accountForDenomOrAddress(ctx, k, req.Id)
+	marker, err := accountForDenomOrAddressWithPerms(ctx, k, req.Id)
 	if err != nil {
 		return nil, err
 	}
-	return &types.QueryAccessResponse{Accounts: marker.GetAccessList()}, nil
+	return &types.QueryAccessResponse{Accounts: marker.GetAccessList()}, nil //nolint:staticcheck // Filled from the perms store above.
 }
 
 // DenomMetadata query for metadata on denom
@@ -221,6 +221,19 @@ func accountForDenomOrAddress(ctx sdk.Context, keeper Keeper, lookup string) (ty
 	}
 	if err != nil {
 		return nil, types.ErrMarkerNotFound.Wrap("invalid denom or address")
+	}
+	return account, nil
+}
+
+// accountForDenomOrAddressWithPerms is the WithPerms variant of accountForDenomOrAddress — use
+// this only for query handlers that actually need the marker's access grants populated.
+func accountForDenomOrAddressWithPerms(ctx sdk.Context, keeper Keeper, lookup string) (types.MarkerAccountI, error) {
+	account, err := accountForDenomOrAddress(ctx, keeper, lookup)
+	if err != nil || account == nil {
+		return account, err
+	}
+	if err := keeper.PopulateMarkerPerms(ctx, account); err != nil {
+		return nil, err
 	}
 	return account, nil
 }
