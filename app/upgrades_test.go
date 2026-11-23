@@ -1034,7 +1034,6 @@ var (
 	LogMsgPruneIBCExpiredConsensusStates       = "INF Pruning expired consensus states for IBC. module=baseapp"
 	LogMsgRemoveInactiveValidatorDelegations   = "INF Removing inactive validator delegations. module=baseapp"
 	LogMsgConvertFinishedVestingAccountsToBase = "INF Converting completed vesting accounts into base accounts. module=baseapp"
-	LogMsgRemoveOrphanedFeeGrants              = "INF Removing orphaned fee grants. module=baseapp"
 )
 
 func (s *UpgradeTestSuite) TestHibiscusRC1() {
@@ -1043,7 +1042,7 @@ func (s *UpgradeTestSuite) TestHibiscusRC1() {
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
-		LogMsgRemoveOrphanedFeeGrants,
+		"INF Removing orphaned fee grants. module=baseapp",
 		"INF Fixing feegrant expiration queue. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("hibiscus-rc1", expInLog, nil)
@@ -1055,7 +1054,7 @@ func (s *UpgradeTestSuite) TestHibiscus() {
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
-		LogMsgRemoveOrphanedFeeGrants,
+		"INF Removing orphaned fee grants. module=baseapp",
 		"INF Fixing feegrant expiration queue. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("hibiscus", expInLog, nil)
@@ -1118,7 +1117,7 @@ func (s *UpgradeTestSuite) TestRemoveOrphanedFeeGrants() {
 	s.Require().ElementsMatch(append(slices.Clone(keep), remove...), getAllGrants(), "fee grants before removeOrphanedFeeGrants")
 
 	expInLog := []string{
-		LogMsgRemoveOrphanedFeeGrants,
+		"INF Removing orphaned fee grants. module=baseapp",
 		"INF Found 3 orphaned fee grants. Removing them now. module=baseapp",
 		"INF Done removing orphaned fee grants. module=baseapp",
 	}
@@ -1138,7 +1137,7 @@ func (s *UpgradeTestSuite) TestRemoveOrphanedFeeGrants() {
 
 	// Running it again should find nothing.
 	expInLog = []string{
-		LogMsgRemoveOrphanedFeeGrants,
+		"INF Removing orphaned fee grants. module=baseapp",
 		"INF No orphaned fee grants found. module=baseapp",
 		"INF Done removing orphaned fee grants. module=baseapp",
 	}

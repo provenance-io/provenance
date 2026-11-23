@@ -60,7 +60,6 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
-			// TODO: Delete one of these.
 			if err = removeOrphanedFeeGrants(ctx, app); err != nil {
 				return nil, err
 			}
@@ -88,7 +87,6 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
-			// TODO: Delete one of these.
 			if err = removeOrphanedFeeGrants(ctx, app); err != nil {
 				return nil, err
 			}
@@ -299,6 +297,30 @@ func convertFinishedVestingAccountsToBase(ctx sdk.Context, app *App) error {
 	return nil
 }
 
+// unlockVestingAccounts will convert the provided addrs from ContinuousVestingAccount to BaseAccount.
+// This might be needed later, for another round of unlocks, so we're keeping it around in case.
+func unlockVestingAccounts(ctx sdk.Context, app *App, addrs []sdk.AccAddress) {
+	ctx.Logger().Info("Unlocking select vesting accounts.")
+
+	ctx.Logger().Info(fmt.Sprintf("Identified %d accounts to unlock.", len(addrs)))
+	for _, addr := range addrs {
+		// We don't care about the error here because it's already logged, and we want to move on.
+		_ = app.HoldKeeper.UnlockVestingAccount(ctx, addr)
+	}
+
+	ctx.Logger().Info("Done unlocking select vesting accounts.")
+}
+
+// Create a use of the standard helpers so that the linter neither complains about it not being used,
+// nor complains about a nolint:unused directive that isn't needed because the function is used.
+var (
+	_ = runModuleMigrations
+	_ = removeInactiveValidatorDelegations
+	_ = pruneIBCExpiredConsensusStates
+	_ = convertFinishedVestingAccountsToBase
+	_ = unlockVestingAccounts
+)
+
 // removeOrphanedFeeGrants revokes all fee grants whose granter account no longer exists.
 // These are left over from markers that were deleted before deleting a marker also revoked its fee grants.
 // If not removed, they'd come back to life if a marker with the same denom were created again.
@@ -340,30 +362,6 @@ func removeOrphanedFeeGrants(ctx sdk.Context, app *App) error {
 	ctx.Logger().Info("Done removing orphaned fee grants.")
 	return nil
 }
-
-// unlockVestingAccounts will convert the provided addrs from ContinuousVestingAccount to BaseAccount.
-// This might be needed later, for another round of unlocks, so we're keeping it around in case.
-func unlockVestingAccounts(ctx sdk.Context, app *App, addrs []sdk.AccAddress) {
-	ctx.Logger().Info("Unlocking select vesting accounts.")
-
-	ctx.Logger().Info(fmt.Sprintf("Identified %d accounts to unlock.", len(addrs)))
-	for _, addr := range addrs {
-		// We don't care about the error here because it's already logged, and we want to move on.
-		_ = app.HoldKeeper.UnlockVestingAccount(ctx, addr)
-	}
-
-	ctx.Logger().Info("Done unlocking select vesting accounts.")
-}
-
-// Create a use of the standard helpers so that the linter neither complains about it not being used,
-// nor complains about a nolint:unused directive that isn't needed because the function is used.
-var (
-	_ = runModuleMigrations
-	_ = removeInactiveValidatorDelegations
-	_ = pruneIBCExpiredConsensusStates
-	_ = convertFinishedVestingAccountsToBase
-	_ = unlockVestingAccounts
-)
 
 // fixFeegrantRevokeList rebuilds the x/feegrant expiration queue from the existing allowances.
 // A bug in revokeAllowance deleted the wrong queue entry, leaving stale entries for revoked grants.
