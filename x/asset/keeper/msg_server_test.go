@@ -655,7 +655,66 @@ func (s *MsgServerTestSuite) TestCreateSecuritization_AdminCheckEnforcedPerPool(
 	poolMarker, err := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, "per-pool-2")
 	s.Require().NoError(err, "per-pool-2 marker must still exist after rejected call")
 	s.Require().True(
-		poolMarker.AddressHasAccess(user2Addr, markertypes.Access_Admin),
+		s.app.MarkerKeeper.HasAccess(s.ctx, poolMarker.GetAddress(), user2Addr, markertypes.Access_Admin),
 		"user2 must still hold Admin on per-pool-2: auth check fires before mutation on this pool",
 	)
+}
+
+func (s *MsgServerTestSuite) TestCreateSecuritization_PoolGrantRules() {
+	msgServer := keeper.NewMsgServerImpl(s.app.AssetKeeper)
+
+	addPool := func(denom string, markerType markertypes.MarkerType) {
+		pool := markertypes.NewEmptyMarkerAccount(denom, s.user1Addr.String(), []markertypes.AccessGrant{
+			*markertypes.NewAccessGrant(s.user1Addr, markertypes.AccessList{markertypes.Access_Admin}),
+		})
+		pool.MarkerType = markerType
+		pool.SupplyFixed = false
+		s.Require().NoError(pool.SetSupply(sdk.NewInt64Coin(denom, 100)), "setup: SetSupply %s", denom)
+		s.Require().NoError(s.app.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, pool), "setup: add marker %s", denom)
+	}
+	ibcDenom := "ibc/" + strings.Repeat("A", 64)
+	addPool("grant-rules-restricted", markertypes.MarkerType_RestrictedCoin)
+	addPool("grant-rules-coin", markertypes.MarkerType_Coin)
+	addPool(ibcDenom, markertypes.MarkerType_RestrictedCoin)
+
+	tests := []struct {
+		name   string
+		pool   string
+		expErr string
+	}{
+		{
+			name: "restricted pool",
+			pool: "grant-rules-restricted",
+		},
+		{
+			name:   "coin pool cannot get transfer",
+			pool:   "grant-rules-coin",
+			expErr: "ACCESS_TRANSFER is not supported for marker type MARKER_TYPE_COIN",
+		},
+		{
+			name:   "ibc pool cannot get mint or burn",
+			pool:   ibcDenom,
+			expErr: "invalid ibc denom configuration",
+		},
+	}
+
+	for i, tc := range tests {
+		s.Run(tc.name, func() {
+			ctx, _ := s.ctx.CacheContext()
+			_, err := msgServer.CreateSecuritization(ctx, &types.MsgCreateSecuritization{
+				Id:       fmt.Sprintf("grant-rules-sec-%d", i),
+				Tranches: []*sdk.Coin{{Denom: "tr-grant", Amount: sdkmath.NewInt(10)}},
+				Pools:    []string{tc.pool},
+				Signer:   s.user1Addr.String(),
+			})
+			if len(tc.expErr) > 0 {
+				s.Require().ErrorContains(err, tc.expErr, "CreateSecuritization error")
+				return
+			}
+			s.Require().NoError(err, "CreateSecuritization error")
+			poolAddr := markertypes.MustGetMarkerAddress(tc.pool)
+			s.Require().True(s.app.MarkerKeeper.HasAccess(ctx, poolAddr, s.app.AssetKeeper.GetModuleAddress(), markertypes.Access_Transfer),
+				"asset module should have transfer on the pool")
+		})
+	}
 }

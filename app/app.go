@@ -180,8 +180,6 @@ import (
 	"github.com/provenance-io/provenance/x/sanction"
 	sanctionkeeper "github.com/provenance-io/provenance/x/sanction/keeper"
 	sanctionmodule "github.com/provenance-io/provenance/x/sanction/module"
-	triggerkeeper "github.com/provenance-io/provenance/x/trigger/keeper"
-	triggermodule "github.com/provenance-io/provenance/x/trigger/module"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
@@ -209,7 +207,6 @@ var (
 		attributetypes.ModuleName: nil,
 		markertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		wasmtypes.ModuleName:      {authtypes.Burner},
-		triggertypes.ModuleName:   nil,
 		metadatatypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
 		nft.ModuleName:            nil,
 	}
@@ -265,7 +262,6 @@ type App struct {
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	FlatFeesKeeper        flatfeeskeeper.Keeper
 	SanctionKeeper        sanctionkeeper.Keeper
-	TriggerKeeper         triggerkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 
 	IBCKeeper          *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
@@ -385,7 +381,6 @@ func New(
 		flatfeestypes.StoreKey,
 		wasmtypes.StoreKey,
 		sanction.StoreKey,
-		triggertypes.StoreKey,
 		hold.StoreKey,
 		registrytypes.StoreKey,
 		ledger.StoreKey,
@@ -615,8 +610,6 @@ func New(
 		exchangekeeper.NewQueryServer(app.ExchangeKeeper),
 	)
 
-	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[triggertypes.StoreKey], app.MsgServiceRouter())
-
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(keys[icahosttypes.StoreKey]), nil,
 		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, app.AccountKeeper,
@@ -772,7 +765,6 @@ func New(
 		flatfeesmodule.NewAppModule(appCodec, app.FlatFeesKeeper, app.interfaceRegistry),
 		msgfeesmodule.NewAppModule(appCodec, flatfeeskeeper.NewQueryServer(app.FlatFeesKeeper)),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), nil),
-		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
 		registrymodule.NewAppModule(appCodec, app.RegistryKeeper),
 		ledgermodule.NewAppModule(appCodec, app.LedgerKeeper),
@@ -815,6 +807,9 @@ func New(
 	// We also removed the quarantine module, but need to keep the msg types registered.
 	quarantine.RegisterInterfaces(interfaceRegistry)
 
+	// We also removed the trigger module, but need to keep the msg types registered.
+	triggertypes.RegisterInterfaces(interfaceRegistry)
+
 	// NOTE: upgrade module is required to be prioritized
 	app.mm.SetOrderPreBlockers(
 		upgradetypes.ModuleName,
@@ -835,7 +830,6 @@ func New(
 		markertypes.ModuleName,
 		attributetypes.ModuleName,
 		authz.ModuleName,
-		triggertypes.ModuleName,
 		vaulttypes.ModuleName,
 	)
 
@@ -845,7 +839,6 @@ func New(
 		stakingtypes.ModuleName,
 		feegrant.ModuleName,
 		group.ModuleName,
-		triggertypes.ModuleName,
 		vaulttypes.ModuleName,
 	)
 
@@ -894,7 +887,6 @@ func New(
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		wasmtypes.ModuleName, // must be after ibctransfer.
-		triggertypes.ModuleName,
 	}
 	app.mm.SetOrderInitGenesis(moduleGenesisOrder...)
 	app.mm.SetOrderExportGenesis(moduleGenesisOrder...)
@@ -938,7 +930,6 @@ func New(
 		msgfeestypes.ModuleName,
 		metadatatypes.ModuleName,
 		nametypes.ModuleName,
-		triggertypes.ModuleName,
 		assettypes.ModuleName,
 
 		vaulttypes.ModuleName,
