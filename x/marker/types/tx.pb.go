@@ -1839,7 +1839,7 @@ func (m *MsgSupplyDecreaseProposalResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSupplyDecreaseProposalResponse proto.InternalMessageInfo
 
-// MsgUpdateRequiredAttributesRequest defines a msg to update/add/remove required attributes from a resticted marker
+// MsgUpdateRequiredAttributesRequest defines a msg to update/add/remove required attributes from a restricted marker
 // signer must have transfer authority to change attributes, to update attribute add current to remove list and new to
 // add list
 type MsgUpdateRequiredAttributesRequest struct {
@@ -2257,8 +2257,8 @@ func (m *MsgSetAccountDataResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSetAccountDataResponse proto.InternalMessageInfo
 
-// MsgUpdateSendDenyListRequest defines a msg to add/remove addresses to send deny list for a resticted marker
-// signer must have transfer authority
+// MsgUpdateSendDenyListRequest defines a msg to add/remove addresses to send deny list for a restricted marker.
+// Signer must have transfer authority.
 type MsgUpdateSendDenyListRequest struct {
 	// The denomination of the marker to update.
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
@@ -2266,7 +2266,7 @@ type MsgUpdateSendDenyListRequest struct {
 	RemoveDeniedAddresses []string `protobuf:"bytes,2,rep,name=remove_denied_addresses,json=removeDeniedAddresses,proto3" json:"remove_denied_addresses,omitempty"`
 	// List of bech32 addresses to add to the deny send list.
 	AddDeniedAddresses []string `protobuf:"bytes,3,rep,name=add_denied_addresses,json=addDeniedAddresses,proto3" json:"add_denied_addresses,omitempty"`
-	// The signer of the message.  Must have admin authority to marker or be governance module account address.
+	// The signer of the message.  Must have transfer authority to marker or be governance module account address.
 	Authority string `protobuf:"bytes,4,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 
@@ -3805,7 +3805,7 @@ type MsgClient interface {
 	UpdateRequireDepositAccess(ctx context.Context, in *MsgUpdateRequireDepositAccessRequest, opts ...grpc.CallOption) (*MsgUpdateRequireDepositAccessResponse, error)
 	// SetAccountData sets the accountdata for a denom. Signer must have deposit authority.
 	SetAccountData(ctx context.Context, in *MsgSetAccountDataRequest, opts ...grpc.CallOption) (*MsgSetAccountDataResponse, error)
-	// UpdateSendDenyList will only succeed if signer has admin authority
+	// UpdateSendDenyList will only succeed if signer has transfer authority.
 	UpdateSendDenyList(ctx context.Context, in *MsgUpdateSendDenyListRequest, opts ...grpc.CallOption) (*MsgUpdateSendDenyListResponse, error)
 	// AddNetAssetValues sets the net asset value for a marker.
 	AddNetAssetValues(ctx context.Context, in *MsgAddNetAssetValuesRequest, opts ...grpc.CallOption) (*MsgAddNetAssetValuesResponse, error)
@@ -4150,7 +4150,7 @@ type MsgServer interface {
 	UpdateRequireDepositAccess(context.Context, *MsgUpdateRequireDepositAccessRequest) (*MsgUpdateRequireDepositAccessResponse, error)
 	// SetAccountData sets the accountdata for a denom. Signer must have deposit authority.
 	SetAccountData(context.Context, *MsgSetAccountDataRequest) (*MsgSetAccountDataResponse, error)
-	// UpdateSendDenyList will only succeed if signer has admin authority
+	// UpdateSendDenyList will only succeed if signer has transfer authority.
 	UpdateSendDenyList(context.Context, *MsgUpdateSendDenyListRequest) (*MsgUpdateSendDenyListResponse, error)
 	// AddNetAssetValues sets the net asset value for a marker.
 	AddNetAssetValues(context.Context, *MsgAddNetAssetValuesRequest) (*MsgAddNetAssetValuesResponse, error)
