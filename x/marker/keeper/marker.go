@@ -741,7 +741,7 @@ func (k Keeper) canForceTransferFrom(ctx sdk.Context, from sdk.AccAddress) bool 
 	// sequence. This also prevents other force transfers that wouldn't cause problems, though.
 	// For example, some funds got erroneously sent to a new account that no one has a key for.
 	// If the forced transfer is absolutely required, use a governance proposal with a MsgSend.
-	if acc.GetSequence() != 0 {
+	if acc.GetSequence() != 0 || acc.GetPubKey() != nil {
 		return true
 	}
 
