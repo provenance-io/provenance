@@ -15,6 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	ibctmmigrations "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint/migrations"
+
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -61,6 +63,10 @@ var upgrades = map[string]appUpgrade{
 
 			fixFeegrantRevokeList(ctx, app)
 
+			if err = deleteScopelessSessions(ctx, app); err != nil {
+				return nil, err
+			}
+
 			return vm, nil
 		},
 	},
@@ -83,6 +89,10 @@ var upgrades = map[string]appUpgrade{
 			}
 
 			fixFeegrantRevokeList(ctx, app)
+
+			if err = deleteScopelessSessions(ctx, app); err != nil {
+				return nil, err
+			}
 
 			return vm, nil
 		},
@@ -373,4 +383,40 @@ func fixFeegrantRevokeList(ctx sdk.Context, app *App) {
 
 	ctx.Logger().Info(fmt.Sprintf("Wrote %d feegrant expiration queue entries.", len(entries)))
 	ctx.Logger().Info("Done fixing feegrant expiration queue.")
+}
+
+// deleteScopelessSessions will delete any sessions that don't have an existing scope.
+func deleteScopelessSessions(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Deleting sessions without a scope.")
+	store := ctx.KVStore(app.GetKey(metadatatypes.StoreKey))
+
+	// Identify the sessions to delete.
+	var toDelete []metadatatypes.MetadataAddress
+	err := app.MetadataKeeper.IterateSessions(ctx, nil, func(session metadatatypes.Session) (stop bool) {
+		scopeID, err := session.SessionId.AsScopeAddress()
+		if err != nil {
+			ctx.Logger().Info("Could not get scope id from session id", "session id", session.SessionId.String())
+		}
+		if !store.Has(scopeID) {
+			toDelete = append(toDelete, session.SessionId)
+		}
+		return false
+	})
+	if err != nil {
+		return fmt.Errorf("error iterating sessions: %w", err)
+	}
+
+	// And delete them.
+	if len(toDelete) == 0 {
+		ctx.Logger().Info("No sessions found without a scope.")
+	} else {
+		ctx.Logger().Info(fmt.Sprintf("Found %d sessions without a scope.", len(toDelete)))
+		for _, sessionID := range toDelete {
+			store.Delete(sessionID)
+			_ = ctx.EventManager().EmitTypedEvent(metadatatypes.NewEventSessionDeleted(sessionID))
+		}
+	}
+
+	ctx.Logger().Info("Done deleting sessions without a scope.")
+	return nil
 }

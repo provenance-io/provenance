@@ -1042,6 +1042,7 @@ func (s *UpgradeTestSuite) TestHibiscusRC1() {
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
 		"INF Fixing feegrant expiration queue. module=baseapp",
+		"INF Deleting sessions without a scope. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("hibiscus-rc1", expInLog, nil)
 }
@@ -1053,6 +1054,7 @@ func (s *UpgradeTestSuite) TestHibiscus() {
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
 		"INF Fixing feegrant expiration queue. module=baseapp",
+		"INF Deleting sessions without a scope. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("hibiscus", expInLog, nil)
 }
