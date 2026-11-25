@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
@@ -1057,6 +1058,96 @@ func (s *KeeperTestSuite) TestKeeper_DeleteGovPropTempEntries() {
 
 		s.Assert().ElementsMatch(expTempEntries, finalTempEntries, "temp entries, A = expected, B = after delete")
 		s.Assert().ElementsMatch(expIndEntries, finalIndEntries, "index entries, A = expected, B = after delete")
+	})
+}
+
+func (s *KeeperTestSuite) TestKeeper_BeginBlock() {
+	s.ClearState()
+	defer s.ClearState()
+
+	s.Run("no temp entries", func() {
+		s.GovKeeper.GetProposalCalls = nil
+		s.Require().NotPanics(func() {
+			s.Keeper.BeginBlock(s.SdkCtx)
+		}, "BeginBlock")
+		s.Assert().Empty(s.GovKeeper.GetProposalCalls, "GetProposal calls")
+	})
+
+	// Add several temp entries for multiple gov props.
+	addrs := []sdk.AccAddress{s.addr1, s.addr2, s.addr3, s.addr4, s.addr5}
+	for id := uint64(1); id <= 6; id++ {
+		if id%2 == 1 {
+			s.ReqOKAddTempSanct(id, "addrs...", addrs...)
+		} else {
+			s.ReqOKAddTempUnsanct(id, "addrs...", addrs...)
+		}
+	}
+
+	s.Run("all props exist", func() {
+		for id := uint64(1); id <= 6; id++ {
+			s.GovKeeper.GetProposalReturns[id] = govv1.Proposal{Id: id}
+		}
+		defer func() {
+			s.GovKeeper.GetProposalReturns = make(map[uint64]govv1.Proposal)
+		}()
+		s.GovKeeper.GetProposalCalls = nil
+		origTempEntries := s.GetAllTempEntries()
+		origIndEntries := s.GetAllIndexTempEntries()
+
+		s.Require().NotPanics(func() {
+			s.Keeper.BeginBlock(s.SdkCtx)
+		}, "BeginBlock")
+
+		s.Assert().Equal([]uint64{1, 2, 3, 4, 5, 6}, s.GovKeeper.GetProposalCalls, "GetProposal calls")
+		s.Assert().ElementsMatch(origTempEntries, s.GetAllTempEntries(), "temp entries, A = orig, B = after")
+		s.Assert().ElementsMatch(origIndEntries, s.GetAllIndexTempEntries(), "index entries, A = orig, B = after")
+	})
+
+	s.Run("some props missing", func() {
+		// Props 2 (unsanction), 3 (sanction) and 6 (unsanction) no longer exist.
+		missing := map[uint64]bool{2: true, 3: true, 6: true}
+		for id := uint64(1); id <= 6; id++ {
+			if !missing[id] {
+				s.GovKeeper.GetProposalReturns[id] = govv1.Proposal{Id: id}
+			}
+		}
+		defer func() {
+			s.GovKeeper.GetProposalReturns = make(map[uint64]govv1.Proposal)
+		}()
+		s.GovKeeper.GetProposalCalls = nil
+
+		var expTempEntries []*sanction.TemporaryEntry
+		for _, entry := range s.GetAllTempEntries() {
+			if !missing[entry.ProposalId] {
+				expTempEntries = append(expTempEntries, entry)
+			}
+		}
+		var expIndEntries []*sanction.TemporaryEntry
+		for _, entry := range s.GetAllIndexTempEntries() {
+			if !missing[entry.ProposalId] {
+				expIndEntries = append(expIndEntries, entry)
+			}
+		}
+
+		s.Require().NotPanics(func() {
+			s.Keeper.BeginBlock(s.SdkCtx)
+		}, "BeginBlock")
+
+		s.Assert().Equal([]uint64{1, 2, 3, 4, 5, 6}, s.GovKeeper.GetProposalCalls, "GetProposal calls")
+		s.Assert().ElementsMatch(expTempEntries, s.GetAllTempEntries(), "temp entries, A = expected, B = after")
+		s.Assert().ElementsMatch(expIndEntries, s.GetAllIndexTempEntries(), "index entries, A = expected, B = after")
+	})
+
+	s.Run("all props missing", func() {
+		s.GovKeeper.GetProposalCalls = nil
+
+		s.Require().NotPanics(func() {
+			s.Keeper.BeginBlock(s.SdkCtx)
+		}, "BeginBlock")
+
+		s.Assert().Equal([]uint64{1, 4, 5}, s.GovKeeper.GetProposalCalls, "GetProposal calls")
+		s.Assert().Empty(s.GetAllTempEntries(), "temp entries after")
+		s.Assert().Empty(s.GetAllIndexTempEntries(), "index entries after")
 	})
 }
 
