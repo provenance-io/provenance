@@ -26,7 +26,7 @@ func GetLastGovProp(t *testing.T, n *network.Network) *govv1.Proposal {
 // The returned bool will be true on success, or false if something goes wrong.
 func AssertGetLastGovProp(t *testing.T, n *network.Network) (*govv1.Proposal, bool) {
 	t.Helper()
-	url := "/cosmos/gov/v1/proposals?limit=1&reverse=true"
+	url := "/cosmos/gov/v1/proposals?pagination.limit=1&pagination.reverse=true"
 	resp, ok := AssertGetRequest(t, n, url, &govv1.QueryProposalsResponse{})
 	if !ok {
 		return nil, false

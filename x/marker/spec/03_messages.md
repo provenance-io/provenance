@@ -235,11 +235,8 @@ marker itself.
 This service message is expected to fail if:
 
 - The given denom value is invalid or does not match an existing marker on the system
-- If marker is not in a `Active` status:
-  - The request is not signed with an administrator address that matches the manager address
-  - For `Pending` status: the denom being withdrawn from the marker matches the marker denom
-- If the marker is `Active`, `Cancelled`
- - The given administrator address does not currently have the "withdraw" access granted on the marker
+- The marker is not in `Active` status and `amount` contains the marker denom.
+- The request is not signed by someone with `withdraw` permission.
 - The amount of coin requested for withdraw is not currently held by the marker account
 
 ## Msg/Transfer
