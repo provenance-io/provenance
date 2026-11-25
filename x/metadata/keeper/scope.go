@@ -197,6 +197,18 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) error {
 		k.RemoveRecord(ctx, iter.Key())
 	}
 
+	// Remove all sessions that didn't have any records.
+	prefix2, _ := id.ScopeSessionIteratorPrefix()
+	iter2 := storetypes.KVStorePrefixIterator(store, prefix2)
+	defer func() {
+		if err := iter2.Close(); err != nil {
+			k.Logger(ctx).Error("Failed to close RemoveSession", "error", err)
+		}
+	}()
+	for ; iter2.Valid(); iter2.Next() {
+		k.RemoveSession(ctx, iter2.Key())
+	}
+
 	k.indexScope(store, nil, &scope)
 	store.Delete(id)
 	k.EmitEvent(ctx, types.NewEventScopeDeleted(scope.ScopeId))

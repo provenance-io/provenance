@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -79,6 +80,18 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		votingPeriod := s.cfg.TimeoutCommit * blocksPerVotingPeriod
 		govGen.Params.MaxDepositPeriod = &votingPeriod // default is 48h
 		govGen.Params.VotingPeriod = &votingPeriod     // default is 48h
+		// The sanction genesis temporary entries are for proposal 1, so it needs to exist,
+		// otherwise the sanction BeginBlocker will delete those entries.
+		farFuture := time.Now().Add(100 * 365 * 24 * time.Hour)
+		govGen.Proposals = append(govGen.Proposals, &govv1.Proposal{
+			Id:             1,
+			Status:         govv1.StatusDepositPeriod,
+			SubmitTime:     &farFuture,
+			DepositEndTime: &farFuture,
+			Title:          "Placeholder for temporary entries",
+			Summary:        "Placeholder for temporary entries",
+		})
+		govGen.StartingProposalId = 2
 		return govGen
 	})
 

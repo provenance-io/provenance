@@ -831,6 +831,7 @@ func New(
 		attributetypes.ModuleName,
 		authz.ModuleName,
 		vaulttypes.ModuleName,
+		sanction.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(

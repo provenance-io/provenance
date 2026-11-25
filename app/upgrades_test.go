@@ -1044,6 +1044,7 @@ func (s *UpgradeTestSuite) TestHibiscusRC1() {
 		LogMsgConvertFinishedVestingAccountsToBase,
 		"INF Removing orphaned fee grants. module=baseapp",
 		"INF Fixing feegrant expiration queue. module=baseapp",
+		"INF Deleting sessions without a scope. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("hibiscus-rc1", expInLog, nil)
 }
@@ -1056,6 +1057,7 @@ func (s *UpgradeTestSuite) TestHibiscus() {
 		LogMsgConvertFinishedVestingAccountsToBase,
 		"INF Removing orphaned fee grants. module=baseapp",
 		"INF Fixing feegrant expiration queue. module=baseapp",
+		"INF Deleting sessions without a scope. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("hibiscus", expInLog, nil)
 }

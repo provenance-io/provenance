@@ -2258,6 +2258,83 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 	}
 }
 
+func (s *ScopeKeeperTestSuite) TestSessionDeletion() {
+	// Create a scope that has two sessions. One session has two records, one has none.
+	// When the scope is deleted, it should also delete the sessions.
+
+	ctx := s.FreshCtx()
+	owners := ownerPartyList(s.user1)
+	partiesInvolved := []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}
+
+	// Create the specs.
+	contractSpecUUID := uuid.New()
+	contractSpecID := types.ContractSpecMetadataAddress(contractSpecUUID)
+	contractSpec := types.NewContractSpecification(contractSpecID, types.NewDescription("name", "desc", "url", "icon"),
+		[]string{s.user1}, partiesInvolved, &types.ContractSpecification_Hash{Hash: "hash"}, "processname")
+	s.app.MetadataKeeper.SetContractSpecification(ctx, *contractSpec)
+
+	recordName := "TestRecord"
+	recordSpecID := types.RecordSpecMetadataAddress(contractSpecUUID, recordName)
+	recordSpec := types.NewRecordSpecification(recordSpecID, recordName, []*types.InputSpecification{}, "type-name",
+		types.DefinitionType_DEFINITION_TYPE_RECORD, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER})
+	s.app.MetadataKeeper.SetRecordSpecification(ctx, *recordSpec)
+
+	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, partiesInvolved, []types.MetadataAddress{contractSpecID})
+	s.app.MetadataKeeper.SetScopeSpecification(ctx, *scopeSpec)
+
+	// Create the scope.
+	scopeUUID := uuid.New()
+	scopeID := types.ScopeMetadataAddress(scopeUUID)
+	scope := types.NewScope(scopeID, scopeSpecID, owners, []string{s.user1}, "", false)
+	s.Require().NoError(s.app.MetadataKeeper.SetScope(ctx, *scope), "SetScope")
+
+	// Create two sessions: the first gets two records, the second gets none.
+	session1ID := types.SessionMetadataAddress(scopeUUID, uuid.New())
+	session1 := types.NewSession("session1", session1ID, contractSpecID, nil, nil)
+	s.app.MetadataKeeper.SetSession(ctx, *session1)
+
+	session2ID := types.SessionMetadataAddress(scopeUUID, uuid.New())
+	session2 := types.NewSession("session2", session2ID, contractSpecID, nil, nil)
+	s.app.MetadataKeeper.SetSession(ctx, *session2)
+
+	// Create two records in the first session.
+	process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
+	record1Name := recordName + "1"
+	record2Name := recordName + "2"
+	record1ID := types.RecordMetadataAddress(scopeUUID, record1Name)
+	record2ID := types.RecordMetadataAddress(scopeUUID, record2Name)
+	s.app.MetadataKeeper.SetRecord(ctx, *types.NewRecord(record1Name, session1ID, *process, nil, nil, recordSpecID))
+	s.app.MetadataKeeper.SetRecord(ctx, *types.NewRecord(record2Name, session1ID, *process, nil, nil, recordSpecID))
+
+	// Sanity check that everything exists before the deletion.
+	_, found := s.app.MetadataKeeper.GetScope(ctx, scopeID)
+	s.Require().True(found, "scope should exist before deletion")
+	for i, id := range []types.MetadataAddress{session1ID, session2ID} {
+		_, found = s.app.MetadataKeeper.GetSession(ctx, id)
+		s.Require().True(found, "session%d %s should exist before deletion", i+1, id)
+	}
+	for i, id := range []types.MetadataAddress{record1ID, record2ID} {
+		_, found = s.app.MetadataKeeper.GetRecord(ctx, id)
+		s.Require().True(found, "record%d %s should exist before deletion", i+1, id)
+	}
+
+	// Delete the scope.
+	s.Require().NoError(s.app.MetadataKeeper.RemoveScope(ctx, scopeID), "RemoveScope")
+
+	// Check that the scope, both sessions, and both records are gone.
+	_, found = s.app.MetadataKeeper.GetScope(ctx, scopeID)
+	s.Assert().False(found, "scope should be deleted")
+	_, found = s.app.MetadataKeeper.GetSession(ctx, session1ID)
+	s.Assert().False(found, "session with records should be deleted")
+	_, found = s.app.MetadataKeeper.GetSession(ctx, session2ID)
+	s.Assert().False(found, "session without records should be deleted")
+	_, found = s.app.MetadataKeeper.GetRecord(ctx, record1ID)
+	s.Assert().False(found, "record 1 should be deleted")
+	_, found = s.app.MetadataKeeper.GetRecord(ctx, record2ID)
+	s.Assert().False(found, "record 2 should be deleted")
+}
+
 func (s *ScopeKeeperTestSuite) TestValidateSetScopeAccountData() {
 	pt := func(addr string, role types.PartyType, opt bool) types.Party {
 		return types.Party{
