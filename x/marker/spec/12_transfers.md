@@ -20,7 +20,7 @@ There are some complex interactions involved with transfers of restricted coins.
 
 Accounting of restricted coins is handled by the bank module. Restricted funds can be moved using the bank module's `MsgSend` or `MsgMutliSend`. They can also be moved using the marker module's `MsgTransferRequest`.
 
-During such transfers several things are checked using a `SendRestrictionFn` injected into the bank module. This restriction is applied in almost all instances when funds are being moved between accounts. The exceptions are delegations, undelegations, minting, burning, and marker withdrawals. A `MsgTransferRequest` also bypasses the `SendRestrictionFn` in order to include the `admin` account in the logic.
+During such transfers several things are checked using a `SendRestrictionFn` injected into the bank module. This restriction is applied in almost all instances when funds are being moved between accounts. The exceptions are delegations, undelegations, minting, burning, and marker withdrawals of the marker’s own denom. A `MsgTransferRequest` also bypasses the `SendRestrictionFn` in order to include the `admin` account in the logic.
 
 <!-- TODO: Add notes about IBC movement too -->
 
@@ -65,7 +65,7 @@ A withdrawal is when any funds are being sent out of a marker's account. The fun
 
 Withdraws can be made using the `Withdraw` endpoint, or another endpoint that utilizes a transfer agent (e.g. the exchange module's `MarketCommitmentSettle`).
 
-Whenever funds are being withdrawn, the transfer agent must have `withdraw` permission on the source marker. If the funds to withdraw are of the source marker's denom, the source marker must be active. The transfer agent must also have `transfer` permission on any restricted coins being moved.
+Whenever funds are being withdrawn, the transfer agent must have `withdraw` permission on the source marker. If the funds to withdraw are of the source marker's denom, the source marker must be active. Any other restricted coins being moved must pass their own marker’s send rules, with the transfer agent acting for the send: the transfer agent must have transfer permission on them, or the recipient must have their required attributes (and, when the recipient is a marker, transfer permission is always needed).
 
 ### Bypass Accounts
 
