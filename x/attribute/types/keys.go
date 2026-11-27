@@ -1,7 +1,7 @@
 package types
 
 import (
-	"crypto/sha256"
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"strings"
@@ -23,6 +23,10 @@ const (
 
 	// AccountDataName is the name of the attribute used to store account data.
 	AccountDataName = "accountdata"
+
+	// NameTerminator ends the (variable length) reversed name in a store key so that whatever
+	// follows it can't be confused for part of the name. Names can't contain this byte.
+	NameTerminator = byte(0x00)
 )
 
 var (
@@ -35,10 +39,9 @@ var (
 )
 
 // AddrAttributeKey creates a key for an account attribute
+// Format: [0x02][addr_len][addr][reversed name][0x00][hash(value)]
 func AddrAttributeKey(addr []byte, attr Attribute) []byte {
-	key := AttributeKeyPrefix
-	key = append(key, address.MustLengthPrefix(addr)...)
-	key = append(key, GetNameKeyBytes(attr.Name)...)
+	key := AddrAttributesNameKeyPrefix(addr, attr.Name)
 	return append(key, attr.Hash()...)
 }
 
@@ -70,8 +73,7 @@ func AddrStrAttributesKeyPrefix(addr string) []byte {
 
 // AddrAttributesNameKeyPrefix returns a prefix key for all attributes with a given name on an account
 func AddrAttributesNameKeyPrefix(addr []byte, attributeName string) []byte {
-	key := AttributeKeyPrefix
-	key = append(key, address.MustLengthPrefix(addr)...)
+	key := AddrAttributesKeyPrefix(addr)
 	return append(key, GetNameKeyBytes(attributeName)...)
 }
 
@@ -88,15 +90,23 @@ func AttributeNameKeyPrefix(attributeName string) []byte {
 
 // AttributeNameAddrKeyPrefix returns a prefix key for attribute and address
 func AttributeNameAddrKeyPrefix(attributeName string, addr []byte) []byte {
-	key := AttributeAddrLookupKeyPrefix
-	key = append(key, GetNameKeyBytes(attributeName)...)
+	key := AttributeNameKeyPrefix(attributeName)
 	return append(key, address.MustLengthPrefix(addr)...)
 }
 
 // GetAddressFromKey returns the AccAddress from full attribute address key ([prefix][name hash][length + AccAddress bytes][attribute hash])
+// ([0x03][reversed name][0x00][addr_len][addr]).
 func GetAddressFromKey(nameAddrKey []byte) (sdk.AccAddress, error) {
-	// start index of slice is [prefix (1)] + [name hash (32)] + [address len prefix (1)]
-	addressBytes := nameAddrKey[34:]
+	// Everything up to (and including) the terminator is the prefix byte and reversed name.
+	end := bytes.IndexByte(nameAddrKey, NameTerminator)
+	if end < 0 {
+		return nil, fmt.Errorf("invalid attribute address lookup key: no name terminator found")
+	}
+	// Skip the terminator and the address length byte.
+	if len(nameAddrKey) < end+2 {
+		return nil, fmt.Errorf("invalid attribute address lookup key: no address found")
+	}
+	addressBytes := nameAddrKey[end+2:]
 	if err := sdk.VerifyAddressFormat(addressBytes); err != nil {
 		return nil, err
 	}
@@ -105,13 +115,17 @@ func GetAddressFromKey(nameAddrKey []byte) (sdk.AccAddress, error) {
 
 // GetNameKeyBytes returns a set of bytes that uniquely identifies the given name
 func GetNameKeyBytes(name string) []byte {
-	attrName := strings.ToLower(strings.TrimSpace(name))
-	attrName = reverse(attrName)
+	attrName := ReverseName(name)
 	if len(attrName) == 0 {
 		panic(fmt.Sprintf("invalid account attribute name %s", name))
 	}
-	hash := sha256.Sum256([]byte(attrName))
-	return hash[:]
+	return append([]byte(attrName), NameTerminator)
+}
+
+// ReverseName normalizes the provided attribute name and reverses the order of its segments.
+// E.g. "id.sso.provenance.io" becomes "io.provenance.sso.id".
+func ReverseName(name string) string {
+	return reverse(strings.ToLower(strings.TrimSpace(name)))
 }
 
 // GetAttributeExpireTimePrefix returns a prefix for expired time [AttributeExpirationKeyPrefix][epoch]
@@ -129,7 +143,6 @@ func reverse(name string) string {
 	if strings.TrimSpace(name) == "" {
 		return ""
 	}
-	// check if there is nothing to reverse (root name)
 	if !strings.Contains(name, ".") {
 		return name
 	}

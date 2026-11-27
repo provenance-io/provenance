@@ -779,7 +779,9 @@ func (s *KeeperTestSuite) runGetAllAttributesTests(funcName string, attrGetter f
 	attrsSetUp := uint(0)
 	// Attributes are keyed using a hash of the name. So they aren't in alphabetical order.
 	// The order should never change, though, unless their name changes.
-	attrStoreOrder := []uint{2, 7, 9, 6, 8, 1, 3, 5, 0, 4}
+	// Reversed-name order: "exampleN.attribute" reverses to "attribute.exampleN", so these
+	// now sort 0-9 instead of by sha256 of the name.
+	attrStoreOrder := []uint{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	getExpAttrs := func(count uint) []types.Attribute {
 		// providing a count instead of just using attrsSetUp so that the size is dictated by the test.
 		var rv []types.Attribute
@@ -1082,7 +1084,7 @@ func (s *KeeperTestSuite) TestIterateRecord() {
 			return nil
 		}
 		// Collect and return genesis state.
-		err := s.app.AttributeKeeper.IterateRecords(s.ctx, types.AttributeKeyPrefix, appendToRecords)
+		err := s.app.AttributeKeeper.IterateRecords(s.ctx, appendToRecords)
 		s.Require().NoError(err)
 		s.Require().Equal(1, len(records))
 	})
@@ -1770,4 +1772,120 @@ func (s *KeeperTestSuite) TestPurgeAttributeEmitsEvents() {
 		}
 	}
 	s.Assert().Equal(2, deleteEventCount, "should emit one EventAttributeDelete per purged attribute")
+}
+
+// corruptCounter is a value the uint64 counter codec can't decode (it requires exactly 8 bytes).
+var corruptCounter = []byte{0x01, 0x02, 0x03}
+
+func (s *KeeperTestSuite) TestSetAttributeCorruptCounterIsAnError() {
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	counterKey := types.AttributeNameAddrKeyPrefix("example.attribute", s.user1Addr)
+	store.Set(counterKey, corruptCounter)
+
+	attr := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("v"), nil, "")
+	err := s.app.AttributeKeeper.SetAttribute(s.ctx, attr, s.user1Addr)
+
+	// An unreadable counter must surface as an error, not be treated as 0 and overwritten.
+	s.Require().Error(err, "SetAttribute with an unreadable name/addr counter")
+	s.Assert().Equal(corruptCounter, store.Get(counterKey), "the unreadable counter must be left as-is")
+}
+
+func (s *KeeperTestSuite) TestDecAttrNameAddressLookupKeepsCorruptCounter() {
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	counterKey := types.AttributeNameAddrKeyPrefix("example.attribute", s.user1Addr)
+	store.Set(counterKey, corruptCounter)
+
+	s.app.AttributeKeeper.DecAttrNameAddressLookup(s.ctx, "example.attribute", s.user1Addr)
+
+	// An unreadable counter must not be treated as "at most 1" and deleted.
+	s.Assert().Equal(corruptCounter, store.Get(counterKey), "the unreadable counter must be left as-is")
+}
+
+func (s *KeeperTestSuite) TestDecAttrNameAddressLookupMissingCounter() {
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	counterKey := types.AttributeNameAddrKeyPrefix("example.attribute", s.user1Addr)
+	store.Delete(counterKey)
+
+	s.Require().NotPanics(func() {
+		s.app.AttributeKeeper.DecAttrNameAddressLookup(s.ctx, "example.attribute", s.user1Addr)
+	}, "DecAttrNameAddressLookup with no counter")
+	s.Assert().Nil(store.Get(counterKey), "no counter should be created by a decrement")
+}
+
+func (s *KeeperTestSuite) TestNameAddrCounterIncAndDec() {
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	counterKey := types.AttributeNameAddrKeyPrefix("example.attribute", s.user1Addr)
+	count := func() uint64 {
+		bz := store.Get(counterKey)
+		if bz == nil {
+			return 0
+		}
+		return binary.BigEndian.Uint64(bz)
+	}
+
+	a1 := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("one"), nil, "")
+	a2 := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("two"), nil, "")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, a1, s.user1Addr), "SetAttribute a1")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(s.ctx, a2, s.user1Addr), "SetAttribute a2")
+	s.Assert().Equal(uint64(2), count(), "counter after two values")
+
+	s.app.AttributeKeeper.DecAttrNameAddressLookup(s.ctx, "example.attribute", s.user1Addr)
+	s.Assert().Equal(uint64(1), count(), "counter after one decrement")
+	s.app.AttributeKeeper.DecAttrNameAddressLookup(s.ctx, "example.attribute", s.user1Addr)
+	s.Assert().Nil(store.Get(counterKey), "counter entry should be removed when it reaches 0")
+}
+
+func (s *KeeperTestSuite) TestGetParamsCorruptPanics() {
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	// 0xFF is field 31 with wire type 7, which isn't a valid protobuf wire type.
+	store.Set(types.AttributeParamPrefix, []byte{0xFF, 0xFF, 0xFF})
+
+	// An unreadable params entry is corrupt state. It must not silently fall back to defaults.
+	s.Assert().Panics(func() { s.app.AttributeKeeper.GetParams(s.ctx) }, "GetParams with corrupt params")
+}
+
+func (s *KeeperTestSuite) TestGetParamsUnsetUsesDefaults() {
+	store := s.ctx.KVStore(s.app.GetKey(types.StoreKey))
+	store.Delete(types.AttributeParamPrefix)
+
+	var params types.Params
+	s.Require().NotPanics(func() { params = s.app.AttributeKeeper.GetParams(s.ctx) }, "GetParams with no params")
+	s.Assert().Equal(uint32(types.DefaultMaxValueLength), params.MaxValueLength, "MaxValueLength when params are unset")
+}
+
+func (s *KeeperTestSuite) TestGetAttributesSkipsExpired() {
+	// An expired attribute stays in state until the begin blocker sweeps it, but the getters
+	// shouldn't return it in the meantime.
+	setupCtx := s.ctx.WithBlockTime(s.startBlockTime.Add(-1 * time.Hour))
+	expiredAt := s.startBlockTime.Add(-1 * time.Minute)
+
+	stale := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("stale"), &expiredAt, "")
+	live := types.NewAttribute("example.attribute", s.user1, types.AttributeType_String, []byte("fresh"), nil, "")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(setupCtx, stale, s.user1Addr), "SetAttribute stale")
+	s.Require().NoError(s.app.AttributeKeeper.SetAttribute(setupCtx, live, s.user1Addr), "SetAttribute live")
+
+	// Compare by value: an ExpirationDate doesn't survive the store round trip byte-for-byte
+	// (monotonic clock and location are dropped), so comparing whole Attributes would make a
+	// NotContains check pass no matter what.
+	values := func(attrs []types.Attribute) []string {
+		rv := make([]string, len(attrs))
+		for i, attr := range attrs {
+			rv[i] = string(attr.Value)
+		}
+		return rv
+	}
+
+	byName, err := s.app.AttributeKeeper.GetAttributes(s.ctx, s.user1, "example.attribute")
+	s.Require().NoError(err, "GetAttributes")
+	s.Assert().Equal([]string{"fresh"}, values(byName), "GetAttributes values")
+
+	all, err := s.app.AttributeKeeper.GetAllAttributes(s.ctx, s.user1)
+	s.Require().NoError(err, "GetAllAttributes")
+	s.Assert().NotContains(values(all), "stale", "GetAllAttributes values")
+	s.Assert().Contains(values(all), "fresh", "GetAllAttributes values")
+
+	allAddr, err := s.app.AttributeKeeper.GetAllAttributesAddr(s.ctx, s.user1Addr)
+	s.Require().NoError(err, "GetAllAttributesAddr")
+	s.Assert().NotContains(values(allAddr), "stale", "GetAllAttributesAddr values")
+	s.Assert().Contains(values(allAddr), "fresh", "GetAllAttributesAddr values")
 }
