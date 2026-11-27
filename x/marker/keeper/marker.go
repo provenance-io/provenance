@@ -209,7 +209,17 @@ func (k Keeper) WithdrawCoins(
 	if k.bankKeeper.BlockedAddr(recipient) {
 		return fmt.Errorf("%s is not allowed to receive funds", recipient)
 	}
-
+	// The send below skips the send restrictions, so coins of other markers held in this marker's account
+	// are checked here against their own marker's rules, with the caller as the transfer agent.
+	toMarker, _ := k.GetMarker(ctx, recipient)
+	for _, coin := range coins {
+		if coin.Denom == m.GetDenom() {
+			continue
+		}
+		if err = k.validateSendDenom(ctx, m.GetAddress(), recipient, []sdk.AccAddress{caller}, coin.Denom, toMarker); err != nil {
+			return fmt.Errorf("cannot withdraw %s from %s marker: %w", coin.Denom, m.GetDenom(), err)
+		}
+	}
 	if err := k.bankKeeper.SendCoins(types.WithBypass(ctx), m.GetAddress(), recipient, coins); err != nil {
 		return err
 	}

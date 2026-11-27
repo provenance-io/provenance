@@ -12,13 +12,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
+	abci "github.com/cometbft/cometbft/abci/types"
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -495,6 +495,8 @@ func TestWithdrawCoins(t *testing.T) {
 	addr1 := sdk.AccAddress("addr1_______________")
 	addr2 := sdk.AccAddress("addr2_______________")
 	addr3 := sdk.AccAddress("addr3_______________")
+	addrWithTransfer := sdk.AccAddress("addrWithTransfer____")
+	addrWithAttr := sdk.AccAddress("addrWithAttr________")
 
 	denomMain := "mackenzie"
 	denomCoin := "norman"
@@ -503,6 +505,9 @@ func TestWithdrawCoins(t *testing.T) {
 	denomInactive := "indigo"
 	denomCancelled := "carmen"
 	denomNoMarker := "noah"
+	denomRestrictedPlain := "ruth"
+	denomRestrictedAttr := "rachel"
+	reqAttr := "kyc.withdraw.test"
 
 	allAccessExcept := func(addr sdk.AccAddress, perms ...types.Access) types.AccessGrant {
 		rv := types.AccessGrant{
@@ -593,12 +598,39 @@ func TestWithdrawCoins(t *testing.T) {
 			allAccessExcept(addrNoWithdraw, types.Access_Withdraw),
 			accessOnly(addrOnlyWithdraw, types.Access_Withdraw),
 			accessOnly(addrWithDep, types.Access_Withdraw),
+			accessOnly(addrWithTransfer, types.Access_Withdraw),
 		},
 		SupplyFixed:            true,
 		AllowGovernanceControl: true,
 	}
 	addrMarkerMain := createMarker(denomMain, markerMain)
-	fundAcct(addrMarkerMain, sdk.NewCoins(coin(1_000_000, denomCoin), coin(1_000_000, denomNoMarker)))
+	fundAcct(addrMarkerMain, sdk.NewCoins(coin(1_000_000, denomCoin), coin(1_000_000, denomNoMarker),
+		coin(1_000_000, denomRestrictedPlain), coin(1_000_000, denomRestrictedAttr)))
+
+	// Two other restricted markers whose coins are held in the main marker's account.
+	// Only addrWithTransfer has transfer on them, and only addrWithAttr has the required attribute.
+	createMarker(denomRestrictedPlain, &types.MarkerAccount{
+		AccessControl:          []types.AccessGrant{accessOnly(addrWithTransfer, types.Access_Transfer)},
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+	})
+	createMarker(denomRestrictedAttr, &types.MarkerAccount{
+		AccessControl:          []types.AccessGrant{accessOnly(addrWithTransfer, types.Access_Transfer)},
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+		RequiredAttributes:     []string{reqAttr},
+	})
+	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addrManager))
+	require.NoError(t, app.NameKeeper.SetNameRecord(ctx, reqAttr, addrManager, false), "SetNameRecord %q", reqAttr)
+	require.NoError(t, app.AttributeKeeper.SetAttribute(ctx, attrtypes.Attribute{
+		Name:          reqAttr,
+		Value:         []byte("yes"),
+		Address:       addrWithAttr.String(),
+		AttributeType: attrtypes.AttributeType_String,
+	}, addrManager), "SetAttribute %q", reqAttr)
+	withdrawOtherErr := func(denom, reason string) string {
+		return "cannot withdraw " + denom + " from " + denomMain + " marker: " + reason
+	}
 
 	markerCoin := &types.MarkerAccount{
 		AccessControl:          []types.AccessGrant{allAccessExcept(addrManager, types.Access_Transfer, types.Access_ForceTransfer)},
@@ -824,6 +856,70 @@ func TestWithdrawCoins(t *testing.T) {
 			coins:                 sdk.NewCoins(coin(27, denomNoMarker)),
 			expEventTo:            addr3,
 			expRecipientGetsCoins: true,
+		},
+		{
+			name:      "other restricted coin without required attributes: caller has no transfer",
+			caller:    addrOnlyWithdraw,
+			recipient: addr1,
+			denom:     denomMain,
+			coins:     sdk.NewCoins(coin(5, denomRestrictedPlain)),
+			expErr: withdrawOtherErr(denomRestrictedPlain,
+				addrMarkerMain.String()+" does not have transfer permissions for "+denomRestrictedPlain),
+		},
+		{
+			name:                  "other restricted coin without required attributes: caller has transfer",
+			caller:                addrWithTransfer,
+			recipient:             addr1,
+			denom:                 denomMain,
+			coins:                 sdk.NewCoins(coin(5, denomRestrictedPlain)),
+			expEventTo:            addr1,
+			expRecipientGetsCoins: true,
+		},
+		{
+			name:      "other restricted coin with required attributes: recipient does not have them",
+			caller:    addrOnlyWithdraw,
+			recipient: addr2,
+			denom:     denomMain,
+			coins:     sdk.NewCoins(coin(6, denomRestrictedAttr)),
+			expErr: withdrawOtherErr(denomRestrictedAttr, "address "+addr2.String()+
+				" does not contain the \""+denomRestrictedAttr+"\" required attribute: \""+reqAttr+"\""),
+		},
+		{
+			name:                  "other restricted coin with required attributes: recipient has them",
+			caller:                addrOnlyWithdraw,
+			recipient:             addrWithAttr,
+			denom:                 denomMain,
+			coins:                 sdk.NewCoins(coin(6, denomRestrictedAttr)),
+			expEventTo:            addrWithAttr,
+			expRecipientGetsCoins: true,
+		},
+		{
+			name:                  "other restricted coin with required attributes: caller has transfer",
+			caller:                addrWithTransfer,
+			recipient:             addr2,
+			denom:                 denomMain,
+			coins:                 sdk.NewCoins(coin(7, denomRestrictedAttr)),
+			expEventTo:            addr2,
+			expRecipientGetsCoins: true,
+		},
+		{
+			name:      "own coin and other restricted coin: caller has no transfer on the other",
+			caller:    addrOnlyWithdraw,
+			recipient: addr3,
+			denom:     denomMain,
+			coins:     sdk.NewCoins(coin(8, denomMain), coin(8, denomRestrictedPlain)),
+			expErr: withdrawOtherErr(denomRestrictedPlain,
+				addrMarkerMain.String()+" does not have transfer permissions for "+denomRestrictedPlain),
+		},
+		{
+			name:      "other restricted coin to a restricted marker: caller has deposit but no transfer",
+			caller:    addrWithDep,
+			recipient: addrMarkerToDeposit,
+			denom:     denomMain,
+			coins:     sdk.NewCoins(coin(9, denomRestrictedPlain)),
+			expErr: withdrawOtherErr(denomRestrictedPlain, fmt.Sprintf("none of %q have %s on %s marker (%s)",
+				[]string{addrMarkerMain.String(), addrWithDep.String()}, types.Access_Transfer,
+				denomRestrictedPlain, markerAddr(denomRestrictedPlain))),
 		},
 	}
 
