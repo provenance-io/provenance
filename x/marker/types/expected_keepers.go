@@ -27,6 +27,7 @@ type AuthzKeeper interface {
 	GetAuthorization(ctx context.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (authz.Authorization, *time.Time)
 	DeleteGrant(ctx context.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error
 	SaveGrant(ctx context.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration *time.Time) error
+	GranterGrants(ctx context.Context, req *authz.QueryGranterGrantsRequest) (*authz.QueryGranterGrantsResponse, error)
 }
 
 // BankKeeper defines the bank functionality needed by the marker module.
@@ -45,8 +46,9 @@ type BankKeeper interface {
 	AppendSendRestriction(restriction banktypes.SendRestrictionFn)
 	BlockedAddr(addr sdk.AccAddress) bool
 
-	GetDenomMetaData(context context.Context, denom string) (banktypes.Metadata, bool)
-	SetDenomMetaData(context context.Context, denomMetaData banktypes.Metadata)
+	GetDenomMetaData(ctx context.Context, denom string) (banktypes.Metadata, bool)
+	SetDenomMetaData(ctx context.Context, denomMetaData banktypes.Metadata)
+	DeleteDenomMetaData(ctx context.Context, denom string) error
 }
 
 // FeeGrantKeeper defines the fee-grant functionality needed by the marker module.

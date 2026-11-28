@@ -862,7 +862,7 @@ func TestWithdrawCoins(t *testing.T) {
 
 			kpr := *app.MarkerKeeper
 			if tc.bankKeeper != nil {
-				kpr = kpr.WithBankKeeper(tc.bankKeeper.WithParent(app.BankKeeper))
+				kpr = kpr.WithBankKeeper(tc.bankKeeper.WithParent(markerkeeper.NewWrappedBankKeeper(&app.BankKeeper)))
 			}
 
 			em := sdk.NewEventManager()
@@ -1530,7 +1530,7 @@ func TestTransferCoin(t *testing.T) {
 			}
 			kpr := app.MarkerKeeper.WithAuthzKeeper(tc.authzKeeper)
 			if tc.bankKeeper != nil {
-				kpr = kpr.WithBankKeeper(tc.bankKeeper.WithParent(app.BankKeeper))
+				kpr = kpr.WithBankKeeper(tc.bankKeeper.WithParent(markerkeeper.NewWrappedBankKeeper(&app.BankKeeper)))
 			}
 
 			origFromBal := app.BankKeeper.GetAllBalances(ctx, tc.from)
@@ -3335,6 +3335,10 @@ func (d dummyBankKeeper) GetDenomMetaData(_ context.Context, _ string) (banktype
 
 func (d dummyBankKeeper) SetDenomMetaData(_ context.Context, _ banktypes.Metadata) {}
 
+func (d dummyBankKeeper) DeleteDenomMetaData(_ context.Context, _ string) error {
+	return nil
+}
+
 func (d dummyBankKeeper) IterateAllBalances(_ context.Context, _ func(sdk.AccAddress, sdk.Coin) bool) {
 }
 
@@ -3511,6 +3515,103 @@ func TestMarkerCollectionsRoundTrip(t *testing.T) {
 		return false
 	})
 	assert.Len(t, navsAfterRemove, 0, "NAVs should be cleared after RemoveMarker")
+}
+
+func TestDeleteMarkerRemovesFeeGrants(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+	server := markerkeeper.NewMsgServerImpl(*app.MarkerKeeper)
+
+	user := testUserAddress("test")
+	mac := types.NewEmptyMarkerAccount("feegrantcoin", user.String(), []types.AccessGrant{
+		*types.NewAccessGrant(user, []types.Access{types.Access_Admin, types.Access_Delete}),
+	})
+	require.NoError(t, mac.SetSupply(sdk.NewInt64Coin(mac.Denom, 1)), "SetSupply")
+	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac), "AddMarkerAccount")
+	markerAddr := mac.GetAddress()
+
+	allowance := func() *feegrant.BasicAllowance {
+		return &feegrant.BasicAllowance{SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("feegrantcoin", 1))}
+	}
+
+	// More than the default page size (100) to make sure they all get removed.
+	const numGrants = 150
+	var grantees []sdk.AccAddress
+	for i := 0; i < numGrants; i++ {
+		grantee := testUserAddress(fmt.Sprintf("grantee%d", i))
+		grantees = append(grantees, grantee)
+		require.NoError(t, app.FeeGrantKeeper.GrantAllowance(ctx, markerAddr, grantee, allowance()), "GrantAllowance %d", i)
+	}
+
+	// A grant from a different granter that should not be affected.
+	otherGranter := testUserAddress("othergranter")
+	require.NoError(t, app.FeeGrantKeeper.GrantAllowance(ctx, otherGranter, grantees[0], allowance()), "GrantAllowance from other granter")
+
+	countGrants := func(granter sdk.AccAddress) int {
+		resp, err := app.FeeGrantKeeper.AllowancesByGranter(ctx, &feegrant.QueryAllowancesByGranterRequest{
+			Granter:    granter.String(),
+			Pagination: &query.PageRequest{Limit: numGrants * 2},
+		})
+		require.NoError(t, err, "AllowancesByGranter(%s)", granter)
+		return len(resp.Allowances)
+	}
+	require.Equal(t, numGrants, countGrants(markerAddr), "marker grants before Delete")
+	require.Equal(t, 1, countGrants(otherGranter), "other granter grants before Delete")
+
+	_, err := server.Cancel(ctx, &types.MsgCancelRequest{Denom: mac.Denom, Administrator: user.String()})
+	require.NoError(t, err, "Cancel")
+	require.Equal(t, numGrants, countGrants(markerAddr), "marker grants after Cancel")
+
+	_, err = server.Delete(ctx, &types.MsgDeleteRequest{Denom: mac.Denom, Administrator: user.String()})
+	require.NoError(t, err, "Delete")
+
+	assert.Equal(t, 0, countGrants(markerAddr), "marker grants after Delete")
+	assert.Equal(t, 1, countGrants(otherGranter), "other granter grants after Delete")
+	for i, grantee := range grantees {
+		_, err = app.FeeGrantKeeper.GetAllowance(ctx, markerAddr, grantee)
+		assert.Error(t, err, "GetAllowance(marker, grantee%d) after Delete", i)
+	}
+}
+
+func TestAddMarkerAccountDeletesDenomMetadata(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+
+	user := testUserAddress("test")
+	newMarker := func(denom string) *types.MarkerAccount {
+		mac := types.NewEmptyMarkerAccount(denom, user.String(), []types.AccessGrant{
+			*types.NewAccessGrant(user, []types.Access{types.Access_Admin}),
+		})
+		require.NoError(t, mac.SetSupply(sdk.NewInt64Coin(denom, 1)), "SetSupply(%q)", denom)
+		return mac
+	}
+	newMetadata := func(denom string) banktypes.Metadata {
+		return banktypes.Metadata{
+			Description: "metadata for " + denom,
+			DenomUnits:  []*banktypes.DenomUnit{{Denom: denom, Exponent: 0}},
+			Base:        denom,
+			Display:     denom,
+			Name:        denom,
+			Symbol:      strings.ToUpper(denom),
+		}
+	}
+
+	// Leftover metadata for the denom of the marker being created, and metadata for an unrelated denom.
+	app.BankKeeper.SetDenomMetaData(ctx, newMetadata("leftovercoin"))
+	app.BankKeeper.SetDenomMetaData(ctx, newMetadata("othercoin"))
+
+	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, newMarker("leftovercoin")), "AddMarkerAccount(leftovercoin)")
+	assert.False(t, app.BankKeeper.HasDenomMetaData(ctx, "leftovercoin"), "HasDenomMetaData(leftovercoin) after AddMarkerAccount")
+	assert.True(t, app.BankKeeper.HasDenomMetaData(ctx, "othercoin"), "HasDenomMetaData(othercoin) after AddMarkerAccount")
+
+	// Creating a marker that doesn't have any metadata is fine too.
+	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, newMarker("freshcoin")), "AddMarkerAccount(freshcoin)")
+	assert.False(t, app.BankKeeper.HasDenomMetaData(ctx, "freshcoin"), "HasDenomMetaData(freshcoin) after AddMarkerAccount")
+
+	// A failed attempt to re-add an existing marker should not delete its metadata.
+	app.BankKeeper.SetDenomMetaData(ctx, newMetadata("leftovercoin"))
+	require.Error(t, app.MarkerKeeper.AddMarkerAccount(ctx, newMarker("leftovercoin")), "AddMarkerAccount(leftovercoin) again")
+	assert.True(t, app.BankKeeper.HasDenomMetaData(ctx, "leftovercoin"), "HasDenomMetaData(leftovercoin) after failed AddMarkerAccount")
 }
 
 func TestIterateMarkersCollections(t *testing.T) {

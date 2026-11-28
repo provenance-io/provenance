@@ -8,6 +8,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
+	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -61,6 +62,10 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
+			if err = removeOrphanedFeeGrants(ctx, app); err != nil {
+				return nil, err
+			}
+
 			fixFeegrantRevokeList(ctx, app)
 
 			if err = deleteScopelessSessions(ctx, app); err != nil {
@@ -85,6 +90,10 @@ var upgrades = map[string]appUpgrade{
 			removeInactiveValidatorDelegations(ctx, app)
 
 			if err = convertFinishedVestingAccountsToBase(ctx, app); err != nil {
+				return nil, err
+			}
+
+			if err = removeOrphanedFeeGrants(ctx, app); err != nil {
 				return nil, err
 			}
 
@@ -321,6 +330,48 @@ var (
 	_ = convertFinishedVestingAccountsToBase
 	_ = unlockVestingAccounts
 )
+
+// removeOrphanedFeeGrants revokes all fee grants whose granter account no longer exists.
+// These are left over from markers that were deleted before deleting a marker also revoked its fee grants.
+// If not removed, they'd come back to life if a marker with the same denom were created again.
+func removeOrphanedFeeGrants(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Removing orphaned fee grants.")
+
+	var orphans []*feegrant.MsgRevokeAllowance
+	var checkErr error
+	err := app.FeeGrantKeeper.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
+		granter, err := sdk.AccAddressFromBech32(grant.Granter)
+		if err != nil {
+			checkErr = fmt.Errorf("invalid granter %q (grantee %q): %w", grant.Granter, grant.Grantee, err)
+			return true
+		}
+		if !app.AccountKeeper.HasAccount(ctx, granter) {
+			orphans = append(orphans, &feegrant.MsgRevokeAllowance{Granter: grant.Granter, Grantee: grant.Grantee})
+		}
+		return false
+	})
+	if err == nil {
+		err = checkErr
+	}
+	if err != nil {
+		return fmt.Errorf("error iterating fee grants: %w", err)
+	}
+
+	if len(orphans) == 0 {
+		ctx.Logger().Info("No orphaned fee grants found.")
+	} else {
+		ctx.Logger().Info(fmt.Sprintf("Found %d orphaned fee grants. Removing them now.", len(orphans)))
+		server := feegrantkeeper.NewMsgServerImpl(app.FeeGrantKeeper)
+		for _, msg := range orphans {
+			if _, err = server.RevokeAllowance(ctx, msg); err != nil {
+				return fmt.Errorf("could not revoke fee grant from %s to %s: %w", msg.Granter, msg.Grantee, err)
+			}
+		}
+	}
+
+	ctx.Logger().Info("Done removing orphaned fee grants.")
+	return nil
+}
 
 // fixFeegrantRevokeList rebuilds the x/feegrant expiration queue from the existing allowances.
 // A bug in revokeAllowance deleted the wrong queue entry, leaving stale entries for revoked grants.

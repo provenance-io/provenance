@@ -28,6 +28,7 @@ import (
 
 	"github.com/provenance-io/provenance/internal"
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 type UpgradeTestSuite struct {
@@ -1041,6 +1042,7 @@ func (s *UpgradeTestSuite) TestHibiscusRC1() {
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
+		"INF Removing orphaned fee grants. module=baseapp",
 		"INF Fixing feegrant expiration queue. module=baseapp",
 		"INF Deleting sessions without a scope. module=baseapp",
 	}
@@ -1053,10 +1055,97 @@ func (s *UpgradeTestSuite) TestHibiscus() {
 		LogMsgPruneIBCExpiredConsensusStates,
 		LogMsgRemoveInactiveValidatorDelegations,
 		LogMsgConvertFinishedVestingAccountsToBase,
+		"INF Removing orphaned fee grants. module=baseapp",
 		"INF Fixing feegrant expiration queue. module=baseapp",
 		"INF Deleting sessions without a scope. module=baseapp",
 	}
 	s.AssertUpgradeHandlerLogs("hibiscus", expInLog, nil)
+}
+
+func (s *UpgradeTestSuite) TestRemoveOrphanedFeeGrants() {
+	expiration := s.ctx.BlockTime().Add(24 * time.Hour)
+	newAllowance := func(exp *time.Time) *feegrant.BasicAllowance {
+		return &feegrant.BasicAllowance{SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("stake", 10)), Expiration: exp}
+	}
+	grantees := []sdk.AccAddress{
+		sdk.AccAddress("grantee_0___________"),
+		sdk.AccAddress("grantee_1___________"),
+		sdk.AccAddress("grantee_2___________"),
+	}
+
+	// A normal granter with an account. Its grants should be kept.
+	existingGranter := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	s.Require().NoError(s.app.FeeGrantKeeper.GrantAllowance(s.ctx, existingGranter, grantees[0], newAllowance(nil)), "GrantAllowance existing->0")
+	s.Require().NoError(s.app.FeeGrantKeeper.GrantAllowance(s.ctx, existingGranter, grantees[1], newAllowance(&expiration)), "GrantAllowance existing->1")
+
+	// A marker that issued fee grants, then got removed without revoking them (the old behavior).
+	marker := markertypes.NewEmptyMarkerAccount("orphancoin", existingGranter.String(), []markertypes.AccessGrant{
+		*markertypes.NewAccessGrant(existingGranter, []markertypes.Access{markertypes.Access_Admin}),
+	})
+	s.Require().NoError(marker.SetSupply(sdk.NewInt64Coin(marker.Denom, 1)), "SetSupply")
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, marker), "AddMarkerAccount")
+	markerAddr := marker.GetAddress()
+	s.Require().NoError(s.app.FeeGrantKeeper.GrantAllowance(s.ctx, markerAddr, grantees[0], newAllowance(nil)), "GrantAllowance marker->0")
+	s.Require().NoError(s.app.FeeGrantKeeper.GrantAllowance(s.ctx, markerAddr, grantees[2], newAllowance(&expiration)), "GrantAllowance marker->2")
+	s.app.MarkerKeeper.RemoveMarker(s.ctx, marker)
+	s.Require().False(s.app.AccountKeeper.HasAccount(s.ctx, markerAddr), "HasAccount(marker) after RemoveMarker")
+
+	// A granter that never had an account.
+	noAcctGranter := sdk.AccAddress("no_account_granter__")
+	s.Require().NoError(s.app.FeeGrantKeeper.GrantAllowance(s.ctx, noAcctGranter, grantees[1], newAllowance(nil)), "GrantAllowance noAcct->1")
+
+	type grantKey struct{ granter, grantee string }
+	getAllGrantsIn := func(ctx sdk.Context) []grantKey {
+		var rv []grantKey
+		err := s.app.FeeGrantKeeper.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
+			rv = append(rv, grantKey{granter: grant.Granter, grantee: grant.Grantee})
+			return false
+		})
+		s.Require().NoError(err, "IterateAllFeeAllowances")
+		return rv
+	}
+	getAllGrants := func() []grantKey {
+		return getAllGrantsIn(s.ctx)
+	}
+	keep := []grantKey{
+		{granter: existingGranter.String(), grantee: grantees[0].String()},
+		{granter: existingGranter.String(), grantee: grantees[1].String()},
+	}
+	remove := []grantKey{
+		{granter: markerAddr.String(), grantee: grantees[0].String()},
+		{granter: markerAddr.String(), grantee: grantees[2].String()},
+		{granter: noAcctGranter.String(), grantee: grantees[1].String()},
+	}
+	s.Require().ElementsMatch(append(slices.Clone(keep), remove...), getAllGrants(), "fee grants before removeOrphanedFeeGrants")
+
+	expInLog := []string{
+		"INF Removing orphaned fee grants. module=baseapp",
+		"INF Found 3 orphaned fee grants. Removing them now. module=baseapp",
+		"INF Done removing orphaned fee grants. module=baseapp",
+	}
+	var err error
+	runner := func() {
+		err = removeOrphanedFeeGrants(s.ctx, s.app)
+	}
+	s.ExecuteAndAssertLogs(runner, expInLog, nil, true, "removeOrphanedFeeGrants")
+	s.Require().NoError(err, "removeOrphanedFeeGrants")
+	s.Assert().ElementsMatch(keep, getAllGrants(), "fee grants after removeOrphanedFeeGrants")
+
+	// Pruning after the expiration should still work and only remove the kept grant that expires.
+	// Do it in a cache context so it doesn't affect the rest of this test.
+	pruneCtx, _ := s.ctx.WithBlockTime(expiration.Add(time.Hour)).CacheContext()
+	s.Require().NoError(s.app.FeeGrantKeeper.RemoveExpiredAllowances(pruneCtx, 100), "RemoveExpiredAllowances")
+	s.Assert().ElementsMatch(keep[:1], getAllGrantsIn(pruneCtx), "fee grants after pruning expired ones")
+
+	// Running it again should find nothing.
+	expInLog = []string{
+		"INF Removing orphaned fee grants. module=baseapp",
+		"INF No orphaned fee grants found. module=baseapp",
+		"INF Done removing orphaned fee grants. module=baseapp",
+	}
+	s.ExecuteAndAssertLogs(runner, expInLog, nil, true, "removeOrphanedFeeGrants second time")
+	s.Require().NoError(err, "removeOrphanedFeeGrants second time")
+	s.Assert().ElementsMatch(keep, getAllGrants(), "fee grants after second removeOrphanedFeeGrants")
 }
 
 func (s *UpgradeTestSuite) TestFixFeegrantRevokeList() {
